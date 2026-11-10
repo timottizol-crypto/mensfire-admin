@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="img/icon-dark.png">
+    <link rel="apple-touch-icon" href="img/icon-dark.png">
+    <title>MENSFIRE | Барберы</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (isStandalone) {
+            document.documentElement.classList.add('is-pwa');
+        }
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme-light.css">
+</head>
+<body class="header-hidden">
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ЭКРАН ЗАГРУЗКИ -->
+    <div id="splashScreen" class="active">
+        <div class="splash-content">
+            <div class="splash-title-wrapper">
+                <div class="splash-line sl-1"></div>
+                <div class="splash-line sl-2"></div>
+                <div class="splash-line sl-3"></div>
+                <div class="splash-title">MENS<span>FIRE</span></div>
+            </div>
+            <div class="splash-greeting-oval" id="splashGreeting">
+                Панель управления
+            </div>
+        </div>
+        <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+    </div>
+
+    <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
+    <div id="appContainer">
+        <div class="app-header">
+            <div class="header-pill left-pill" onclick="goHomeFromHeader()">
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2">
+                        <circle cx="6" cy="6" r="3"></circle>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+                        <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+                        <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+                    </svg>
+                    <div class="logo-text">MENS<span>FIRE</span></div>
+                </div>
+            </div>
+
+            <div class="header-title-wrapper">
+                <h1 id="headerTitle" class="header-title">Вход</h1>
+            </div>
+
+            <div class="header-pill right-pill" onclick="toggleTheme()" id="headerThemeBtn">
+                <span id="themeIcon" style="font-size: 20px;">☀️</span>
+            </div>
+        </div>
+
+        <!-- ЭКРАН ВХОДА -->
+        <div id="viewLogin" class="view active">
+            <div class="login-wrapper">
+                <div class="login-card">
+                    <div class="login-logo">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="6" cy="6" r="3"></circle>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+                            <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+                            <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h2 class="login-title">MENS<span>FIRE</span></h2>
+                    <p class="login-subtitle">Вход для мастеров</p>
+                    
+                    <input type="password" id="loginPin" maxlength="4" placeholder="••••" class="pin-input">
+                    
+                    <button class="login-btn" onclick="handleLogin()">Войти</button>
+                    <p class="login-hint">Демо-доступ: Админ — 1111, Барберы — 2222 / 3333</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН РАСПИСАНИЯ (Общий) -->
+        <div id="viewSchedule" class="view">
+            <div class="glass-card home-bookings-card" style="min-height: 200px;">
+                <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span id="scheduleGreeting">Расписание</span>
+                    <span id="scheduleDateDisplay" style="font-size: 12px; color: var(--gold);"></span>
+                </h3>
+                
+                <!-- НОВЫЕ ТАБЫ -->
+                <div class="category-tabs" style="margin-bottom: 15px;">
+                    <button class="tab-btn active" onclick="switchScheduleTab('bookings')" id="tabBookings">Записи</button>
+                    <button class="tab-btn" onclick="switchScheduleTab('breaks')" id="tabBreaks">Перерывы</button>
+                </div>
+
+                <!-- Селектор дат -->
+                <div class="date-selector" id="scheduleDateSelector"></div>
+                
+                <div id="scheduleList" class="home-scroll-area" style="transition: opacity 0.3s ease;">
+                    <!-- Карточки записей генерируются через JS -->
+                </div>
+            </div>
+            
+            <button class="home-cta-btn" style="width: 100%; margin-top: 15px;" onclick="openBlockTimeModal()">
+                <div class="cta-text">
+                    <span>Заблокировать время</span>
+                    <small>Обед / Личные дела</small>
+                </div>
+            </button>
+        </div>
+
+            <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
+        <div id="viewFinance" class="view">
+            
+            <!-- Вкладки внутри Финансов -->
+            <div class="category-tabs" style="margin-bottom: 15px;">
+                <button class="tab-btn active" id="tabFinExpenses" onclick="switchFinanceTab('expenses')">Расходы</button>
+                <button class="tab-btn" id="tabFinRevenue" onclick="switchFinanceTab('revenue')">Выручка и Прибыль</button>
+                <button class="tab-btn" id="tabFinAnalytics" onclick="switchFinanceTab('analytics')">Аналитика</button>
+            </div>
+
+            <!-- Селектор дат (общий) -->
+            <div class="date-selector" id="financeDateSelector" style="margin-bottom: 20px;"></div>
+
+            <!-- ВКЛАДКА 1: РАСХОДЫ -->
+            <div id="finTabExpenses" class="fin-tab-content" style="display: block;">
+                <!-- Блок расходов за день -->
+                <div class="glass-card" style="margin-bottom: 20px;">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Расходы за день</span>
+                        <button class="action-modal-btn action-btn-primary" onclick="openExpenseModal()" style="margin: 0; padding: 8px 15px; font-size: 12px; width: auto;">+ Добавить</button>
+                    </h3>
+                    <div id="expensesList" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                        <!-- Список расходов за выбранный день -->
+                    </div>
+                </div>
+
+                <!-- Блок расходов за месяц -->
+                <div class="glass-card">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 10px;">Расходы за месяц</h3>
+                    <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                        <span style="color: var(--text-muted);">Итого:</span>
+                        <span id="financeMonthExpenses" style="font-weight: 800; color: #ff4d4d;">0 ₽</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 2: ВЫРУЧКА И ПРИБЫЛЬ -->
+            <div id="finTabRevenue" class="fin-tab-content" style="display: none; flex-direction: column; gap: 20px;">
+                <!-- Блок Выручки -->
+                <div class="glass-card">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Выручка всех мастеров</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">За выбранный день:</span>
+                        <span id="financeToday" style="font-weight: 800;">0 ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">За неделю:</span>
+                        <span id="financeWeek" style="font-weight: 800;">0 ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">За месяц:</span>
+                        <span id="financeMonth" style="font-weight: 800;">0 ₽</span>
+                    </div>
+                </div>
+
+                <!-- Блок Прибыли -->
+                <div class="glass-card">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Чистая прибыль</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">За выбранный день:</span>
+                        <span id="financeProfit" style="font-weight: 800; color: #4CAF50; font-size: 20px;">0 ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">За неделю:</span>
+                        <span id="profitWeek" style="font-weight: 800;">0 ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">За месяц:</span>
+                        <span id="profitMonth" style="font-weight: 800;">0 ₽</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 3: АНАЛИТИКА -->
+            <div id="finTabAnalytics" class="fin-tab-content" style="display: none;">
+                <div class="glass-card">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Аналитика за 30 дней</h3>
+                    <div id="analyticsHistoryList" style="max-height: 60vh; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- История аналитики по дням -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КОМАНДЫ (Только Админ) -->
+        <div id="viewTeam" class="view">
+           <button class="home-cta-btn" onclick="openStaffModal()">
+                <div class="cta-text">
+                    <span>+ Добавить мастера</span>
+                </div>
+            </button>
+            <div id="teamList">
+                <!-- Карточки мастеров генерируются через JS -->
+            </div>
+        </div>
+
+        <!-- ЭКРАН КЛИЕНТОВ -->
+        <div id="viewClients" class="view">
+            <div class="glass-card home-bookings-card" style="display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                
+                <!-- Заголовок (меняется через JS) -->
+                <h3 id="clientsPageTitle" style="margin-bottom: 15px; font-size: 16px;">Мои клиенты</h3>
+                
+                <!-- Контейнер для кнопок (Мои / Все) — они не будут скроллиться -->
+                <div id="clientsTabsContainer"></div>
+                
+                <!-- Сам список (только он будет скроллиться) -->
+                <div id="clientsList" class="home-scroll-area" style="flex-grow: 1; overflow-y: auto; max-height: none;">
+                    <!-- Список клиентов -->
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- ЭКРАН ПРОФИЛЯ (Общий) -->
+        <div id="viewProfile" class="view">
+            <div class="profile-pc-wrapper">
+                
+                <!-- ЛЕВАЯ КОЛОНКА (Команда) - видна только на ПК -->
+                <div class="profile-left-col" id="profileLeftCol" style="display: none;">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Команда</h3>
+                    <div id="teamListPC"></div>
+                    
+                    <!-- Кнопка добавления (под списком, как ты просил) -->
+                    <button class="home-cta-btn" onclick="openStaffModal()" style="width: 100%; margin-top: 15px;">
+                        <div class="cta-text">
+                            <span>+ Добавить мастера</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- ПРАВАЯ КОЛОНКА (Личный кабинет) -->
+                <div class="profile-right-col">
+                    <div class="glass-card profile-main-card" id="profileMainCard">
+                        <div class="profile-header-horizontal" id="profileHeader">
+                            <div class="profile-avatar-gold">
+                                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            </div>
+                            <div class="profile-info">
+                                <h1 id="profileName">Имя</h1>
+                                <p id="profileRole">Роль</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Личная выручка / Прибыль -->
+                    <div class="glass-card" id="barberRevenueCard" style="margin-top: 15px; display: none;">
+                        <h3 id="profileRevenueTitle" style="font-size: 16px; color: var(--gold); margin-bottom: 10px;">Моя выручка за сегодня</h3>
+                        <div style="font-size: 24px; font-weight: 800;" id="barberRevenue">0 ₽</div>
+                    </div>
+
+                    <button class="checkout-btn" style="margin-top: 15px;" onclick="openChangePasswordModal()">Сменить пароль</button>
+                    <button class="logout-btn" style="margin-top: 15px;" onclick="logout()">Выйти</button>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- НИЖНЕЕ МЕНЮ (Собирается в JS) -->
+        <div class="bottom-nav" id="bottomNav">
+            <div class="nav-bubble" id="navBubble"></div>
+            <!-- Вкладки будут добавлены динамически -->
+        </div>
+    </div>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Управление записью -->
+    <div class="modal" id="actionModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px; font-size: 20px;">Управление записью</h2>
+            <button class="action-modal-btn action-btn-primary" onclick="completeBooking()">Завершить</button>
+            <button class="action-modal-btn action-btn-danger" onclick="cancelBooking()">Отменить</button>
+            <button class="action-modal-btn action-btn-cancel" onclick="closeModal('actionModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Добавление расхода -->
+    <div class="modal" id="expenseModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; font-size: 20px;">Новый расход</h2>
+            <div class="form-group">
+                <label>На что потратили?</label>
+                <input type="text" id="expenseTitle" placeholder="Аренда, кофе, расходники...">
+            </div>
+            <div class="form-group">
+                <label>Сумма (₽)</label>
+                <input type="number" id="expenseAmount" placeholder="0">
+            </div>
+            <button class="checkout-btn" onclick="addExpense()">Добавить</button>
+            <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('expenseModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Добавление мастера -->
+    <div class="modal" id="staffModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; font-size: 20px;">Новый мастер</h2>
+            <div class="form-group">
+                <label>Имя мастера</label>
+                <input type="text" id="staffName" placeholder="Иван">
+            </div>
+            <div class="form-group">
+                <label>PIN-код (4 цифры)</label>
+                <input type="number" id="staffPin" placeholder="0000">
+            </div>
+            <button class="checkout-btn" onclick="addStaff()">Добавить</button>
+            <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('staffModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Блокировка времени -->
+    <div class="modal" id="blockTimeModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; font-size: 20px;">Блокировка времени</h2>
+            <div class="form-group">
+                <label>Дата (ДД.ММ.ГГГГ)</label>
+                <input type="text" id="blockDate" readonly>
+            </div>
+            <div class="form-group">
+                <label>Время начала (ЧЧ:ММ)</label>
+                <input type="time" id="blockStartTime">
+            </div>
+            <div class="form-group">
+                <label>Время окончания (ЧЧ:ММ)</label>
+                <input type="time" id="blockEndTime">
+            </div>
+            <button class="checkout-btn" onclick="addTimeBlock()">Заблокировать</button>
+            <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('blockTimeModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Смена пароля -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; font-size: 20px;">Смена пароля</h2>
+            <div class="form-group">
+                <label>Новый PIN-код (4 цифры)</label>
+                <input type="number" id="newPin" placeholder="0000" maxlength="4">
+            </div>
+            <button class="checkout-btn" onclick="changePassword()">Сохранить</button>
+            <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('passwordModal')">Отмена</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

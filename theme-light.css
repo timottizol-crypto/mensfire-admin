@@ -1,0 +1,410 @@
+/* ============================================
+   СВЕТЛАЯ ТЕМА ДЛЯ АДМИНКИ MENSFIRE
+   ============================================ */
+
+/* ---------- 1. Переменные ---------- */
+html.light-theme {
+    --bg-dark: #F5F5F7;
+    --bg-card: #FFFFFF;
+    --gold: #C79A2A;
+    --gold-hover: #B08A25;
+    --text-main: #121212;
+    --text-muted: #4A4A4A;
+
+    --bg-image: url('img/background-light.jpg');
+    --bg-gradient-start: rgba(255, 255, 255, 0.855);
+    --bg-gradient-end: rgba(255, 255, 255, 0.918);
+}
+
+/* ---------- 2. База ---------- */
+html.light-theme body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+html.light-theme .view {
+    background: var(--bg-dark);
+}
+html.light-theme #viewLogin {
+    background: linear-gradient(var(--bg-gradient-start), var(--bg-gradient-end)), var(--bg-image) center/cover !important;
+}
+
+/* ---------- 3. Стеклянные блоки ---------- */
+html.light-theme .header-pill,
+html.light-theme .bottom-nav,
+html.light-theme .glass-card,
+html.light-theme .profile-main-card,
+html.light-theme .login-card,
+html.light-theme .team-card,
+html.light-theme .nav-bubble {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.05),
+        0 4px 15px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* ---------- 4. Текст ---------- */
+html.light-theme .profile-info h1,
+html.light-theme .header-title,
+html.light-theme .logo-text,
+html.light-theme .form-group label {
+    color: var(--text-main) !important;
+}
+
+html.light-theme .profile-info p,
+html.light-theme .team-role {
+    color: var(--gold) !important;
+}
+
+html.light-theme .login-title {
+    color: var(--text-main) !important;
+}
+html.light-theme .login-title span {
+    color: var(--gold) !important;
+}
+html.light-theme .login-subtitle,
+html.light-theme .login-hint {
+    color: var(--text-muted) !important;
+}
+
+/* ---------- 5. Экран входа ---------- */
+html.light-theme .pin-input {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: var(--gold) !important;
+}
+html.light-theme .pin-input:focus {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 20px rgba(199, 154, 42, 0.2) !important;
+}
+html.light-theme .pin-input::placeholder {
+    color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html.light-theme .login-logo {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 25px rgba(199, 154, 42, 0.25) !important;
+}
+
+html.light-theme .login-btn {
+    color: #FFFFFF !important;
+    box-shadow: 0 8px 25px rgba(199, 154, 42, 0.3) !important;
+}
+
+/* ---------- 6. Карточки расписания ---------- */
+html.light-theme .booking-card-item {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-left: 3px solid var(--gold) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+html.light-theme .booking-card-item:active {
+    background: rgba(255, 255, 255, 1) !important;
+}
+html.light-theme .booking-card-item.completed {
+    border-left-color: #999 !important;
+}
+html.light-theme .booking-card-item.cancelled {
+    border-left-color: #E53E3E !important;
+}
+html.light-theme .booking-card-item.time-block {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-left-color: #999 !important;
+}
+
+html.light-theme .booking-client {
+    color: var(--text-main) !important;
+}
+html.light-theme .booking-master {
+    color: var(--gold) !important;
+}
+html.light-theme .booking-services {
+    color: var(--text-muted) !important;
+}
+html.light-theme .booking-duration {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: var(--text-muted) !important;
+}
+
+/* ---------- 7. Финансы ---------- */
+html.light-theme .finance-header-card {
+    background: linear-gradient(135deg, rgba(199, 154, 42, 0.2) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+    border: 1.5px solid rgba(199, 154, 42, 0.4) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 10px 30px rgba(199, 154, 42, 0.08) !important;
+}
+
+html.light-theme .finance-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+html.light-theme .finance-row .value {
+    color: var(--text-main) !important;
+}
+
+html.light-theme .expense-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+html.light-theme .expense-title {
+    color: var(--text-main) !important;
+}
+
+html.light-theme .analytics-badge {
+    background: rgba(199, 154, 42, 0.15) !important;
+    color: var(--gold) !important;
+    border: 1px solid rgba(199, 154, 42, 0.3) !important;
+}
+
+/* ---------- 8. Команда ---------- */
+html.light-theme .team-avatar {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border-color: var(--gold) !important;
+}
+html.light-theme .team-avatar svg {
+    fill: var(--gold) !important;
+}
+html.light-theme .team-name {
+    color: var(--text-main) !important;
+}
+html.light-theme .team-pin {
+    color: var(--text-muted) !important;
+}
+
+html.light-theme .team-action-btn.reset {
+    color: var(--gold) !important;
+    border-color: rgba(199, 154, 42, 0.6) !important;
+}
+html.light-theme .team-action-btn.reset:active {
+    background: rgba(199, 154, 42, 0.15) !important;
+}
+html.light-theme .team-action-btn.delete {
+    color: #E53E3E !important;
+    border-color: rgba(229, 62, 62, 0.5) !important;
+}
+html.light-theme .team-action-btn.delete:active {
+    background: rgba(229, 62, 62, 0.1) !important;
+}
+
+/* ---------- 9. Клиенты (CRM) ---------- */
+html.light-theme .client-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-left: 3px solid var(--gold) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+html.light-theme .client-card:active {
+    background: rgba(255, 255, 255, 1) !important;
+}
+
+html.light-theme .client-avatar {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border-color: rgba(199, 154, 42, 0.6) !important;
+    color: var(--gold) !important;
+}
+
+html.light-theme .client-name {
+    color: var(--text-main) !important;
+}
+html.light-theme .client-meta {
+    color: var(--text-muted) !important;
+}
+html.light-theme .client-meta .gold-text {
+    color: var(--gold) !important;
+}
+
+html.light-theme .client-history-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-left-color: var(--gold) !important;
+}
+html.light-theme .client-history-item .date {
+    color: var(--gold) !important;
+}
+html.light-theme .client-history-item .services {
+    color: var(--text-muted) !important;
+}
+
+/* ---------- 10. Профиль ---------- */
+html.light-theme .profile-header-horizontal::after {
+    background: rgba(0, 0, 0, 0.08) !important;
+}
+html.light-theme .profile-avatar-gold {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 20px rgba(199, 154, 42, 0.25) !important;
+}
+html.light-theme .profile-avatar-gold svg {
+    fill: var(--gold) !important;
+}
+
+html.light-theme .revenue-card {
+    background: linear-gradient(135deg, rgba(199, 154, 42, 0.2) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+    border: 1.5px solid rgba(199, 154, 42, 0.4) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 10px 30px rgba(199, 154, 42, 0.1) !important;
+}
+html.light-theme .revenue-value {
+    color: var(--gold) !important;
+    text-shadow: 0 0 20px rgba(199, 154, 42, 0.3) !important;
+}
+
+/* ---------- 11. Кнопки ---------- */
+html.light-theme .checkout-btn {
+    color: #FFFFFF !important;
+}
+html.light-theme .checkout-btn:active {
+    background: var(--gold-hover) !important;
+}
+
+html.light-theme .home-cta-btn {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border: 1.5px solid rgba(199, 154, 42, 0.5) !important;
+    color: var(--gold) !important;
+}
+html.light-theme .home-cta-btn:active {
+    background: rgba(199, 154, 42, 0.25) !important;
+}
+
+html.light-theme .btn-cancel {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    color: var(--text-muted) !important;
+}
+html.light-theme .btn-cancel:active {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light-theme .logout-btn {
+    border-color: rgba(229, 62, 62, 0.5) !important;
+    color: #E53E3E !important;
+}
+html.light-theme .logout-btn:active {
+    background: rgba(229, 62, 62, 0.1) !important;
+}
+
+html.light-theme .action-btn-primary {
+    color: #FFFFFF !important;
+}
+html.light-theme .action-btn-danger {
+    background: rgba(229, 62, 62, 0.08) !important;
+    color: #E53E3E !important;
+    border-color: rgba(229, 62, 62, 0.4) !important;
+}
+html.light-theme .action-btn-cancel {
+    color: var(--text-muted) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ---------- 12. Навигация ---------- */
+html.light-theme .nav-item {
+    color: var(--text-muted) !important;
+}
+html.light-theme .nav-item.active {
+    color: var(--gold) !important;
+}
+html.light-theme .nav-bubble {
+    background: rgba(199, 154, 42, 0.1) !important;
+    border: 1.5px solid rgba(199, 154, 42, 0.3) !important;
+    box-shadow: 0 2px 12px rgba(199, 154, 42, 0.15) !important;
+}
+
+/* ---------- 13. Модалки ---------- */
+html.light-theme .modal {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+html.light-theme .modal-content {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.light-theme .form-group input {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-main) !important;
+}
+html.light-theme .form-group input:focus {
+    border-color: var(--gold) !important;
+}
+html.light-theme .form-group input::placeholder {
+    color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ---------- 14. Тосты ---------- */
+html.light-theme .toast {
+    background: rgba(255, 255, 255, 0.98) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--gold) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ---------- 15. Статус-бейджи ---------- */
+html.light-theme .status-badge.active {
+    background: rgba(199, 154, 42, 0.15) !important;
+    color: var(--gold) !important;
+    border: 1px solid rgba(199, 154, 42, 0.4) !important;
+}
+html.light-theme .status-badge.completed {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #666 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+html.light-theme .status-badge.cancelled {
+    background: rgba(229, 62, 62, 0.08) !important;
+    color: #E53E3E !important;
+    border: 1px solid rgba(229, 62, 62, 0.25) !important;
+}
+
+/* ---------- 16. Splash (светлая тема) ---------- */
+html.light-theme .splash-greeting-oval {
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    background: rgba(20, 20, 22, 0.4) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+html.light-theme .splash-greeting-oval span {
+    color: var(--gold) !important;
+    text-shadow: 0 0 10px rgba(199, 154, 42, 0.6);
+}
+
+/* ---------- 17. Пустые состояния ---------- */
+html.light-theme .empty-bookings-msg {
+    color: var(--text-main) !important;
+}
+
+/* ---------- 18. Плавные переходы между темами ---------- */
+html, body, .view, .glass-card, .profile-main-card, .bottom-nav, .header-pill, 
+.booking-card-item, .team-card, .client-card, .login-card, .modal-content {
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* =========================================
+   СЕЛЕКТОР ДАТ — СВЕТЛАЯ ТЕМА
+   ========================================= */
+html.light-theme .date-selector-item {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    color: var(--text-main);
+}
+html.light-theme .date-selector-item.selected {
+    background: var(--gold) !important;
+    border-color: var(--gold) !important;
+    color: #fff !important;
+}
+
+html.light-theme .tab-btn {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+    color: var(--text-muted) !important;
+}
+html.light-theme .tab-btn.active {
+    background: rgba(199, 154, 42, 0.15) !important;
+    border-color: var(--gold) !important;
+    color: var(--gold) !important;
+}
