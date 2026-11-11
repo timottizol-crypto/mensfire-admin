@@ -195,10 +195,22 @@
 
             <!-- ВКЛАДКА 3: АНАЛИТИКА -->
             <div id="finTabAnalytics" class="fin-tab-content" style="display: none;">
-                <div class="glass-card">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Аналитика за 30 дней</h3>
-                    <div id="analyticsHistoryList" style="max-height: 60vh; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 10px;">
-                        <!-- История аналитики по дням -->
+                <!-- Блок: Аналитика за выбранный день -->
+                <div class="glass-card" style="margin-bottom: 25px;">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Аналитика</h3>
+                    
+                    <div id="analyticsHeaderBlock" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); flex-shrink: 0;">
+                    </div>
+
+                    <div id="analyticsHistoryList" class="custom-scroll" style="display: flex; flex-direction: column; gap: 0; max-height: 90px; overflow-y: auto; padding-right: 5px;">
+                    </div>
+                </div>
+
+                <!-- Блок: Топ услуг за 30 дней (КОМПАКТНЫЙ, СКРОЛЛ) -->
+                <div class="glass-card" style="margin-top: 10px;">
+                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Популярные услуги (30 дней)</h3>
+                    <div id="analyticsTopServicesList" class="custom-scroll" style="display: flex; flex-direction: column; gap: 8px; max-height: 190px; overflow-y: auto; padding-right: 5px;">
+                        <!-- Топ услуг -->
                     </div>
                 </div>
             </div>
@@ -336,8 +348,9 @@
         <div class="modal-content">
             <h2 style="margin-bottom: 15px; font-size: 20px;">Блокировка времени</h2>
             <div class="form-group">
-                <label>Дата (ДД.ММ.ГГГГ)</label>
-                <input type="text" id="blockDate" readonly>
+                <label>Дата</label>
+                <!-- МЕНЯЕМ type="text" readonly на type="date" -->
+                <input type="date" id="blockDate" style="color-scheme: dark; width: 100%; padding: 15px; background: rgba(18, 18, 18, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; color: #fff; font-size: 15px; outline: none;">
             </div>
             <div class="form-group">
                 <label>Время начала (ЧЧ:ММ)</label>
@@ -362,6 +375,89 @@
             </div>
             <button class="checkout-btn" onclick="changePassword()">Сохранить</button>
             <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('passwordModal')">Отмена</button>
+        </div>
+    </div>
+
+        <!-- Детали клиента -->
+    <div class="modal" id="clientDetailsModal">
+        <div class="modal-content" style="text-align: left; max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;">
+                <h2 id="clientDetailsName" style="font-size: 20px; color: var(--gold); margin: 0;">Имя</h2>
+                <button class="close-btn" onclick="closeModal('clientDetailsModal')" style="color: #fff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 10px;">
+                <span id="clientDetailsMaster"></span> 
+                <span>·</span>
+                <span>Визитов: <span id="clientDetailsVisits" style="color: var(--gold); font-weight: bold;">0</span></span> 
+                <span>·</span>
+                <span>Потрачено: <span id="clientDetailsTotal" style="color: var(--gold); font-weight: bold;">0 ₽</span></span>
+            </div>
+            
+            <div style="font-size: 14px; font-weight: 800; color: var(--gold); margin-bottom: 10px; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">История визитов</div>
+            
+            <div id="clientDetailsHistory" class="custom-scroll" style="overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px; flex-grow: 1; min-height: 100px;">
+                <!-- История -->
+            </div>
+        </div>
+    </div>
+
+        <!-- Аналитика барбера -->
+    <div class="modal" id="barberStatsModal">
+        <div class="modal-content" style="text-align: left; max-width: 420px; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="statsBarberName" style="font-size: 22px; color: var(--gold); margin: 0;">Имя</h2>
+                <button class="close-btn" onclick="closeModal('barberStatsModal')" style="color: #fff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">За этот месяц</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; text-align: center;">
+                    <div id="statsMonthVisits" style="font-size: 22px; font-weight: 800; color: var(--gold);">0</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">стрижек</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; text-align: center;">
+                    <div id="statsMonthClients" style="font-size: 22px; font-weight: 800; color: var(--gold);">0</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">клиентов</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; text-align: center;">
+                    <div id="statsMonthRevenue" style="font-size: 18px; font-weight: 800; color: var(--text-main);">0 ₽</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">выручка</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div id="statsMonthSalary" style="font-size: 18px; font-weight: 800; color: #4CAF50;">0 ₽</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">зарплата (40%)</div>
+                </div>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Сегодня</div>
+            <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 20px;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="statsTodayVisits" style="font-size: 18px; font-weight: 800; color: var(--gold);">0</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">стрижек</div>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="statsTodayRevenue" style="font-size: 18px; font-weight: 800; color: var(--text-main);">0 ₽</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">выручка</div>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="statsTodaySalary" style="font-size: 18px; font-weight: 800; color: #4CAF50;">0 ₽</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">зарплата</div>
+                </div>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Топ-услуга месяца</div>
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div id="statsTopService" style="font-size: 14px; font-weight: 700; color: var(--text-main);">-</div>
+                <div id="statsTopServiceCount" style="font-size: 12px; color: var(--gold); font-weight: 800;">0 раз</div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="action-modal-btn action-btn-primary" id="statsResetPinBtn" onclick="" style="margin: 0;">Сбросить PIN</button>
+                <button class="action-modal-btn action-btn-cancel" onclick="closeModal('barberStatsModal')" style="margin: 0;">Закрыть</button>
+            </div>
         </div>
     </div>
 

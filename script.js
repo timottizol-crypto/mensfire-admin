@@ -414,14 +414,26 @@ let touchStartY = 0;
 
 document.addEventListener('touchstart', e => {
     if (document.querySelector('.modal.active') || document.querySelector('.drawer.active')) return;
-    if (e.target.closest('.home-scroll-area') || e.target.closest('.profile-history-scroll')) return; 
+    
+    // ИГНОРИРУЕМ СВАЙП, ЕСЛИ ТРОГАЕМ СПИСКИ, ДАТЫ ИЛИ ТАБЫ
+    if (e.target.closest('.home-scroll-area') || 
+        e.target.closest('.profile-history-scroll') ||
+        e.target.closest('.date-selector') || 
+        e.target.closest('.category-tabs')) return; 
+        
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
 }, { passive: true });
 
 document.addEventListener('touchend', e => {
     if (document.querySelector('.modal.active') || document.querySelector('.drawer.active')) return;
-    if (e.target.closest('.home-scroll-area') || e.target.closest('.profile-history-scroll')) return; 
+    
+    // ТУТ ТОЖЕ САМОЕ
+    if (e.target.closest('.home-scroll-area') || 
+        e.target.closest('.profile-history-scroll') ||
+        e.target.closest('.date-selector') || 
+        e.target.closest('.category-tabs')) return; 
+        
     const touchEndX = e.changedTouches[0].screenX;
     const touchEndY = e.changedTouches[0].screenY;
     handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
@@ -448,7 +460,7 @@ function handleSwipe(startX, startY, endX, endY) {
 
 // --- ТАКТИЛЬНЫЙ ОТКЛИК (СКОПИРОВАНО ИЗ КЛИЕНТА) ---
 (function() {
-    const PRESSABLE = 'button, .nav-item, .glass-card, .home-cta-btn, .header-pill, .action-modal-btn, .checkout-btn, .logout-btn, [onclick]';
+     const PRESSABLE = 'button, .nav-item, .home-cta-btn, .header-pill, .action-modal-btn, .checkout-btn, .logout-btn, [onclick]';
     let holdTimer = null;
     let pressedEl = null;
     let longPressFired = false;
@@ -457,6 +469,7 @@ function handleSwipe(startX, startY, endX, endY) {
         if (e.button !== undefined && e.button !== 0) return;
         const el = e.target.closest(PRESSABLE);
         if (!el || el.disabled || el.classList.contains('disabled')) return;
+        if (el.classList.contains('home-booking-item') || el.classList.contains('client-card')) return;
 
         clearTimeout(holdTimer);
         if (pressedEl) pressedEl.classList.remove('is-pressing');
@@ -542,24 +555,23 @@ function renderSchedule() {
     setTimeout(() => {
         renderDateSelector();
 
-        const hour = new Date().getHours();
-        let greeting = "Доброй ночи";
-        if (hour >= 5 && hour < 12) greeting = "Доброе утро";
-        else if (hour >= 12 && hour < 18) greeting = "Добрый день";
-        else if (hour >= 18 && hour < 23) greeting = "Добрый вечер";
         const greetEl = document.getElementById('scheduleGreeting');
-        if (greetEl) greetEl.innerText = `${greeting}, ${currentUser.name}`;
+        if (greetEl) greetEl.innerText = 'Расписание';
 
         const isPC = window.innerWidth >= 768;
         if (emptyPhrasesTimer) clearInterval(emptyPhrasesTimer);
 
+        // Функция создания карточки
         const createCard = (b, isBlock) => {
             if (isBlock) {
                 return `
-                    <div class="home-booking-item" style="border-left-color: #888; opacity: 0.7; background: rgba(255,255,255,0.02); margin-bottom: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <div class="hb-info">
-                            <div class="hb-date" style="color: #888; font-size: 13px;">${b.startTime} - ${b.endTime}</div>
-                            <div class="hb-services" style="font-size: 11px;">Блокировка времени</div>
+                    <div class="home-booking-item" style="border-left-style: dashed; border-left-color: #888; background: rgba(255,255,255,0.02); margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; opacity: 0.8; width: 100%; box-sizing: border-box;">
+                        <div class="hb-info" style="flex: 1; min-width: 0;">
+                            <div class="hb-date" style="color: #888; font-size: 14px;">${b.startTime} - ${b.endTime}</div>
+                            <div class="hb-services" style="font-size: 12px; white-space: normal;">Перерыв / Личные дела</div>
+                        </div>
+                        <div style="flex-shrink: 0; margin-left: 10px;">
+                            <div class="status-badge completed" style="margin:0; background: rgba(255,255,255,0.05); color: #888; border-color: transparent;">Блок</div>
                         </div>
                     </div>
                 `;
@@ -572,7 +584,7 @@ function renderSchedule() {
                 else statusBadge = `<div class="status-badge active" style="margin:0;">Активная</div>`;
 
                 return `
-                    <div class="home-booking-item ${itemClass}" onclick="openActionModal(${b.id})" style="cursor: pointer; margin-bottom: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; transition: transform 0.2s ease;">
+                    <div class="home-booking-item ${itemClass}" onclick="openActionModal(${b.id})" style="cursor: pointer; margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%; box-sizing: border-box;">
                         <div class="hb-info" style="flex: 1; min-width: 0;">
                             <div class="hb-date" style="font-size: 14px;">${b.time}</div>
                             <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? mockStaff.find(s=>s.id === b.barberId)?.name + ' | ' : ''}${b.clientName}</div>
@@ -585,6 +597,10 @@ function renderSchedule() {
                 `;
             }
         };
+
+        // Разделители
+        const yellowDivider = `<div style="width: 100%; height: 2px; background: var(--gold); opacity: 0.6; margin: 12px 0; border-radius: 2px; box-shadow: 0 0 6px rgba(212,175,55,0.4); flex-shrink: 0;"></div>`;
+        const grayDivider = `<div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 12px 0; flex-shrink: 0;"></div>`;
 
         if (isPC) {
             list.style.display = 'flex';
@@ -602,27 +618,36 @@ function renderSchedule() {
                 const dateStr = d.toLocaleDateString('ru-RU');
                 let dayName = i === 0 ? 'Сегодня' : i === 1 ? 'Завтра' : d.toLocaleDateString('ru-RU', { weekday: 'short' });
 
-                // ФИКС: Показываем только записи текущего пользователя (включая Админа)
                 let filteredBookings = bookings.filter(b => b.date === dateStr && b.barberId === currentUser.id);
                 let filteredBlocks = timeBlocks.filter(tb => tb.date === dateStr && tb.barberId === currentUser.id);
 
-                filteredBookings.sort((a, b) => a.time.localeCompare(b.time));
-
                 let cardsHtml = '';
+
+                // РЕНДЕР В ЗАВИСИМОСТИ ОТ ВКЛАДКИ
                 if (currentScheduleTab === 'bookings') {
-                    filteredBookings.forEach(b => { cardsHtml += createCard(b, false); });
+                    filteredBookings.sort((a, b) => a.time.localeCompare(b.time));
+                    filteredBookings.forEach((b, index) => {
+                        cardsHtml += createCard(b, false);
+                        if (index < filteredBookings.length - 1) cardsHtml += yellowDivider;
+                    });
+                    if (filteredBookings.length === 0) cardsHtml = `<div style="color: var(--text-muted); font-size: 12px; padding: 10px 0;">Нет записей</div>`;
                 } else {
-                    filteredBlocks.forEach(tb => { cardsHtml += createCard(tb, true); });
+                    filteredBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
+                    filteredBlocks.forEach((tb, index) => {
+                        cardsHtml += createCard(tb, true);
+                        if (index < filteredBlocks.length - 1) cardsHtml += grayDivider;
+                    });
+                    if (filteredBlocks.length === 0) cardsHtml = `<div style="color: var(--text-muted); font-size: 12px; padding: 10px 0;">Нет перерывов</div>`;
                 }
 
                 html += `
-                        <div style="flex: 0 0 300px; background: rgba(255,255,255,0.02); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                    <div style="flex: 0 0 300px; background: rgba(255,255,255,0.02); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
                         <div style="font-size: 13px; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; display: flex; justify-content: space-between; flex-shrink: 0;">
                             <span>${dayName}</span>
                             <span>${d.getDate()}.${(d.getMonth()+1).toString().padStart(2, '0')}</span>
                         </div>
-                        <div style="display: flex; flex-direction: column; overflow-y: auto; padding-right: 5px;">
-                            ${cardsHtml || `<div style="color: var(--text-muted); font-size: 12px; padding: 10px 0;">Нет ${currentScheduleTab === 'bookings' ? 'записей' : 'перерывов'}</div>`}
+                        <div style="display: flex; flex-direction: column; overflow-y: auto; padding-right: 5px; width: 100%;">
+                            ${cardsHtml}
                         </div>
                     </div>
                 `;
@@ -634,24 +659,22 @@ function renderSchedule() {
             list.style.gridTemplateColumns = 'none';
 
             const targetDate = selectedScheduleDate;
-            // ФИКС: Показываем только записи текущего пользователя
+            
             let filteredBookings = bookings.filter(b => b.date === targetDate && b.barberId === currentUser.id);
             let filteredBlocks = timeBlocks.filter(tb => tb.date === targetDate && tb.barberId === currentUser.id);
-            
-            filteredBookings.sort((a, b) => a.time.localeCompare(b.time));
 
-            let cardsHtml = '';
+            let html = '';
+
+            // РЕНДЕР В ЗАВИСИМОСТИ ОТ ВКЛАДКИ
             if (currentScheduleTab === 'bookings') {
-                filteredBookings.forEach(b => { cardsHtml += createCard(b, false); });
-            } else {
-                filteredBlocks.forEach(tb => { cardsHtml += createCard(tb, true); });
-            }
-
-            if (!cardsHtml) {
-                const emptyText = currentScheduleTab === 'bookings' ? emptyPhrases[0] : "На этот день перерывов нет 😌";
-                list.innerHTML = `<div class="empty-bookings-msg" id="emptyMsg" style="font-size: 16px; font-weight: 600; padding: 20px 0; transition: opacity 0.3s ease;">${emptyText}</div>`;
-                
-                if (currentScheduleTab === 'bookings') {
+                filteredBookings.sort((a, b) => a.time.localeCompare(b.time));
+                filteredBookings.forEach((b, index) => {
+                    html += createCard(b, false);
+                    if (index < filteredBookings.length - 1) html += yellowDivider;
+                });
+                if (filteredBookings.length === 0) {
+                    const emptyText = "На этот день записей нет";
+                    html = `<div class="empty-bookings-msg" id="emptyMsg" style="font-size: 16px; font-weight: 600; padding: 20px 0;">${emptyText}</div>`;
                     emptyPhrasesTimer = setInterval(() => {
                         const msgDiv = document.getElementById('emptyMsg');
                         if (!msgDiv) { clearInterval(emptyPhrasesTimer); return; }
@@ -663,8 +686,17 @@ function renderSchedule() {
                     }, 15000);
                 }
             } else {
-                list.innerHTML = cardsHtml;
+                filteredBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
+                filteredBlocks.forEach((tb, index) => {
+                    html += createCard(tb, true);
+                    if (index < filteredBlocks.length - 1) html += grayDivider;
+                });
+                if (filteredBlocks.length === 0) {
+                    html = `<div class="empty-bookings-msg" style="font-size: 16px; font-weight: 600; padding: 20px 0;">На этот день перерывов нет</div>`;
+                }
             }
+
+            list.innerHTML = html;
         }
         
         list.style.opacity = '1';
@@ -741,21 +773,28 @@ function cancelBooking() {
 
 // --- БЛОКИРОВКА ВРЕМЕНИ ---
 function openBlockTimeModal() {
-    const today = new Date().toLocaleDateString('ru-RU');
-    document.getElementById('blockDate').value = today;
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    
+    document.getElementById('blockDate').value = `${yyyy}-${mm}-${dd}`; // Формат для input type="date"
     document.getElementById('blockStartTime').value = '';
     document.getElementById('blockEndTime').value = '';
     openModal('blockTimeModal');
 }
 
 function addTimeBlock() {
-    const date = document.getElementById('blockDate').value;
+    const dateInput = document.getElementById('blockDate').value; // Получаем YYYY-MM-DD
     const start = document.getElementById('blockStartTime').value;
     const end = document.getElementById('blockEndTime').value;
 
-    if (!start || !end) return showToast('Укажите время начала и конца', 'error');
+    if (!dateInput || !start || !end) return showToast('Укажите дату, время начала и конца', 'error');
 
-    // Переводим время в минуты для удобного сравнения
+    // Конвертируем YYYY-MM-DD в DD.MM.YYYY (формат, в котором хранятся все записи)
+    const [y, m, d] = dateInput.split('-');
+    const date = `${d}.${m}.${y}`;
+
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
     const newStart = startH * 60 + startM;
@@ -778,9 +817,8 @@ function addTimeBlock() {
     activeBookings.forEach(b => {
         const [bH, bM] = b.time.split(':').map(Number);
         const bStart = bH * 60 + bM;
-        const bEnd = bStart + 90; // Буфер 1.5 часа (90 минут) на стрижку
+        const bEnd = bStart + 90; // Буфер 1.5 часа
 
-        // Проверка на пересечение интервалов
         if (newStart < bEnd && newEnd > bStart) {
             hasOverlap = true;
             conflictTime = b.time;
@@ -866,7 +904,6 @@ function renderFinanceDateSelector() {
     }, 50);
 }
 
-// --- ФИНАНСЫ (Только Админ) ---
 function renderFinance() {
     renderFinanceDateSelector();
     
@@ -913,75 +950,81 @@ function renderFinance() {
     }
     document.getElementById('financeMonthExpenses').innerText = `${totalExpensesMonth} ₽`;
 
-        // --- 3. АНАЛИТИКА (КОМПАКТНАЯ) ---
+    // --- 3. АНАЛИТИКА ЗА ДЕНЬ ---
     const dayBookings = bookings.filter(b => b.date === targetDate && b.status === 'completed');
     const clientsCount = dayBookings.length;
 
-    const serviceCounts = {};
+    const serviceCountsForDay = {};
     dayBookings.forEach(b => {
         b.services.forEach(s => {
-            serviceCounts[s.title] = (serviceCounts[s.title] || 0) + 1;
+            serviceCountsForDay[s.title] = (serviceCountsForDay[s.title] || 0) + 1;
         });
     });
-    let topService = '-';
-    let maxCount = 0;
-    for (const [title, count] of Object.entries(serviceCounts)) {
-        if (count > maxCount) { maxCount = count; topService = title; }
-    }
 
+    const sortedServicesDay = Object.entries(serviceCountsForDay).sort((a, b) => b[1] - a[1]);
+
+    const analyticsHeader = document.getElementById('analyticsHeaderBlock');
     const analyticsList = document.getElementById('analyticsHistoryList');
     
-    // Блок за выбранный день (сверху)
-    let analyticsHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); margin-bottom: 10px;">
-            <div>
-                <div style="font-size: 14px; font-weight: 800; color: var(--gold);">${targetDate}</div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Топ: <b>${topService}</b></div>
+    if (analyticsHeader) {
+        analyticsHeader.innerHTML = `
+            <div style="font-size: 15px; font-weight: 800; color: var(--gold);">${targetDate}</div>
+            <div style="text-align: right; display: flex; align-items: baseline; gap: 5px;">
+                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1;">${clientsCount}</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">клиентов</div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1;">${clientsCount}</div>
-                <div style="font-size: 9px; color: var(--text-muted);">клиентов</div>
-            </div>
-        </div>
-        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); margin: 10px 0 5px 5px; text-transform: uppercase;">История за 30 дней</div>
-    `;
+        `;
+    }
 
-    // История (компактные карточки)
-    for (let i = 0; i < 30; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toLocaleDateString('ru-RU');
-        if (dateStr === targetDate) continue; 
-        
-        const pastBookings = bookings.filter(b => b.date === dateStr && b.status === 'completed');
-        const pastClients = pastBookings.length;
-
-        const pastServices = {};
-        pastBookings.forEach(b => {
-            b.services.forEach(s => {
-                pastServices[s.title] = (pastServices[s.title] || 0) + 1;
-            });
-        });
-        let pastTop = '-';
-        let pastMax = 0;
-        for (const [title, count] of Object.entries(pastServices)) {
-            if (count > pastMax) { pastMax = count; pastTop = title; }
-        }
-
-        if (pastClients > 0) {
-            analyticsHTML += `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px;">
-                    <div>
-                        <div style="font-size: 12px; font-weight: 700; color: var(--text-main);">${dateStr}</div>
-                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 1px;">${pastTop}</div>
-                    </div>
-                    <div style="font-size: 14px; font-weight: 800; color: var(--gold);">${pastClients} <span style="font-size: 10px; color: var(--text-muted);">чел.</span></div>
+    if (analyticsList) {
+        if (sortedServicesDay.length > 0) {
+            analyticsList.innerHTML = sortedServicesDay.map(([title, count]) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: var(--text-main); font-weight: 600;">${title}</span>
+                    <span style="font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></span>
                 </div>
-            `;
+            `).join('');
+        } else {
+            analyticsList.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 5px 0;">Нет данных за этот день</div>';
         }
     }
-    
-    analyticsList.innerHTML = analyticsHTML;
+
+    // --- 4. ПОПУЛЯРНЫЕ УСЛУГИ (30 ДНЕЙ) ---
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentBookings = bookings.filter(b => {
+        if (b.status !== 'completed') return false;
+        const parts = b.date.split('.');
+        const bDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        return bDate >= thirtyDaysAgo;
+    });
+
+    const allServicesCount = {};
+    recentBookings.forEach(b => {
+        b.services.forEach(s => {
+            allServicesCount[s.title] = (allServicesCount[s.title] || 0) + 1;
+        });
+    });
+
+    const topServicesAll = Object.entries(allServicesCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const topServicesList = document.getElementById('analyticsTopServicesList');
+
+        if (topServicesList) {
+        if (topServicesAll.length === 0) {
+            topServicesList.innerHTML = `<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 10px 0;">Нет данных за последние 30 дней</div>`;
+        } else {
+            topServicesList.innerHTML = topServicesAll.map(([title, count]) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${title}</div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></div>
+                </div>
+            `).join('');
+        }
+    }
 }
 
 
@@ -1024,15 +1067,15 @@ function renderTeam() {
     }
 
     const html = mockStaff.map(s => `
-        <div class="glass-card" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding: 15px;">
+        <div class="glass-card" onclick="showBarberStats('${s.id}')" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding: 15px; cursor: pointer;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h3 style="font-size: 16px; color: var(--gold);">${s.name}</h3>
                     <p style="font-size: 12px; color: var(--text-muted);">${s.role === 'admin' ? 'Главный мастер' : 'Барбер'} | PIN: ${s.pin}</p>
                 </div>
                 <div style="display: flex; gap: 5px;">
-                    <button class="action-modal-btn action-btn-primary" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="resetStaffPin('${s.id}')">Сбросить PIN</button>
-                    ${s.role !== 'admin' ? `<button class="action-modal-btn action-btn-danger" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="deleteStaff('${s.id}')">Удалить</button>` : ''}
+                    <button class="action-modal-btn action-btn-primary" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="event.stopPropagation(); resetStaffPin('${s.id}')">Сбросить PIN</button>
+                    ${s.role !== 'admin' ? `<button class="action-modal-btn action-btn-danger" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="event.stopPropagation(); deleteStaff('${s.id}')">Удалить</button>` : ''}
                 </div>
             </div>
         </div>
@@ -1095,6 +1138,79 @@ function deleteStaff(id) {
             renderTeam();
         }
     }
+}
+
+
+// --- АНАЛИТИКА БАРБЕРА ---
+function showBarberStats(id) {
+    const staff = mockStaff.find(s => s.id === id);
+    if (!staff) return;
+
+    document.getElementById('statsBarberName').innerText = staff.name;
+
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const todayStr = today.toLocaleDateString('ru-RU');
+
+    // Получаем все завершенные записи этого мастера
+    const allCompleted = bookings.filter(b => b.barberId === id && b.status === 'completed');
+    
+    // За текущий месяц
+    const monthBookings = allCompleted.filter(b => {
+        const [d, m, y] = b.date.split('.');
+        return parseInt(y) === currentYear && (parseInt(m) - 1) === currentMonth;
+    });
+
+    // За сегодня
+    const todayBookings = allCompleted.filter(b => b.date === todayStr);
+
+    // Считаем суммы
+    const monthRevenue = monthBookings.reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+    const todayRevenue = todayBookings.reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+    
+    const monthSalary = Math.round(monthRevenue * 0.4);
+    const todaySalary = Math.round(todayRevenue * 0.4);
+
+    // Уникальные клиенты за месяц
+    const uniqueClients = new Set(monthBookings.map(b => b.clientName));
+
+    // Топ услуга за месяц
+    const serviceCounts = {};
+    monthBookings.forEach(b => {
+        b.services.forEach(s => {
+            serviceCounts[s.title] = (serviceCounts[s.title] || 0) + 1;
+        });
+    });
+    let topService = '-';
+    let topCount = 0;
+    for (const [title, count] of Object.entries(serviceCounts)) {
+        if (count > topCount) { topCount = count; topService = title; }
+    }
+
+    // Заполняем данные
+    document.getElementById('statsMonthVisits').innerText = monthBookings.length;
+    document.getElementById('statsMonthClients').innerText = uniqueClients.size;
+    document.getElementById('statsMonthRevenue').innerText = monthRevenue + ' ₽';
+    document.getElementById('statsMonthSalary').innerText = monthSalary + ' ₽';
+    
+    document.getElementById('statsTodayVisits').innerText = todayBookings.length;
+    document.getElementById('statsTodayRevenue').innerText = todayRevenue + ' ₽';
+    document.getElementById('statsTodaySalary').innerText = todaySalary + ' ₽';
+
+    document.getElementById('statsTopService').innerText = topService;
+    document.getElementById('statsTopServiceCount').innerText = topCount + ' раз';
+
+    // Настраиваем кнопку сброса PIN
+    const resetBtn = document.getElementById('statsResetPinBtn');
+    if (resetBtn) {
+        resetBtn.onclick = () => {
+            closeModal('barberStatsModal');
+            resetStaffPin(id);
+        };
+    }
+
+    openModal('barberStatsModal');
 }
 
 // Добавь эту переменную в начало скрипта или прямо перед функцией
@@ -1178,18 +1294,60 @@ function renderClients(tab = 'all') {
 
 function showClientDetails(name, barberId) {
     const myBookings = bookings.filter(b => b.clientName === name && b.barberId === barberId);
-    myBookings.sort((a, b) => b.date.localeCompare(a.date));
+    
+    // Правильная сортировка: от старых к новым
+    myBookings.sort((a, b) => {
+        const [d1, m1, y1] = a.date.split('.');
+        const [h1, min1] = a.time.split(':');
+        const t1 = new Date(y1, m1 - 1, d1, h1, min1).getTime();
+
+        const [d2, m2, y2] = b.date.split('.');
+        const [h2, min2] = b.time.split(':');
+        const t2 = new Date(y2, m2 - 1, d2, h2, min2).getTime();
+
+        return t2 - t1;
+    });
     
     let total = 0;
-    const history = myBookings.map(b => {
-        if (b.status === 'completed') total += b.services.reduce((s, serv) => s + serv.price, 0);
-        const statusText = b.status === 'completed' ? '✅' : (b.status === 'cancelled' ? '❌' : '🕐');
-        const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
-        return `${statusText} ${b.date} в ${b.time} — ${b.services.map(s => s.title).join(', ')} (${masterName})`;
-    }).join('\n');
+    let completedCount = 0;
     
-    const masterName = mockStaff.find(s => s.id === barberId)?.name || '';
-    alert(`👤 ${name} ${currentUser.role === 'admin' && currentClientsTab === 'all' ? '(Мастер: ' + masterName + ')' : ''}\n\nВсего визитов: ${myBookings.length}\nПотрачено: ${total} ₽\n\nИстория:\n${history}`);
+    const historyHTML = myBookings.map(b => {
+        if (b.status === 'completed') {
+            total += b.services.reduce((s, serv) => s + serv.price, 0);
+            completedCount++;
+        }
+        
+        let statusIcon = '🕐';
+        let statusColor = '#888';
+        if (b.status === 'completed') { statusIcon = '✅'; statusColor = '#4CAF50'; }
+        else if (b.status === 'cancelled') { statusIcon = '❌'; statusColor = '#ff4d4d'; }
+
+        const servicesText = b.services.map(s => s.title).join(', ');
+        const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
+
+        return `
+            <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border-left: 3px solid ${statusColor}; flex-shrink: 0;">
+                <div style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">${statusIcon}</div>
+                <div style="flex-grow: 1;">
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${b.date} в ${b.time}</div>
+                    <div style="font-size: 12px; color: var(--gold); margin-top: 4px;">${servicesText}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${masterName}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('clientDetailsName').innerText = name;
+    document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => s.id === barberId)?.name || 'Мастер';
+    document.getElementById('clientDetailsVisits').innerText = completedCount;
+    document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
+    
+    const historyContainer = document.getElementById('clientDetailsHistory');
+    if (historyContainer) {
+        historyContainer.innerHTML = historyHTML || '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">История пуста</div>';
+    }
+
+    openModal('clientDetailsModal');
 }
 // --- ПРОФИЛЬ ---
 function renderBarberRevenue() {
