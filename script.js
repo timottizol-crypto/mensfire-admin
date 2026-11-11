@@ -483,7 +483,6 @@ function handleSwipe(startX, startY, endX, endY) {
             el.classList.add('is-cancelled');
             setTimeout(() => el.classList.remove('is-cancelled'), 450);
             if (navigator.vibrate) { try { navigator.vibrate(30); } catch (_) {} }
-            if (typeof showToast === 'function') showToast('Действие отменено', 'info');
         }, 2000);
     }, { passive: true });
 
