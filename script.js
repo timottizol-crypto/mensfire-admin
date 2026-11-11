@@ -23,6 +23,12 @@ const servicesData = {
 };
 
 let currentFinanceTab = 'expenses'; // По умолчанию Расходы
+let selectedBlockDate = "";
+let pickerYear = new Date().getFullYear();
+let pickerMonth = new Date().getMonth(); // 0-11
+let editingBlockId = null;
+let confirmCallback = null;
+let staffToResetPin = null;
 
 let currentUser = JSON.parse(localStorage.getItem('mensfire_admin_user')) || null;
 // --- ГЕНЕРАЦИЯ ДЕМО-ДАННЫХ ---
@@ -310,6 +316,24 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+function showConfirm(title, text, yesText, callback) {
+    document.getElementById('confirmModalTitle').innerText = title;
+    document.getElementById('confirmModalText').innerText = text;
+    const yesBtn = document.getElementById('confirmModalYesBtn');
+    yesBtn.innerText = yesText;
+    
+    // Сбрасываем старый обработчик, чтобы не было багов
+    const newYesBtn = yesBtn.cloneNode(true);
+    yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+    
+    newYesBtn.onclick = () => {
+        closeModal('confirmModal');
+        callback();
+    };
+    
+    openModal('confirmModal');
+}
+
 function openModal(id) {
     document.getElementById(id).classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -564,7 +588,7 @@ function renderSchedule() {
         const createCard = (b, isBlock) => {
             if (isBlock) {
                 return `
-                    <div class="home-booking-item" style="border-left-style: dashed; border-left-color: #888; background: rgba(255,255,255,0.02); margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; opacity: 0.8; width: 100%; box-sizing: border-box;">
+                    <div class="home-booking-item" onclick="openBlockActionModal(${b.id})" style="cursor: pointer; border-left-style: dashed; border-left-color: #888; background: rgba(255,255,255,0.02); margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; opacity: 0.8; width: 100%; box-sizing: border-box;">
                         <div class="hb-info" style="flex: 1; min-width: 0;">
                             <div class="hb-date" style="color: #888; font-size: 14px;">${b.startTime} - ${b.endTime}</div>
                             <div class="hb-services" style="font-size: 12px; white-space: normal;">Перерыв / Личные дела</div>
@@ -772,27 +796,89 @@ function cancelBooking() {
 
 // --- БЛОКИРОВКА ВРЕМЕНИ ---
 function openBlockTimeModal() {
+    editingBlockId = null; // Сбрасываем режим редактирования при создании новой блокировки
     const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+    selectedBlockDate = today.toLocaleDateString('ru-RU');
+    document.getElementById('customDateDisplay').innerText = selectedBlockDate;
     
-    document.getElementById('blockDate').value = `${yyyy}-${mm}-${dd}`; // Формат для input type="date"
+    pickerYear = today.getFullYear();
+    pickerMonth = today.getMonth();
+
     document.getElementById('blockStartTime').value = '';
     document.getElementById('blockEndTime').value = '';
+    
+    // Возвращаем заголовок и кнопку в исходное состояние
+    document.querySelector('#blockTimeModal h2').innerText = 'Блокировка времени';
+    document.querySelector('#blockTimeModal .checkout-btn').innerText = 'Заблокировать';
+
     openModal('blockTimeModal');
 }
 
+// Функции для календаря
+function openCustomDatePicker() {
+    renderCalendar();
+    openModal('calendarModal');
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    document.getElementById('calendarMonthYearDisplay').innerText = `${monthNames[pickerMonth]} ${pickerYear}`;
+
+    grid.innerHTML = '';
+    
+    const firstDay = new Date(pickerYear, pickerMonth, 1);
+    let startDayOfWeek = firstDay.getDay(); // 0=Вс, 1=Пн
+    if (startDayOfWeek === 0) startDayOfWeek = 7; // Сдвигаем Вс на 7 место
+    
+    const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+
+    // Пустые ячейки до 1-го числа
+    for (let i = 1; i < startDayOfWeek; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day empty';
+        grid.appendChild(empty);
+    }
+
+    // Дни месяца
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.innerText = i;
+        
+        const thisDateStr = `${String(i).padStart(2, '0')}.${String(pickerMonth + 1).padStart(2, '0')}.${pickerYear}`;
+        
+        if (thisDateStr === selectedBlockDate) {
+            dayDiv.classList.add('selected');
+        }
+
+        dayDiv.onclick = () => {
+            selectedBlockDate = thisDateStr;
+            document.getElementById('customDateDisplay').innerText = selectedBlockDate;
+            closeModal('calendarModal');
+        };
+        grid.appendChild(dayDiv);
+    }
+}
+
+function changeMonth(delta) {
+    pickerMonth += delta;
+    if (pickerMonth < 0) {
+        pickerMonth = 11;
+        pickerYear--;
+    } else if (pickerMonth > 11) {
+        pickerMonth = 0;
+        pickerYear++;
+    }
+    renderCalendar();
+}
+
 function addTimeBlock() {
-    const dateInput = document.getElementById('blockDate').value; // Получаем YYYY-MM-DD
     const start = document.getElementById('blockStartTime').value;
     const end = document.getElementById('blockEndTime').value;
+    const date = selectedBlockDate;
 
-    if (!dateInput || !start || !end) return showToast('Укажите дату, время начала и конца', 'error');
-
-    // Конвертируем YYYY-MM-DD в DD.MM.YYYY (формат, в котором хранятся все записи)
-    const [y, m, d] = dateInput.split('-');
-    const date = `${d}.${m}.${y}`;
+    if (!start || !end || !date) return showToast('Укажите дату, время начала и конца', 'error');
 
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
@@ -803,7 +889,6 @@ function addTimeBlock() {
         return showToast('Время окончания должно быть позже начала', 'error');
     }
 
-    // Ищем активные записи этого мастера на выбранную дату
     const activeBookings = bookings.filter(b =>
         b.date === date &&
         b.barberId === currentUser.id &&
@@ -816,7 +901,7 @@ function addTimeBlock() {
     activeBookings.forEach(b => {
         const [bH, bM] = b.time.split(':').map(Number);
         const bStart = bH * 60 + bM;
-        const bEnd = bStart + 90; // Буфер 1.5 часа
+        const bEnd = bStart + 90;
 
         if (newStart < bEnd && newEnd > bStart) {
             hasOverlap = true;
@@ -828,20 +913,76 @@ function addTimeBlock() {
         return showToast(`Нельзя: пересекается с записью в ${conflictTime} (нужно минимум 1.5 ч)`, 'error');
     }
 
-    const newBlock = {
-        id: Date.now(),
-        barberId: currentUser.id,
-        date: date,
-        startTime: start,
-        endTime: end
-    };
+    if (editingBlockId) {
+        // Если редактируем — обновляем существующий
+        const blockIndex = timeBlocks.findIndex(tb => tb.id === editingBlockId);
+        if (blockIndex !== -1) {
+            timeBlocks[blockIndex].date = date;
+            timeBlocks[blockIndex].startTime = start;
+            timeBlocks[blockIndex].endTime = end;
+            showToast('Время успешно изменено', 'success');
+        }
+    } else {
+        // Если создаем — добавляем новый
+        const newBlock = {
+            id: Date.now(),
+            barberId: currentUser.id,
+            date: date,
+            startTime: start,
+            endTime: end
+        };
+        timeBlocks.push(newBlock);
+        showToast('Время успешно заблокировано', 'success');
+    }
 
-    timeBlocks.push(newBlock);
     localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
-    
     closeModal('blockTimeModal');
-    showToast('Время успешно заблокировано', 'success');
     renderSchedule();
+}
+
+// --- УПРАВЛЕНИЕ БЛОКИРОВКОЙ ---
+function openBlockActionModal(id) {
+    editingBlockId = id;
+    openModal('blockActionModal');
+}
+
+function editTimeBlock() {
+    const block = timeBlocks.find(tb => tb.id === editingBlockId);
+    if (!block) return;
+
+    // Заполняем поля данными из блокировки
+    selectedBlockDate = block.date;
+    document.getElementById('customDateDisplay').innerText = block.date;
+    
+    // Устанавливаем даты в календаре
+    const parts = block.date.split('.');
+    pickerYear = parseInt(parts[2]);
+    pickerMonth = parseInt(parts[1]) - 1;
+
+    document.getElementById('blockStartTime').value = block.startTime;
+    document.getElementById('blockEndTime').value = block.endTime;
+
+    // Меняем заголовок и кнопку на "Редактирование"
+    document.querySelector('#blockTimeModal h2').innerText = 'Редактирование перерыва';
+    document.querySelector('#blockTimeModal .checkout-btn').innerText = 'Сохранить изменения';
+
+    closeModal('blockActionModal');
+    openModal('blockTimeModal');
+}
+
+function deleteTimeBlock() {
+    showConfirm(
+        'Удалить перерыв?', 
+        'Это действие нельзя отменить.', 
+        'Да, удалить', 
+        () => {
+            timeBlocks = timeBlocks.filter(tb => tb.id !== editingBlockId);
+            localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
+            closeModal('blockActionModal');
+            showToast('Перерыв удален', 'success');
+            renderSchedule();
+        }
+    );
 }
 
 function switchFinanceTab(tab) {
@@ -1113,30 +1254,52 @@ function addStaff() {
 }
 
 function resetStaffPin(id) {
-    const newPin = prompt('Введите новый PIN (4 цифры):');
-    if (newPin && newPin.length === 4) {
-        const staff = mockStaff.find(s => s.id === id);
-        if (staff) {
-            staff.pin = newPin;
-            localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
-            showToast('PIN обновлен', 'success');
-            renderTeam();
+    staffToResetPin = id;
+    document.getElementById('adminNewPinInput').value = '';
+    openModal('adminResetPinModal');
+}
+
+function submitAdminResetPin() {
+    const newPin = document.getElementById('adminNewPinInput').value;
+    if (!newPin || newPin.length !== 4) {
+        return showToast('PIN должен состоять из 4 цифр', 'error');
+    }
+    
+    // Проверка, что PIN не занят
+    if (mockStaff.some(s => s.pin === newPin)) {
+        return showToast('Этот PIN уже занят', 'error');
+    }
+
+    const staff = mockStaff.find(s => s.id === staffToResetPin);
+    if (staff) {
+        staff.pin = newPin;
+        localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+        closeModal('adminResetPinModal');
+        showToast('PIN обновлен', 'success');
+        renderTeam();
+        
+        // Обновляем статистику, если она открыта
+        if (document.getElementById('barberStatsModal').classList.contains('active')) {
+            showBarberStats(staffToResetPin);
         }
-    } else if (newPin) {
-        showToast('PIN должен состоять из 4 цифр', 'error');
     }
 }
 
 function deleteStaff(id) {
-    if (confirm('Удалить мастера?')) {
-        const index = mockStaff.findIndex(s => s.id === id);
-        if (index !== -1) {
-            mockStaff.splice(index, 1);
-            localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
-            showToast('Мастер удален', 'success');
-            renderTeam();
+    showConfirm(
+        'Удалить мастера?', 
+        'Мастер и его доступ будут удалены.', 
+        'Да, удалить', 
+        () => {
+            const index = mockStaff.findIndex(s => s.id === id);
+            if (index !== -1) {
+                mockStaff.splice(index, 1);
+                localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+                showToast('Мастер удален', 'success');
+                renderTeam();
+            }
         }
-    }
+    );
 }
 
 

@@ -349,8 +349,7 @@
             <h2 style="margin-bottom: 15px; font-size: 20px;">Блокировка времени</h2>
             <div class="form-group">
                 <label>Дата</label>
-                <!-- МЕНЯЕМ type="text" readonly на type="date" -->
-                <input type="date" id="blockDate" style="color-scheme: dark; width: 100%; padding: 15px; background: rgba(18, 18, 18, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; color: #fff; font-size: 15px; outline: none;">
+                <div id="customDateDisplay" onclick="openCustomDatePicker()" class="custom-date-input">Выберите дату</div>
             </div>
             <div class="form-group">
                 <label>Время начала (ЧЧ:ММ)</label>
@@ -458,6 +457,57 @@
                 <button class="action-modal-btn action-btn-primary" id="statsResetPinBtn" onclick="" style="margin: 0;">Сбросить PIN</button>
                 <button class="action-modal-btn action-btn-cancel" onclick="closeModal('barberStatsModal')" style="margin: 0;">Закрыть</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Модалка выбора даты (Календарь) -->
+    <div class="modal" id="calendarModal">
+        <div class="modal-content" style="max-width: 380px;">
+            <div class="calendar-header">
+                <button type="button" class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
+                <div id="calendarMonthYearDisplay" style="font-size: 16px; font-weight: 800; color: var(--gold);">Ноябрь 2026</div>
+                <button type="button" class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
+            </div>
+            <div class="calendar-weekdays">
+                <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Дни генерируются через JS -->
+            </div>
+            <button class="btn-cancel" style="margin-top: 20px;" onclick="closeModal('calendarModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Управление блокировкой -->
+    <div class="modal" id="blockActionModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px; font-size: 20px;">Управление перерывом</h2>
+            <button class="action-modal-btn action-btn-primary" onclick="editTimeBlock()">Изменить</button>
+            <button class="action-modal-btn action-btn-danger" onclick="deleteTimeBlock()">Удалить</button>
+            <button class="action-modal-btn action-btn-cancel" onclick="closeModal('blockActionModal')">Закрыть</button>
+        </div>
+    </div>
+
+        <!-- Универсальная модалка подтверждения -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h2 id="confirmModalTitle" style="margin-bottom: 15px; font-size: 20px;">Подтверждение</h2>
+            <p id="confirmModalText" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Вы уверены?</p>
+            <button class="action-modal-btn action-btn-danger" id="confirmModalYesBtn">Да</button>
+            <button class="action-modal-btn action-btn-cancel" onclick="closeModal('confirmModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модалка сброса PIN мастеру (для Админа) -->
+    <div class="modal" id="adminResetPinModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; font-size: 20px;">Сброс PIN-кода</h2>
+            <div class="form-group">
+                <label>Новый PIN (4 цифры)</label>
+                <input type="number" id="adminNewPinInput" placeholder="0000" maxlength="4">
+            </div>
+            <button class="checkout-btn" onclick="submitAdminResetPin()">Сохранить</button>
+            <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('adminResetPinModal')">Отмена</button>
         </div>
     </div>
 

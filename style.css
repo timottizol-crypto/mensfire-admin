@@ -2108,3 +2108,89 @@ body.header-hidden .view.active {
     background: rgba(212, 175, 55, 0.3);
     border-radius: 10px;
 }
+
+/* =========================================
+   КАСТОМНЫЙ ВЫБОР ДАТЫ (КАЛЕНДАРЬ)
+   ========================================= */
+.custom-date-input {
+    width: 100%;
+    padding: 15px;
+    background: rgba(18, 18, 18, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--gold);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: border 0.3s var(--smooth);
+}
+.custom-date-input:active { transform: scale(0.98); }
+html.light-theme .custom-date-input { background: rgba(0, 0, 0, 0.03); }
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.cal-nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--gold);
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.cal-nav-btn:active { transform: scale(0.9); }
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.calendar-day:hover:not(.empty) {
+    background: rgba(255, 255, 255, 0.1);
+}
+.calendar-day.selected {
+    background: var(--gold);
+    color: #000;
+    font-weight: 800;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+.calendar-day.empty {
+    cursor: default;
+}
+html.light-theme .calendar-day:hover:not(.empty) {
+    background: rgba(0, 0, 0, 0.05);
+}
