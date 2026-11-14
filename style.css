@@ -2845,3 +2845,15 @@ html.light-theme .calendar-day:hover:not(.empty) {
 .new-booking-duration strong {
     color: var(--gold);
 }
+.desktop-staff-track {
+    cursor: crosshair;
+}
+
+.desktop-staff-track:hover {
+    background-color: rgba(212, 175, 55, 0.025);
+}
+
+.desktop-booking-card,
+.desktop-break-card {
+    cursor: pointer;
+}

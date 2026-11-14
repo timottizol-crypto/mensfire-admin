@@ -869,7 +869,9 @@ function renderDesktopSchedule() {
                     <span>${barber.role === 'admin' ? 'Администратор' : 'Барбер'}</span>
                 </button>
 
-                <div class="desktop-staff-track" style="height:${totalHeight}px">
+                <div class="desktop-staff-track"
+                    style="height:${totalHeight}px"
+                    onclick="openNewBookingFromSlot(event, '${barber.id}', '${date}')">
         `;
 
         for (let i = 0; i <= (END_HOUR - START_HOUR) * 4; i++) {
@@ -892,7 +894,7 @@ function renderDesktopSchedule() {
                 html += `
                     <button class="desktop-booking-card ${booking.status || 'active'}"
                         style="top:${top}px;height:${height}px"
-                        onclick="openActionModal(${booking.id})">
+                        >onclick="event.stopPropagation(); openActionModal(${booking.id})"
                         <strong>${booking.time} · ${booking.clientName}</strong>
                         <span>${serviceNames}</span>
                         <small>${duration} мин. · ${booking.status === 'completed'
@@ -914,7 +916,7 @@ function renderDesktopSchedule() {
                 html += `
                     <button class="desktop-break-card"
                         style="top:${top}px;height:${height}px"
-                        onclick="openBlockActionModal(${block.id})">
+                        onclick="event.stopPropagation(); openBlockActionModal(${block.id})">
                         <strong>${block.startTime}–${block.endTime}</strong>
                         <span>Перерыв</span>
                     </button>
@@ -1152,6 +1154,34 @@ function changeMonth(delta) {
         pickerYear++;
     }
     renderCalendar();
+}
+
+
+
+function openNewBookingFromSlot(event, barberId, date) {
+    if (currentScheduleTab !== 'bookings') return;
+
+    const track = event.currentTarget;
+    const rect = track.getBoundingClientRect();
+
+    const SLOT_HEIGHT = 24;
+    const START_HOUR = 8;
+
+    const offsetY = Math.max(0, event.clientY - rect.top);
+    const slotIndex = Math.floor(offsetY / SLOT_HEIGHT);
+
+    const totalMinutes = START_HOUR * 60 + slotIndex * 15;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (totalMinutes + 45 > 22 * 60) {
+        showToast('На это время нельзя поставить запись', 'error');
+        return;
+    }
+
+    const time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+    openNewBookingModal(barberId, time, date);
 }
 
 
