@@ -964,15 +964,91 @@ function switchScheduleTab(tab) {
     renderSchedule();
 }
 
+
 function openActionModal(id) {
-    const booking = bookings.find(b => b.id === id);
-    if (!booking || booking.status !== 'active') {
-        showToast('Эта запись уже завершена или отменена', 'info');
+    const booking = bookings.find(b => String(b.id) === String(id));
+    if (!booking) {
+        showToast('Запись не найдена', 'error');
         return;
     }
-    selectedBookingId = id;
+
+    selectedBookingId = booking.id;
+
+    const details = document.getElementById('actionBookingDetails');
+    const completeBtn = document.getElementById('completeBookingBtn');
+    const cancelBtn = document.getElementById('cancelBookingBtn');
+
+    const barber = mockStaff.find(s => s.id === booking.barberId);
+    const services = booking.services || [];
+    const total = services.reduce((sum, service) =>
+        sum + (Number(service.price) || 0), 0);
+
+    const statusLabels = {
+        active: 'Активная',
+        completed: 'Завершена',
+        cancelled: 'Отменена'
+    };
+
+    const status = statusLabels[booking.status] || booking.status || 'Не указан';
+
+    details.innerHTML = `
+        <div class="booking-detail-status ${booking.status || 'active'}">
+            ${status}
+        </div>
+
+        <div class="booking-detail-main">
+            <div class="booking-detail-client">${booking.clientName || 'Клиент'}</div>
+            <div class="booking-detail-date">${booking.date} · ${booking.time}</div>
+        </div>
+
+        <div class="booking-detail-row">
+            <span>Мастер</span>
+            <strong id="bookingDetailMaster"></strong>
+        </div>
+
+        <div class="booking-detail-row">
+            <span>Услуги</span>
+            <strong>${services.map(s => s.title).join(', ') || 'Не указаны'}</strong>
+        </div>
+
+        <div class="booking-detail-row">
+            <span>Количество услуг</span>
+            <strong>${services.length}</strong>
+        </div>
+
+        <div class="booking-detail-row">
+            <span>Стоимость</span>
+            <strong>${total.toLocaleString('ru-RU')} ₽</strong>
+        </div>
+
+        <div class="booking-detail-row booking-detail-total">
+            <span>Длительность</span>
+            <strong>${services.length ? services.length * 45 : 0} мин.</strong>
+        </div>
+
+        <button type="button" class="booking-client-link" id="bookingClientLink">
+            Открыть историю клиента →
+        </button>
+    `;
+
+    const masterEl = document.getElementById('bookingDetailMaster');
+    if (masterEl) masterEl.textContent = barber?.name || '—';
+
+    const clientBtn = document.getElementById('bookingClientLink');
+    if (clientBtn) {
+        clientBtn.onclick = () => {
+            closeModal('actionModal');
+            showClientDetails(booking.clientName, booking.barberId);
+        };
+    }
+
+    const isActive = booking.status === 'active';
+    completeBtn.style.display = isActive ? 'flex' : 'none';
+    cancelBtn.style.display = isActive ? 'flex' : 'none';
+
     openModal('actionModal');
 }
+
 
 function completeBooking() {
     const booking = bookings.find(b => b.id === selectedBookingId);

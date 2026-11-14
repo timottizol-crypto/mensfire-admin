@@ -300,12 +300,26 @@
     <!-- МОДАЛКИ -->
 
     <!-- Управление записью -->
+        
     <div class="modal" id="actionModal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px; font-size: 20px;">Управление записью</h2>
-            <button class="action-modal-btn action-btn-primary" onclick="completeBooking()">Завершить</button>
-            <button class="action-modal-btn action-btn-danger" onclick="cancelBooking()">Отменить</button>
-            <button class="action-modal-btn action-btn-cancel" onclick="closeModal('actionModal')">Закрыть</button>
+        <div class="modal-content booking-detail-modal">
+            <div class="booking-detail-heading">
+                <h2>Детали записи</h2>
+                <button class="close-btn" onclick="closeModal('actionModal')">&times;</button>
+            </div>
+
+            <div id="actionBookingDetails" class="booking-detail-content"></div>
+
+            <button id="completeBookingBtn"
+                class="action-modal-btn action-btn-primary"
+                onclick="completeBooking()">Завершить запись</button>
+
+            <button id="cancelBookingBtn"
+                class="action-modal-btn action-btn-danger"
+                onclick="cancelBooking()">Отменить запись</button>
+
+            <button class="action-modal-btn action-btn-cancel"
+                onclick="closeModal('actionModal')">Закрыть</button>
         </div>
     </div>
 
