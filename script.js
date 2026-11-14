@@ -97,6 +97,7 @@ let expenses = JSON.parse(localStorage.getItem('mensfire_admin_expenses')) || []
 seedDatabase();
 
 let selectedBookingId = null;
+let editingBookingId = null;
 let viewOrder = []; // Заполнится в зависимости от роли
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
@@ -1091,6 +1092,65 @@ function openActionModal(id) {
     openModal('actionModal');
 }
 
+function openEditBooking() {
+    const booking = bookings.find(
+        b => String(b.id) === String(selectedBookingId)
+    );
+
+    if (!booking) {
+        return showToast('Запись не найдена', 'error');
+    }
+
+    if (booking.status !== 'active') {
+        return showToast('Можно редактировать только активные записи', 'error');
+    }
+
+    editingBookingId = booking.id;
+
+    const availableStaff = currentUser.role === 'admin'
+        ? mockStaff
+        : mockStaff.filter(s => s.id === currentUser.id);
+
+    const barberSelect = document.getElementById('newBookingBarber');
+
+    barberSelect.innerHTML = availableStaff.map(s =>
+        `<option value="${s.id}">${s.name}</option>`
+    ).join('');
+
+    if (!availableStaff.some(s => s.id === booking.barberId)) {
+        return showToast('Нет доступа к этому мастеру', 'error');
+    }
+
+    barberSelect.value = booking.barberId;
+
+    document.getElementById('newBookingClient').value = booking.clientName;
+
+    const [day, month, year] = booking.date.split('.');
+    document.getElementById('newBookingDate').value =
+        `${year}-${month}-${day}`;
+
+    document.getElementById('newBookingTime').value = booking.time;
+
+    updateNewBookingServices();
+
+    const selectedIds = (booking.services || []).map(s => s.id);
+
+    document.querySelectorAll('#newBookingServicesList input').forEach(input => {
+        input.checked = selectedIds.includes(input.value);
+    });
+
+    updateNewBookingSummary();
+
+    document.querySelector('#newBookingModal h2').textContent =
+        'Редактирование записи';
+
+    document.querySelector('#newBookingModal .checkout-btn').textContent =
+        'Сохранить изменения';
+
+    closeModal('actionModal');
+    openModal('newBookingModal');
+}
+
 
 function completeBooking() {
     const booking = bookings.find(b => b.id === selectedBookingId);
@@ -1254,6 +1314,10 @@ function openNewBookingFromSlot(event, barberId, date) {
 
 
 function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
+    editingBookingId = null;
+
+    document.querySelector('#newBookingModal h2').textContent = 'Новая запись';
+    document.querySelector('#newBookingModal .checkout-btn').textContent = 'Создать запись';
     const barberSelect = document.getElementById('newBookingBarber');
     const dateInput = document.getElementById('newBookingDate');
     const timeInput = document.getElementById('newBookingTime');
@@ -1370,6 +1434,8 @@ function saveNewBooking() {
         aStart < bEnd && aEnd > bStart;
 
     const bookingConflict = bookings.some(b => {
+        if (String(b.id) === String(editingBookingId)) return false;
+
         if (b.date !== date || b.barberId !== barberId || b.status !== 'active') {
             return false;
         }
@@ -1398,22 +1464,40 @@ function saveNewBooking() {
         return showToast('Это время занято перерывом', 'error');
     }
 
-    bookings.push({
-        id: Date.now(),
+    const bookingData = {
         barberId,
         clientName,
         time,
         date,
-        services: selectedServices.map(s => ({ ...s })),
-        status: 'active'
-    });
+        services: selectedServices.map(s => ({ ...s }))
+    };
+
+    if (editingBookingId) {
+        const existingBooking = bookings.find(
+            b => String(b.id) === String(editingBookingId)
+        );
+
+        if (!existingBooking) {
+            return showToast('Запись не найдена', 'error');
+        }
+
+        Object.assign(existingBooking, bookingData);
+    } else {
+        bookings.push({
+            id: Date.now(),
+            ...bookingData,
+            status: 'active'
+        });
+    }
+
+    editingBookingId = null;
 
     localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
 
     selectedScheduleDate = date;
     closeModal('newBookingModal');
     renderSchedule();
-    showToast('Запись успешно создана', 'success');
+    showToast('Изменения сохранены', 'success');
 }
 
 
