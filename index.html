@@ -237,6 +237,14 @@
                 
                 <!-- Контейнер для кнопок (Мои / Все) — они не будут скроллиться -->
                 <div id="clientsTabsContainer"></div>
+                <div style="margin-bottom: 12px;">
+                    <input
+                        type="search"
+                        id="clientsSearch"
+                        placeholder="Поиск по имени или телефону..."
+                        oninput="setClientsSearchQuery(this.value)"
+                        style="width: 100%;">
+                </div>
                 
                 <!-- Сам список (только он будет скроллиться) -->
                 <div id="clientsList" class="home-scroll-area" style="flex-grow: 1; overflow-y: auto; max-height: none;">

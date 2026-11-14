@@ -2051,6 +2051,12 @@ function showBarberStats(id) {
 
 // Добавь эту переменную в начало скрипта или прямо перед функцией
 let currentClientsTab = 'all'; 
+let clientsSearchQuery = '';
+
+function setClientsSearchQuery(value) {
+    clientsSearchQuery = value.trim().toLowerCase();
+    renderClients(currentClientsTab);
+}
 
 let clientProfiles = JSON.parse(
     localStorage.getItem('mensfire_client_profiles')
@@ -2116,7 +2122,17 @@ function renderClients(tab = 'all') {
         }
     });
 
-    const clientArray = Object.values(clients).sort((a, b) => b.visits.length - a.visits.length);
+    const clientArray = Object.values(clients)
+    .filter(c => {
+        const key = JSON.stringify([c.name, c.barberId]);
+        const phone = clientProfiles[key]?.phone || '';
+
+        return (
+            c.name.toLowerCase().includes(clientsSearchQuery) ||
+            phone.toLowerCase().includes(clientsSearchQuery)
+        );
+    })
+    .sort((a, b) => b.visits.length - a.visits.length);
     
     if (clientArray.length === 0) {
         list.innerHTML = '<div class="empty-bookings-msg" style="font-size: 16px;">Клиентов пока нет</div>';
