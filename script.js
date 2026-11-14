@@ -642,6 +642,11 @@ function renderSchedule() {
         if (greetEl) greetEl.innerText = 'Расписание';
 
         const isPC = window.innerWidth >= 768;
+        if (isPC) {
+            renderDesktopSchedule();
+            list.style.opacity = '1';
+            return;
+        }
         if (emptyPhrasesTimer) clearInterval(emptyPhrasesTimer);
 
         // Функция создания карточки
@@ -785,6 +790,146 @@ function renderSchedule() {
         list.style.opacity = '1';
     }, 200);
 }
+
+
+function renderDesktopSchedule() {
+    const view = document.getElementById('viewSchedule');
+    if (!view) return;
+
+    let calendar = document.getElementById('desktopSchedule');
+
+    if (!calendar) {
+        calendar = document.createElement('div');
+        calendar.id = 'desktopSchedule';
+        view.insertBefore(calendar, view.querySelector('.home-cta-btn'));
+    }
+
+    const date = selectedScheduleDate;
+    const staff = currentUser.role === 'admin'
+        ? mockStaff
+        : mockStaff.filter(s => s.id === currentUser.id);
+
+    const START_HOUR = 8;
+    const END_HOUR = 22;
+    const SLOT_HEIGHT = 24; // 15 минут = 24px
+    const HOUR_HEIGHT = SLOT_HEIGHT * 4;
+
+    const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
+
+    const toMinutes = time => {
+        const [h, m] = time.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    const timeLabel = hour =>
+        `${String(hour).padStart(2, '0')}:00`;
+
+    let html = `
+        <div class="desktop-calendar-toolbar">
+            <div>
+                <strong>${date}</strong>
+                <span>${staff.length} маст.</span>
+            </div>
+            <div class="desktop-calendar-tabs">
+                <button class="${currentScheduleTab === 'bookings' ? 'active' : ''}"
+                    onclick="switchScheduleTab('bookings')">Записи</button>
+                <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}"
+                    onclick="switchScheduleTab('breaks')">Перерывы</button>
+            </div>
+        </div>
+
+        <div class="desktop-calendar-scroll">
+            <div class="desktop-calendar-grid">
+                <div class="desktop-time-column">
+                    <div class="desktop-staff-heading">Время</div>
+                    <div class="desktop-time-track" style="height:${totalHeight}px">
+                        ${Array.from({length: END_HOUR - START_HOUR + 1}, (_, i) =>
+                            `<div class="desktop-time-label" style="top:${i * HOUR_HEIGHT}px">
+                                ${timeLabel(START_HOUR + i)}
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+    `;
+
+    staff.forEach(barber => {
+        const barberBookings = bookings.filter(b =>
+            b.date === date && b.barberId === barber.id
+        );
+
+        const barberBlocks = timeBlocks.filter(b =>
+            b.date === date && b.barberId === barber.id
+        );
+
+        html += `
+            <div class="desktop-staff-column">
+                <button class="desktop-staff-heading"
+                    onclick="showBarberStats('${barber.id}')">
+                    <strong>${barber.name}</strong>
+                    <span>${barber.role === 'admin' ? 'Администратор' : 'Барбер'}</span>
+                </button>
+
+                <div class="desktop-staff-track" style="height:${totalHeight}px">
+        `;
+
+        for (let i = 0; i <= (END_HOUR - START_HOUR) * 4; i++) {
+            html += `<div class="desktop-time-line ${i % 4 === 0 ? 'hour' : ''}"
+                style="top:${i * SLOT_HEIGHT}px"></div>`;
+        }
+
+        if (currentScheduleTab === 'bookings') {
+            barberBookings.forEach(booking => {
+                const start = toMinutes(booking.time);
+                const top = (start - START_HOUR * 60) / 15 * SLOT_HEIGHT;
+
+                if (top < 0 || top >= totalHeight) return;
+
+                const duration = 45;
+                const height = duration / 15 * SLOT_HEIGHT;
+                const serviceNames = (booking.services || [])
+                    .map(s => s.title).join(', ');
+
+                html += `
+                    <button class="desktop-booking-card ${booking.status || 'active'}"
+                        style="top:${top}px;height:${height}px"
+                        onclick="openActionModal(${booking.id})">
+                        <strong>${booking.time} · ${booking.clientName}</strong>
+                        <span>${serviceNames}</span>
+                        <small>${duration} мин. · ${booking.status === 'completed'
+                            ? 'Завершена'
+                            : booking.status === 'cancelled'
+                                ? 'Отменена' : 'Активная'}</small>
+                    </button>
+                `;
+            });
+        } else {
+            barberBlocks.forEach(block => {
+                const start = toMinutes(block.startTime);
+                const end = toMinutes(block.endTime);
+                const top = (start - START_HOUR * 60) / 15 * SLOT_HEIGHT;
+                const height = (end - start) / 15 * SLOT_HEIGHT;
+
+                if (top < 0 || top >= totalHeight || height <= 0) return;
+
+                html += `
+                    <button class="desktop-break-card"
+                        style="top:${top}px;height:${height}px"
+                        onclick="openBlockActionModal(${block.id})">
+                        <strong>${block.startTime}–${block.endTime}</strong>
+                        <span>Перерыв</span>
+                    </button>
+                `;
+            });
+        }
+
+        html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+
+    calendar.innerHTML = html;
+}
+
 
 function renderDateSelector() {
     const container = document.getElementById('scheduleDateSelector');
