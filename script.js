@@ -394,15 +394,54 @@ function showConfirm(title, text, yesText, callback) {
     openModal('confirmModal');
 }
 
+
 function openModal(id) {
-    document.getElementById(id).classList.add('active');
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById(id);
+    if (!modal) return;
+
+    const drawerIds = [
+        'actionModal',
+        'newBookingModal',
+        'blockTimeModal',
+        'blockActionModal',
+        'clientDetailsModal',
+        'barberStatsModal'
+    ];
+
+    const isDesktopDrawer = window.innerWidth >= 768 &&
+        drawerIds.includes(id);
+
+    if (isDesktopDrawer) {
+        modal.classList.add('drawer-modal');
+        document.body.classList.add('mensfire-drawer-open');
+
+        const schedule = document.getElementById('viewSchedule');
+        if (schedule) schedule.classList.add('drawer-space');
+    } else {
+        modal.classList.remove('drawer-modal');
+    }
+
+    modal.classList.add('active');
+
+    if (!isDesktopDrawer) {
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
+    const modal = document.getElementById(id);
+    if (!modal) return;
+
+    modal.classList.remove('active', 'drawer-modal');
+
+    document.body.classList.remove('mensfire-drawer-open');
+
+    const schedule = document.getElementById('viewSchedule');
+    if (schedule) schedule.classList.remove('drawer-space');
+
     document.body.style.overflow = '';
 }
+
 
 function toggleTheme() {
     const html = document.documentElement;
