@@ -357,6 +357,50 @@
         </div>
     </div>
 
+
+    <!-- Создание новой записи -->
+    <div class="modal" id="newBookingModal">
+        <div class="modal-content new-booking-modal">
+            <div class="new-booking-heading">
+                <h2>Новая запись</h2>
+                <button class="close-btn" onclick="closeModal('newBookingModal')">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="newBookingClient">Имя клиента</label>
+                <input id="newBookingClient" type="text" placeholder="Введите имя клиента">
+            </div>
+
+            <div class="form-group">
+                <label for="newBookingBarber">Мастер</label>
+                <select id="newBookingBarber" onchange="updateNewBookingServices()"></select>
+            </div>
+
+            <div class="form-group">
+                <label for="newBookingService">Услуга</label>
+                <select id="newBookingService"></select>
+            </div>
+
+            <div class="form-group">
+                <label for="newBookingDate">Дата</label>
+                <input id="newBookingDate" type="date">
+            </div>
+
+            <div class="form-group">
+                <label for="newBookingTime">Время начала</label>
+                <input id="newBookingTime" type="time" min="08:00" max="21:15" step="900">
+            </div>
+
+            <div class="new-booking-duration">
+                Длительность: <strong>45 минут</strong>
+            </div>
+
+            <button class="checkout-btn" onclick="saveNewBooking()">Создать запись</button>
+            <button class="btn-cancel" onclick="closeModal('newBookingModal')">Отмена</button>
+        </div>
+    </div>
+
+
     <!-- Блокировка времени -->
     <div class="modal" id="blockTimeModal">
         <div class="modal-content">

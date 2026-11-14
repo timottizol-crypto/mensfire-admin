@@ -1154,6 +1154,132 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
+
+function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
+    const barberSelect = document.getElementById('newBookingBarber');
+    const dateInput = document.getElementById('newBookingDate');
+    const timeInput = document.getElementById('newBookingTime');
+    const clientInput = document.getElementById('newBookingClient');
+
+    if (!barberSelect || !dateInput || !timeInput || !clientInput) return;
+
+    const availableStaff = currentUser.role === 'admin'
+        ? mockStaff
+        : mockStaff.filter(s => s.id === currentUser.id);
+
+    barberSelect.innerHTML = availableStaff.map(s =>
+        `<option value="${s.id}">${s.name}</option>`
+    ).join('');
+
+    const defaultBarber = barberId || currentUser.id;
+    if (availableStaff.some(s => s.id === defaultBarber)) {
+        barberSelect.value = defaultBarber;
+    }
+
+    const parts = date.split('.');
+    dateInput.value = parts.length === 3
+        ? `${parts[2]}-${parts[1]}-${parts[0]}`
+        : '';
+
+    timeInput.value = time || '10:00';
+    clientInput.value = '';
+
+    updateNewBookingServices();
+    openModal('newBookingModal');
+}
+
+function updateNewBookingServices() {
+    const barberId = document.getElementById('newBookingBarber')?.value;
+    const serviceSelect = document.getElementById('newBookingService');
+    if (!barberId || !serviceSelect) return;
+
+    const catalog = barberId === 'b_al'
+        ? servicesData.top
+        : servicesData.barber;
+
+    serviceSelect.innerHTML = catalog.map(service =>
+        `<option value="${service.id}">${service.title} — ${service.price.toLocaleString('ru-RU')} ₽</option>`
+    ).join('');
+}
+
+function saveNewBooking() {
+    const clientName = document.getElementById('newBookingClient').value.trim();
+    const barberId = document.getElementById('newBookingBarber').value;
+    const serviceId = document.getElementById('newBookingService').value;
+    const dateValue = document.getElementById('newBookingDate').value;
+    const time = document.getElementById('newBookingTime').value;
+
+    if (!clientName || !barberId || !serviceId || !dateValue || !time) {
+        return showToast('Заполните все поля', 'error');
+    }
+
+    const date = new Date(`${dateValue}T12:00:00`).toLocaleDateString('ru-RU');
+    const [hours, minutes] = time.split(':').map(Number);
+    const start = hours * 60 + minutes;
+    const end = start + 45;
+
+    if (start < 8 * 60 || end > 22 * 60) {
+        return showToast('Выберите время в диапазоне 08:00–21:15', 'error');
+    }
+
+    const overlaps = (aStart, aEnd, bStart, bEnd) =>
+        aStart < bEnd && aEnd > bStart;
+
+    const bookingConflict = bookings.some(b => {
+        if (b.date !== date || b.barberId !== barberId || b.status !== 'active') {
+            return false;
+        }
+
+        const [h, m] = b.time.split(':').map(Number);
+        const bStart = h * 60 + m;
+        const bDuration = Math.max(45, (b.services || []).length * 45);
+
+        return overlaps(start, end, bStart, bStart + bDuration);
+    });
+
+    if (bookingConflict) {
+        return showToast('У мастера уже есть запись на это время', 'error');
+    }
+
+    const blockConflict = timeBlocks.some(block => {
+        if (block.date !== date || block.barberId !== barberId) return false;
+
+        const [sh, sm] = block.startTime.split(':').map(Number);
+        const [eh, em] = block.endTime.split(':').map(Number);
+
+        return overlaps(start, end, sh * 60 + sm, eh * 60 + em);
+    });
+
+    if (blockConflict) {
+        return showToast('Это время занято перерывом', 'error');
+    }
+
+    const catalog = barberId === 'b_al'
+        ? servicesData.top
+        : servicesData.barber;
+
+    const service = catalog.find(s => s.id === serviceId);
+    if (!service) return showToast('Услуга не найдена', 'error');
+
+    bookings.push({
+        id: Date.now(),
+        barberId,
+        clientName,
+        time,
+        date,
+        services: [{ ...service }],
+        status: 'active'
+    });
+
+    localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
+
+    selectedScheduleDate = date;
+    closeModal('newBookingModal');
+    renderSchedule();
+    showToast('Запись успешно создана', 'success');
+}
+
+
 function addTimeBlock() {
     const start = document.getElementById('blockStartTime').value;
     const end = document.getElementById('blockEndTime').value;
