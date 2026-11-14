@@ -2981,3 +2981,16 @@ html.light-theme .calendar-day:hover:not(.empty) {
         overflow: auto !important;
     }
 }
+
+
+@media (min-width: 768px) {
+    #appContainer #viewSchedule.drawer-space {
+        width: calc(100% - var(--mensfire-content-left) - 440px) !important;
+        max-width: calc(100% - var(--mensfire-content-left) - 440px) !important;
+    }
+
+    #appContainer #viewSchedule.drawer-space .desktop-calendar-scroll {
+        width: 100%;
+        max-width: 100%;
+    }
+}

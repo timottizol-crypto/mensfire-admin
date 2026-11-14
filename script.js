@@ -931,9 +931,10 @@ function renderDesktopSchedule() {
                     .map(s => s.title).join(', ');
 
                 html += `
-                    <button class="desktop-booking-card ${booking.status || 'active'}"
+                    <button type="button"
+                        class="desktop-booking-card ${booking.status || 'active'}"
                         style="top:${top}px;height:${height}px"
-                        >onclick="event.stopPropagation(); openActionModal(${booking.id})"
+                        onclick="event.stopPropagation(); openActionModal('${booking.id}')">
                         <strong>${booking.time} · ${booking.clientName}</strong>
                         <span>${serviceNames}</span>
                         <small>${duration} мин. · ${booking.status === 'completed'
