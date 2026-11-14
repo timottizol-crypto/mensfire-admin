@@ -2052,6 +2052,27 @@ function showBarberStats(id) {
 // Добавь эту переменную в начало скрипта или прямо перед функцией
 let currentClientsTab = 'all'; 
 
+let clientProfiles = JSON.parse(
+    localStorage.getItem('mensfire_client_profiles')
+) || {};
+
+let selectedClientProfileKey = null;
+
+function saveClientProfile() {
+    if (!selectedClientProfileKey) return;
+
+    clientProfiles[selectedClientProfileKey] = {
+        phone: document.getElementById('clientDetailsPhone').value.trim(),
+        notes: document.getElementById('clientDetailsNotes').value.trim()
+    };
+
+    localStorage.setItem(
+        'mensfire_client_profiles',
+        JSON.stringify(clientProfiles)
+    );
+
+    showToast('Данные клиента сохранены', 'success');
+}
 function renderClients(tab = 'all') {
     currentClientsTab = tab;
     const list = document.getElementById('clientsList');
@@ -2174,6 +2195,15 @@ function showClientDetails(name, barberId) {
     }).join('');
 
     document.getElementById('clientDetailsName').innerText = name;
+    selectedClientProfileKey = JSON.stringify([name, barberId]);
+
+    const profile = clientProfiles[selectedClientProfileKey] || {};
+
+    document.getElementById('clientDetailsPhone').value =
+        profile.phone || '';
+
+    document.getElementById('clientDetailsNotes').value =
+        profile.notes || '';
     document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => s.id === barberId)?.name || 'Мастер';
     document.getElementById('clientDetailsVisits').innerText = completedCount;
     document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
