@@ -198,51 +198,100 @@ function logout() {
     showToast('Вы вышли из системы', 'info');
 }
 
+
 function buildBottomNav() {
     const nav = document.getElementById('bottomNav');
     nav.innerHTML = '<div class="nav-bubble" id="navBubble"></div>';
-    
+
     let navItems = [];
     viewOrder = [];
 
-    if (currentUser.role === 'admin') {
-        const isPC = window.innerWidth >= 768;
-        navItems = [
-            { id: 'viewSchedule', title: 'Расписание', icon: '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>' },
-            { id: 'viewFinance', title: 'Финансы', icon: '<path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>' }
-        ];
-        
-        // Добавляем "Команду" только если это НЕ ПК
-        if (!isPC) {
-            navItems.push({ id: 'viewTeam', title: 'Команда', icon: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' });
-        }
+    const calendarIcon = '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>';
+    const financeIcon = '<path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>';
+    const teamIcon = '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>';
+    const clientsIcon = '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>';
 
-        navItems.push(
-            { id: 'viewClients', title: 'Клиенты', icon: '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' },
-            { id: 'viewProfile', title: 'Профиль', icon: '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' }
-        );
-        
-        viewOrder = navItems.map(item => item.id);
+    if (currentUser.role === 'admin') {
+        navItems = [
+            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
+            { id: 'viewFinance', title: 'Финансы', icon: financeIcon },
+            { id: 'viewTeam', title: 'Команда', icon: teamIcon },
+            { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
+            { id: 'viewProfile', title: 'Профиль', icon: clientsIcon }
+        ];
     } else {
         navItems = [
-            { id: 'viewSchedule', title: 'Расписание', icon: '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>' },
-            { id: 'viewClients', title: 'Клиенты', icon: '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' },
-            { id: 'viewProfile', title: 'Профиль', icon: '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' }
+            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
+            { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
+            { id: 'viewProfile', title: 'Профиль', icon: clientsIcon }
         ];
-        viewOrder = ['viewSchedule', 'viewClients', 'viewProfile'];
     }
+
+    viewOrder = navItems.map(item => item.id);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'desktop-nav-toggle';
+    toggle.id = 'desktopNavToggle';
+    toggle.innerHTML = '<span class="nav-toggle-icon">‹</span><span class="nav-toggle-label">Свернуть меню</span>';
+    toggle.setAttribute('aria-label', 'Свернуть или развернуть меню');
+    toggle.onclick = toggleDesktopNav;
+    nav.appendChild(toggle);
 
     navItems.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = `nav-item ${index === 0 ? 'active' : ''}`;
         div.setAttribute('data-view', item.id);
-        div.innerHTML = `<svg viewBox="0 0 24 24">${item.icon}</svg> ${item.title}`;
+        div.innerHTML = `<svg viewBox="0 0 24 24">${item.icon}</svg><span class="nav-item-label">${item.title}</span>`;
         div.onclick = () => switchView(item.id, div);
         nav.appendChild(div);
     });
 
+    initDesktopNav();
     initNavBubble();
 }
+
+function initDesktopNav() {
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+
+    const savedState = localStorage.getItem('mensfire_desktop_nav');
+    const isCollapsed = savedState === 'collapsed';
+
+    nav.classList.toggle('desktop-collapsed', isCollapsed);
+    updateDesktopNavToggle();
+}
+
+function toggleDesktopNav() {
+    if (window.innerWidth < 768) return;
+
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+
+    const isCollapsed = nav.classList.toggle('desktop-collapsed');
+
+    localStorage.setItem(
+        'mensfire_desktop_nav',
+        isCollapsed ? 'collapsed' : 'expanded'
+    );
+
+    updateDesktopNavToggle();
+}
+
+function updateDesktopNavToggle() {
+    const nav = document.getElementById('bottomNav');
+    const toggle = document.getElementById('desktopNavToggle');
+
+    if (!nav || !toggle) return;
+
+    const isCollapsed = nav.classList.contains('desktop-collapsed');
+    const icon = toggle.querySelector('.nav-toggle-icon');
+    const label = toggle.querySelector('.nav-toggle-label');
+
+    if (icon) icon.textContent = isCollapsed ? '›' : '‹';
+    if (label) label.textContent = isCollapsed ? 'Развернуть меню' : 'Свернуть меню';
+}
+
 
 function switchView(viewId, navElement) {
     const currentView = document.querySelector('.view.active');

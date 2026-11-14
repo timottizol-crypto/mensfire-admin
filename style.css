@@ -2194,3 +2194,182 @@ html.light-theme .custom-date-input { background: rgba(0, 0, 0, 0.03); }
 html.light-theme .calendar-day:hover:not(.empty) {
     background: rgba(0, 0, 0, 0.05);
 }
+
+
+/* =========================================
+   MENSFIRE — НОВАЯ DESKTOP НАВИГАЦИЯ
+   ========================================= */
+
+@media (min-width: 768px) {
+    #bottomNav.bottom-nav {
+        position: fixed !important;
+        top: 18px !important;
+        bottom: 18px !important;
+        left: 18px !important;
+        right: auto !important;
+
+        width: 248px !important;
+        min-width: 248px !important;
+        max-width: 248px !important;
+        height: auto !important;
+
+        transform: none !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+
+        padding: 18px 12px !important;
+        border-radius: 22px !important;
+        background: rgba(24, 24, 26, 0.94) !important;
+        border: 1px solid rgba(255,255,255,0.09) !important;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.22) !important;
+
+        overflow: visible !important;
+        z-index: 500 !important;
+
+        transition: width 0.3s ease, min-width 0.3s ease,
+                    max-width 0.3s ease !important;
+    }
+
+    #bottomNav .nav-bubble {
+        display: none !important;
+    }
+
+    #bottomNav .desktop-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+
+        width: 100%;
+        min-height: 46px;
+        padding: 0 13px;
+        margin-bottom: 14px;
+
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    #bottomNav .desktop-nav-toggle:hover {
+        color: var(--gold);
+        border-color: var(--gold);
+        background: rgba(212,175,55,0.07);
+    }
+
+    #bottomNav .nav-toggle-icon {
+        font-size: 23px;
+        line-height: 1;
+    }
+
+    #bottomNav .nav-item {
+        flex: none !important;
+        width: 100% !important;
+        height: 48px !important;
+        min-height: 48px !important;
+
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 14px !important;
+
+        padding: 0 14px !important;
+        border-radius: 12px !important;
+
+        color: var(--text-muted) !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+    }
+
+    #bottomNav .nav-item svg {
+        width: 19px !important;
+        height: 19px !important;
+        min-width: 19px !important;
+        margin: 0 !important;
+    }
+
+    #bottomNav .nav-item.active {
+        color: var(--gold) !important;
+        background: rgba(212,175,55,0.12) !important;
+    }
+
+    #bottomNav .nav-item.active svg {
+        transform: none !important;
+    }
+
+    #bottomNav.desktop-collapsed {
+        width: 76px !important;
+        min-width: 76px !important;
+        max-width: 76px !important;
+        padding: 18px 10px !important;
+    }
+
+    #bottomNav.desktop-collapsed .desktop-nav-toggle {
+        justify-content: center;
+        padding: 0;
+    }
+
+    #bottomNav.desktop-collapsed .nav-toggle-label,
+    #bottomNav.desktop-collapsed .nav-item-label {
+        display: none !important;
+    }
+
+    #bottomNav.desktop-collapsed .nav-item {
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    /* Рабочая область с учётом ширины меню */
+    #appContainer .view {
+        width: calc(100% - 284px) !important;
+        max-width: none !important;
+        margin-left: 284px !important;
+        padding-left: 30px !important;
+        padding-right: 30px !important;
+        transition: width 0.3s ease, margin-left 0.3s ease;
+    }
+
+    #appContainer .view.active {
+        width: calc(100% - 284px) !important;
+        margin-left: 284px !important;
+    }
+
+    #appContainer #bottomNav.desktop-collapsed ~ .view {
+        width: calc(100% - 112px) !important;
+        margin-left: 112px !important;
+    }
+
+    .app-header {
+        left: 284px !important;
+        width: calc(100% - 284px) !important;
+        padding: 0 30px !important;
+        transition: left 0.3s ease, width 0.3s ease;
+    }
+
+    #bottomNav.desktop-collapsed ~ .app-header {
+        left: 112px !important;
+        width: calc(100% - 112px) !important;
+    }
+}
+
+/* Светлая тема боковой панели */
+@media (min-width: 768px) {
+    html.light-theme #bottomNav.bottom-nav {
+        background: rgba(255,255,255,0.94) !important;
+        border-color: rgba(0,0,0,0.09) !important;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important;
+    }
+
+    html.light-theme #bottomNav .desktop-nav-toggle {
+        border-color: rgba(0,0,0,0.08);
+    }
+}
