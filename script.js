@@ -251,14 +251,19 @@ function buildBottomNav() {
     initNavBubble();
 }
 
+
 function initDesktopNav() {
     const nav = document.getElementById('bottomNav');
-    if (!nav) return;
+    const app = document.getElementById('appContainer');
 
-    const savedState = localStorage.getItem('mensfire_desktop_nav');
-    const isCollapsed = savedState === 'collapsed';
+    if (!nav || !app) return;
+
+    const isCollapsed =
+        localStorage.getItem('mensfire_desktop_nav') === 'collapsed';
 
     nav.classList.toggle('desktop-collapsed', isCollapsed);
+    app.classList.toggle('desktop-nav-collapsed', isCollapsed);
+
     updateDesktopNavToggle();
 }
 
@@ -266,9 +271,14 @@ function toggleDesktopNav() {
     if (window.innerWidth < 768) return;
 
     const nav = document.getElementById('bottomNav');
-    if (!nav) return;
+    const app = document.getElementById('appContainer');
 
-    const isCollapsed = nav.classList.toggle('desktop-collapsed');
+    if (!nav || !app) return;
+
+    const isCollapsed = !nav.classList.contains('desktop-collapsed');
+
+    nav.classList.toggle('desktop-collapsed', isCollapsed);
+    app.classList.toggle('desktop-nav-collapsed', isCollapsed);
 
     localStorage.setItem(
         'mensfire_desktop_nav',
@@ -277,6 +287,7 @@ function toggleDesktopNav() {
 
     updateDesktopNavToggle();
 }
+
 
 function updateDesktopNavToggle() {
     const nav = document.getElementById('bottomNav');

@@ -2429,3 +2429,65 @@ html.light-theme .calendar-day:hover:not(.empty) {
         padding-right: 18px !important;
     }
 }
+
+
+/* MENSFIRE — FIX SIDEBAR / WORKSPACE */
+
+@media (min-width: 768px) {
+
+    #appContainer {
+        --mensfire-sidebar: 248px;
+        --mensfire-content-left: 284px;
+    }
+
+    #appContainer.desktop-nav-collapsed {
+        --mensfire-sidebar: 76px;
+        --mensfire-content-left: 112px;
+    }
+
+    /* Левая панель */
+    #bottomNav.bottom-nav {
+        position: fixed !important;
+        left: 18px !important;
+        right: auto !important;
+
+        width: var(--mensfire-sidebar) !important;
+        min-width: var(--mensfire-sidebar) !important;
+        max-width: var(--mensfire-sidebar) !important;
+
+        transform: none !important;
+        transition:
+            width 0.3s ease,
+            min-width 0.3s ease,
+            max-width 0.3s ease !important;
+    }
+
+    /* Основная рабочая область */
+    #appContainer .view,
+    #appContainer .view.active {
+        width: calc(100% - var(--mensfire-content-left)) !important;
+        max-width: none !important;
+        margin-left: var(--mensfire-content-left) !important;
+        box-sizing: border-box !important;
+
+        transition:
+            width 0.3s ease,
+            margin-left 0.3s ease !important;
+    }
+
+    /* Верхняя панель */
+    #appContainer .app-header {
+        left: var(--mensfire-content-left) !important;
+        width: calc(100% - var(--mensfire-content-left)) !important;
+
+        transition:
+            left 0.3s ease,
+            width 0.3s ease !important;
+    }
+
+    /* Календарь занимает всю доступную ширину */
+    #appContainer #viewSchedule.active {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+}
