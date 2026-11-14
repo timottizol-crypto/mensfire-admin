@@ -2373,3 +2373,59 @@ html.light-theme .calendar-day:hover:not(.empty) {
         border-color: rgba(0,0,0,0.08);
     }
 }
+
+
+
+/* =========================================
+   MENSFIRE — АДАПТИВНАЯ DESKTOP-ОБЛАСТЬ
+   ========================================= */
+
+@media (min-width: 768px) {
+
+    #appContainer {
+        --sidebar-width: 248px;
+        --workspace-gap: 36px;
+    }
+
+    #appContainer.desktop-nav-collapsed {
+        --sidebar-width: 76px;
+        --workspace-gap: 112px;
+    }
+
+    #bottomNav.bottom-nav {
+        width: var(--sidebar-width) !important;
+        min-width: var(--sidebar-width) !important;
+        max-width: var(--sidebar-width) !important;
+    }
+
+    #appContainer .view,
+    #appContainer .view.active {
+        width: calc(100% - var(--workspace-gap)) !important;
+        max-width: none !important;
+        margin-left: var(--workspace-gap) !important;
+        box-sizing: border-box;
+        transition:
+            width 0.3s ease,
+            margin-left 0.3s ease,
+            padding 0.3s ease;
+    }
+
+    #appContainer .app-header {
+        left: var(--workspace-gap) !important;
+        width: calc(100% - var(--workspace-gap)) !important;
+        box-sizing: border-box;
+        transition:
+            left 0.3s ease,
+            width 0.3s ease;
+    }
+
+    #appContainer #viewSchedule.active {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    #appContainer.desktop-nav-collapsed #viewSchedule.active {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+}
