@@ -376,10 +376,19 @@
                 <select id="newBookingBarber" onchange="updateNewBookingServices()"></select>
             </div>
 
+            
             <div class="form-group">
-                <label for="newBookingService">Услуга</label>
-                <select id="newBookingService"></select>
+                <label>Услуги — можно выбрать несколько</label>
+                <div id="newBookingServicesList" class="new-booking-services-list"></div>
             </div>
+
+            <div class="new-booking-duration">
+                Длительность: <strong id="newBookingDuration">0 минут</strong>
+                <span class="new-booking-price">
+                    Стоимость: <strong id="newBookingPrice">0 ₽</strong>
+                </span>
+            </div>
+
 
             <div class="form-group">
                 <label for="newBookingDate">Дата</label>

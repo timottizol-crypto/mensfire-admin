@@ -2857,3 +2857,43 @@ html.light-theme .calendar-day:hover:not(.empty) {
 .desktop-break-card {
     cursor: pointer;
 }
+
+
+.new-booking-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.new-booking-service-option {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border-color, rgba(255,255,255,.12));
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.new-booking-service-option:has(input:checked) {
+    border-color: var(--gold);
+    background: rgba(212,175,55,.08);
+}
+
+.new-booking-service-option input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--gold);
+}
+
+.new-booking-service-option strong {
+    color: var(--gold);
+    white-space: nowrap;
+}
+
+.new-booking-price {
+    display: block;
+    margin-top: 6px;
+}

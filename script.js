@@ -886,7 +886,7 @@ function renderDesktopSchedule() {
 
                 if (top < 0 || top >= totalHeight) return;
 
-                const duration = 45;
+                const duration = Math.max(45, (booking.services || []).length * 45);
                 const height = duration / 15 * SLOT_HEIGHT;
                 const serviceNames = (booking.services || [])
                     .map(s => s.title).join(', ');
@@ -1218,38 +1218,84 @@ function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDa
     openModal('newBookingModal');
 }
 
+
 function updateNewBookingServices() {
     const barberId = document.getElementById('newBookingBarber')?.value;
-    const serviceSelect = document.getElementById('newBookingService');
-    if (!barberId || !serviceSelect) return;
+    const container = document.getElementById('newBookingServicesList');
+    if (!barberId || !container) return;
 
     const catalog = barberId === 'b_al'
         ? servicesData.top
         : servicesData.barber;
 
-    serviceSelect.innerHTML = catalog.map(service =>
-        `<option value="${service.id}">${service.title} — ${service.price.toLocaleString('ru-RU')} ₽</option>`
-    ).join('');
+    container.innerHTML = catalog.map(service => `
+        <label class="new-booking-service-option">
+            <input type="checkbox"
+                value="${service.id}"
+                onchange="updateNewBookingSummary()">
+            <span>${service.title}</span>
+            <strong>${service.price.toLocaleString('ru-RU')} ₽</strong>
+        </label>
+    `).join('');
+
+    updateNewBookingSummary();
 }
+
+function updateNewBookingSummary() {
+    const barberId = document.getElementById('newBookingBarber')?.value;
+    const container = document.getElementById('newBookingServicesList');
+    if (!barberId || !container) return;
+
+    const catalog = barberId === 'b_al'
+        ? servicesData.top
+        : servicesData.barber;
+
+    const selectedIds = [...container.querySelectorAll('input:checked')]
+        .map(input => input.value);
+
+    const selected = catalog.filter(s => selectedIds.includes(s.id));
+    const duration = selected.length * 45;
+    const price = selected.reduce((sum, s) => sum + Number(s.price || 0), 0);
+
+    document.getElementById('newBookingDuration').textContent =
+        `${duration} минут`;
+
+    document.getElementById('newBookingPrice').textContent =
+        `${price.toLocaleString('ru-RU')} ₽`;
+}
+
+
 
 function saveNewBooking() {
     const clientName = document.getElementById('newBookingClient').value.trim();
     const barberId = document.getElementById('newBookingBarber').value;
-    const serviceId = document.getElementById('newBookingService').value;
     const dateValue = document.getElementById('newBookingDate').value;
     const time = document.getElementById('newBookingTime').value;
+    const container = document.getElementById('newBookingServicesList');
 
-    if (!clientName || !barberId || !serviceId || !dateValue || !time) {
-        return showToast('Заполните все поля', 'error');
+    const catalog = barberId === 'b_al'
+        ? servicesData.top
+        : servicesData.barber;
+
+    const selectedIds = [...container.querySelectorAll('input:checked')]
+        .map(input => input.value);
+
+    const selectedServices = catalog.filter(s => selectedIds.includes(s.id));
+
+    if (!clientName || !barberId || !dateValue || !time || !selectedServices.length) {
+        return showToast('Укажите клиента, мастера, услуги, дату и время', 'error');
     }
 
-    const date = new Date(`${dateValue}T12:00:00`).toLocaleDateString('ru-RU');
+    const [year, month, day] = dateValue.split('-').map(Number);
+    const date = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+
     const [hours, minutes] = time.split(':').map(Number);
     const start = hours * 60 + minutes;
-    const end = start + 45;
+    const duration = selectedServices.length * 45;
+    const end = start + duration;
 
     if (start < 8 * 60 || end > 22 * 60) {
-        return showToast('Выберите время в диапазоне 08:00–21:15', 'error');
+        return showToast('Запись должна завершаться не позже 22:00', 'error');
     }
 
     const overlaps = (aStart, aEnd, bStart, bEnd) =>
@@ -1284,20 +1330,13 @@ function saveNewBooking() {
         return showToast('Это время занято перерывом', 'error');
     }
 
-    const catalog = barberId === 'b_al'
-        ? servicesData.top
-        : servicesData.barber;
-
-    const service = catalog.find(s => s.id === serviceId);
-    if (!service) return showToast('Услуга не найдена', 'error');
-
     bookings.push({
         id: Date.now(),
         barberId,
         clientName,
         time,
         date,
-        services: [{ ...service }],
+        services: selectedServices.map(s => ({ ...s })),
         status: 'active'
     });
 
@@ -1308,6 +1347,7 @@ function saveNewBooking() {
     renderSchedule();
     showToast('Запись успешно создана', 'success');
 }
+
 
 
 function addTimeBlock() {
