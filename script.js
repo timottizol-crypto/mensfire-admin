@@ -1105,6 +1105,10 @@ function openEditBooking() {
         return showToast('Можно редактировать только активные записи', 'error');
     }
 
+    if (!availableStaff.some(s => s.id === booking.barberId)) {
+        return showToast('Нет доступа к этому мастеру', 'error');
+    }
+
     editingBookingId = booking.id;
 
     const availableStaff = currentUser.role === 'admin'
@@ -1464,6 +1468,8 @@ function saveNewBooking() {
         return showToast('Это время занято перерывом', 'error');
     }
 
+    const wasEditing = Boolean(editingBookingId);
+
     const bookingData = {
         barberId,
         clientName,
@@ -1497,7 +1503,10 @@ function saveNewBooking() {
     selectedScheduleDate = date;
     closeModal('newBookingModal');
     renderSchedule();
-    showToast('Изменения сохранены', 'success');
+    showToast(
+    wasEditing ? 'Изменения сохранены' : 'Запись успешно создана',
+        'success'
+    );
 }
 
 
