@@ -1077,20 +1077,48 @@ function cancelBooking() {
     }
 }
 
+
+function updateBlockBarberSelect(selectedId = '') {
+    const group = document.getElementById('blockBarberGroup');
+    const select = document.getElementById('blockBarberSelect');
+    if (!group || !select) return;
+
+    const isAdmin = currentUser.role === 'admin';
+    group.style.display = isAdmin ? 'block' : 'none';
+
+    const staff = isAdmin
+        ? mockStaff
+        : mockStaff.filter(s => s.id === currentUser.id);
+
+    select.innerHTML = staff.map(s =>
+        `<option value="${s.id}">${s.name}</option>`
+    ).join('');
+
+    const targetId = selectedId || currentUser.id;
+    if (staff.some(s => s.id === targetId)) {
+        select.value = targetId;
+    }
+}
+
+
 // --- БЛОКИРОВКА ВРЕМЕНИ ---
+
 function openBlockTimeModal() {
-    editingBlockId = null; // Сбрасываем режим редактирования при создании новой блокировки
+    editingBlockId = null;
+
     const today = new Date();
     selectedBlockDate = today.toLocaleDateString('ru-RU');
+
     document.getElementById('customDateDisplay').innerText = selectedBlockDate;
-    
+
     pickerYear = today.getFullYear();
     pickerMonth = today.getMonth();
 
     document.getElementById('blockStartTime').value = '';
     document.getElementById('blockEndTime').value = '';
-    
-    // Возвращаем заголовок и кнопку в исходное состояние
+
+    updateBlockBarberSelect();
+
     document.querySelector('#blockTimeModal h2').innerText = 'Блокировка времени';
     document.querySelector('#blockTimeModal .checkout-btn').innerText = 'Заблокировать';
 
@@ -1350,72 +1378,107 @@ function saveNewBooking() {
 
 
 
+
 function addTimeBlock() {
     const start = document.getElementById('blockStartTime').value;
     const end = document.getElementById('blockEndTime').value;
     const date = selectedBlockDate;
 
-    if (!start || !end || !date) return showToast('Укажите дату, время начала и конца', 'error');
+    const barberId = currentUser.role === 'admin'
+        ? document.getElementById('blockBarberSelect').value
+        : currentUser.id;
 
-    const [startH, startM] = start.split(':').map(Number);
-    const [endH, endM] = end.split(':').map(Number);
-    const newStart = startH * 60 + startM;
-    const newEnd = endH * 60 + endM;
+    if (!start || !end || !date || !barberId) {
+        return showToast('Укажите мастера, дату и время', 'error');
+    }
+
+    const toMinutes = value => {
+        const [h, m] = value.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    const newStart = toMinutes(start);
+    const newEnd = toMinutes(end);
 
     if (newStart >= newEnd) {
         return showToast('Время окончания должно быть позже начала', 'error');
     }
 
+    if (newStart < 8 * 60 || newEnd > 22 * 60) {
+        return showToast('Перерыв должен быть в пределах 08:00–22:00', 'error');
+    }
+
+    const overlaps = (aStart, aEnd, bStart, bEnd) =>
+        aStart < bEnd && aEnd > bStart;
+
     const activeBookings = bookings.filter(b =>
         b.date === date &&
-        b.barberId === currentUser.id &&
+        b.barberId === barberId &&
         b.status === 'active'
     );
 
-    let hasOverlap = false;
-    let conflictTime = '';
+    const conflict = activeBookings.find(b => {
+        const bookingStart = toMinutes(b.time);
+        const duration = Math.max(45, (b.services || []).length * 45);
 
-    activeBookings.forEach(b => {
-        const [bH, bM] = b.time.split(':').map(Number);
-        const bStart = bH * 60 + bM;
-        const bEnd = bStart + 90;
-
-        if (newStart < bEnd && newEnd > bStart) {
-            hasOverlap = true;
-            conflictTime = b.time;
-        }
+        return overlaps(
+            newStart,
+            newEnd,
+            bookingStart,
+            bookingStart + duration
+        );
     });
 
-    if (hasOverlap) {
-        return showToast(`Нельзя: пересекается с записью в ${conflictTime} (нужно минимум 1.5 ч)`, 'error');
+    if (conflict) {
+        return showToast(`Перерыв пересекается с записью в ${conflict.time}`, 'error');
+    }
+
+    const blockConflict = timeBlocks.find(block => {
+        if (block.barberId !== barberId || block.date !== date) return false;
+        if (editingBlockId && String(block.id) === String(editingBlockId)) return false;
+
+        return overlaps(
+            newStart,
+            newEnd,
+            toMinutes(block.startTime),
+            toMinutes(block.endTime)
+        );
+    });
+
+    if (blockConflict) {
+        return showToast('В это время уже установлен перерыв', 'error');
     }
 
     if (editingBlockId) {
-        // Если редактируем — обновляем существующий
-        const blockIndex = timeBlocks.findIndex(tb => tb.id === editingBlockId);
-        if (blockIndex !== -1) {
-            timeBlocks[blockIndex].date = date;
-            timeBlocks[blockIndex].startTime = start;
-            timeBlocks[blockIndex].endTime = end;
-            showToast('Время успешно изменено', 'success');
-        }
+        const block = timeBlocks.find(b =>
+            String(b.id) === String(editingBlockId)
+        );
+
+        if (!block) return showToast('Перерыв не найден', 'error');
+
+        block.date = date;
+        block.barberId = barberId;
+        block.startTime = start;
+        block.endTime = end;
     } else {
-        // Если создаем — добавляем новый
-        const newBlock = {
+        timeBlocks.push({
             id: Date.now(),
-            barberId: currentUser.id,
-            date: date,
+            barberId,
+            date,
             startTime: start,
             endTime: end
-        };
-        timeBlocks.push(newBlock);
-        showToast('Время успешно заблокировано', 'success');
+        });
     }
 
     localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
+
     closeModal('blockTimeModal');
+    showToast(editingBlockId ? 'Перерыв обновлён' : 'Перерыв добавлен', 'success');
+
+    editingBlockId = null;
     renderSchedule();
 }
+
 
 // --- УПРАВЛЕНИЕ БЛОКИРОВКОЙ ---
 function openBlockActionModal(id) {
@@ -1429,6 +1492,7 @@ function editTimeBlock() {
 
     // Заполняем поля данными из блокировки
     selectedBlockDate = block.date;
+    updateBlockBarberSelect(block.barberId);
     document.getElementById('customDateDisplay').innerText = block.date;
     
     // Устанавливаем даты в календаре
