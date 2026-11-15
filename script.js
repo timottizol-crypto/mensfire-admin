@@ -2987,11 +2987,16 @@ function renderClients(tab = 'all') {
         const loyalClients = allClientGroups.filter(client => client.completedCount >= 3).length;
         const visitTotal = allClientGroups.reduce((sum,client) => sum + client.completedCount,0);
         const spentTotal = allClientGroups.reduce((sum,client) => sum + client.totalSpent,0);
+        const completedRevenueTotal = allClientGroups.reduce((sum,client) => sum + client.completedRevenue,0);
+        const averageCheck = visitTotal ? Math.round(completedRevenueTotal / visitTotal) : 0;
+        const upcomingClients = allClientGroups.filter(client => client.visits.some(visit => visit.status !== 'cancelled' && parseClientDateTime(visit) >= Date.now())).length;
         clientsOverview.innerHTML = `
-            <div class="client-overview-card"><span>Клиентов</span><strong>${allClientGroups.length}</strong></div>
-            <div class="client-overview-card"><span>Постоянных</span><strong>${loyalClients}</strong></div>
-            <div class="client-overview-card"><span>Завершённых визитов</span><strong>${visitTotal}</strong></div>
-            <div class="client-overview-card"><span>Оплачено всего</span><strong>${Math.round(spentTotal).toLocaleString('ru-RU')} ₽</strong></div>`;
+            <div class="client-overview-card"><span>Клиентов</span><strong>${allClientGroups.length}</strong><small>Уникальные гости</small></div>
+            <div class="client-overview-card"><span>Постоянных</span><strong>${loyalClients}</strong><small>От 3 завершённых визитов</small></div>
+            <div class="client-overview-card"><span>Завершённых визитов</span><strong>${visitTotal}</strong><small>За всё время</small></div>
+            <div class="client-overview-card"><span>Средний чек</span><strong>${averageCheck.toLocaleString('ru-RU')} ₽</strong><small>По завершённым визитам</small></div>
+            <div class="client-overview-card"><span>Оплачено всего</span><strong>${Math.round(spentTotal).toLocaleString('ru-RU')} ₽</strong><small>Фактически получено</small></div>
+            <div class="client-overview-card"><span>Есть запись</span><strong>${upcomingClients}</strong><small>Будущие визиты</small></div>`;
     }
 
     const clientArray = Object.values(groupedClients)
@@ -3023,6 +3028,9 @@ function renderClients(tab = 'all') {
             const parsed = new Date(year, month - 1, day).getTime();
             return Number.isFinite(parsed) ? parsed : 0;
         };
+        const completedAverageCheck = c.completedCount ? Math.round(c.completedRevenue / c.completedCount) : 0;
+        const upcomingVisit = c.visits.filter(visit => visit.status !== 'cancelled' && parseClientDateTime(visit) >= Date.now())
+            .sort((a,b) => parseClientDateTime(a) - parseClientDateTime(b))[0];
         const completedVisits = c.visits
             .filter(visit => visit.status === 'completed')
             .slice()
@@ -3049,13 +3057,22 @@ function renderClients(tab = 'all') {
                 <div class="client-info">
                     <div class="client-name">${safeNames} <span class="client-tag-badge tag-${safeTag}">${clientTag}</span></div>
                     <div class="client-meta">Визитов: <span class="gold-text">${c.completedCount}</span> · Отмен: <span class="gold-text">${c.cancelledCount}</span></div>
-                    <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span></div>
+                    <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span> · Средний чек: <span class="gold-text">${completedAverageCheck.toLocaleString('ru-RU')} ₽</span></div>
                     <div class="client-meta">${completedVisits.length ? 'Последний визит:' : 'Последняя запись:'} ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
+                    <div class="client-meta client-next-visit">${upcomingVisit ? 'Следующая запись: ' + escapeBookingHtml(upcomingVisit.date) + ' в ' + escapeBookingHtml(upcomingVisit.time) : 'Будущих записей нет'}</div>
                     ${masterBadge ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${safeMasters}</div>` : ''}
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function parseClientDateTime(booking) {
+    const [day, month, year] = String(booking?.date || '').split('.').map(Number);
+    const [hour, minute] = String(booking?.time || '00:00').split(':').map(Number);
+    if (!day || !month || !year || !Number.isInteger(hour) || !Number.isInteger(minute)) return 0;
+    const timestamp = new Date(year, month - 1, day, hour, minute).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function showClientDetails(name, barberId) {
@@ -3151,9 +3168,14 @@ function showClientDetails(name, barberId) {
     const averageCheck = completedCount ? Math.round(completedRevenue / completedCount) : 0;
     const metrics = document.getElementById('clientDetailsMetrics');
     if (metrics) {
+        const nextVisit = myBookings.filter(booking => booking.status !== 'cancelled' && parseClientDateTime(booking) >= Date.now())
+            .sort((a,b) => parseClientDateTime(a) - parseClientDateTime(b))[0];
+        const lastCompleted = myBookings.find(booking => booking.status === 'completed');
         metrics.innerHTML = `
             <span>Отмен: <b>${cancelledCount}</b></span>
-            <span>Средний чек: <b>${averageCheck} ₽</b></span>
+            <span>Средний чек: <b>${averageCheck.toLocaleString('ru-RU')} ₽</b></span>
+            <span>Последний визит: <b>${lastCompleted ? escapeBookingHtml(lastCompleted.date) : '—'}</b></span>
+            <span>Следующая запись: <b>${nextVisit ? escapeBookingHtml(nextVisit.date + ' · ' + nextVisit.time) : 'нет'}</b></span>
         `;
     }
 
