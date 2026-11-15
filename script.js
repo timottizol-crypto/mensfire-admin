@@ -2102,7 +2102,7 @@ function renderFinance() {
     } else {
         expensesList.innerHTML = expensesForDay.map(e => `
             <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
-                <span>${e.title}</span>
+                <span>${escapeBookingHtml(e.title || 'Расход')}</span>
                 <span style="color: #ff4d4d; font-weight: 600;">-${e.amount} ₽</span>
             </div>
         `).join('');
