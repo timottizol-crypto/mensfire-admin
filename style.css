@@ -5086,3 +5086,11 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .finance-expense-breakdown-row>div:first-child { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; }
 .finance-expense-track i { background:linear-gradient(90deg,#b68d3b,var(--gold)); }
 @media(max-width:600px) { .finance-kpi-comparison { grid-column:span 1; } }
+
+
+/* CRM insight cards and appointment hints */
+.clients-overview-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.client-overview-card small { color:var(--text-muted); font-size:9px; line-height:1.35; }
+.client-next-visit { color:var(--gold)!important; }
+.client-history-payment { display:flex; flex-wrap:wrap; align-items:center; gap:5px 9px; }
+@media(max-width:700px) { .clients-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
