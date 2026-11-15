@@ -2836,10 +2836,13 @@ function switchFinanceTab(tab) {
 
 function parseReportDate(value) {
     const parts = String(value || '').split('.').map(Number);
-    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
-    const date = new Date(parts[2], parts[1] - 1, parts[0]);
+    if (parts.length !== 3 || !parts.every(Number.isInteger)) return null;
+    const [day, month, year] = parts;
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1000) return null;
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
     date.setHours(0,0,0,0);
-    return Number.isNaN(date.getTime()) ? null : date;
+    return Number.isFinite(date.getTime()) ? date : null;
 }
 function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
 function openReportDatePicker(target) {
@@ -3054,10 +3057,7 @@ function renderFinance() {
     if (!requireAdminAction('Просматривать финансы может только Али')) return;
     renderFinanceDateSelector();
 
-    const parseDate = value => {
-        const parts = String(value || '').split('.').map(Number);
-        return parts.length === 3 && parts.every(Number.isFinite) ? new Date(parts[2], parts[1] - 1, parts[0]) : null;
-    };
+    const parseDate = value => parseReportDate(value);
     const fmt = value => `${Math.round(Number(value) || 0).toLocaleString('ru-RU')} ₽`;
     const selectedDate = parseDate(selectedFinanceDate) || new Date();
     selectedDate.setHours(0, 0, 0, 0);
