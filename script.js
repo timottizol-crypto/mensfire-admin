@@ -2499,6 +2499,26 @@ function renderTeam() {
     const teamRevenue = bookings.reduce((sum,item) => sum + (inCurrentMonth(item.date) ? getBookingCollectedAmount(item) : 0),0);
     const teamToday = bookings.filter(item => item.date === todayKey && item.status !== 'cancelled').length;
     const overview = document.getElementById('teamOverview');
+    const trend = document.getElementById('teamRevenueTrend');
+    if (trend) {
+        const days = Array.from({length:7},(_,index) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6-index));
+            return date;
+        });
+        const values = days.map(date => {
+            const key = date.toLocaleDateString('ru-RU');
+            return bookings.filter(item => item.date === key && item.status === 'completed')
+                .reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+        });
+        const max = Math.max(1,...values);
+        trend.innerHTML = '<div class="team-trend-bars">' + days.map((date,index) => {
+            const height = Math.max(values[index] > 0 ? 5 : 2,values[index]/max*100);
+            const amount = values[index] ? Math.round(values[index]).toLocaleString('ru-RU') + ' ₽' : '—';
+            return '<div class="team-trend-column"><strong>' + amount + '</strong><div class="team-trend-track"><i style="height:' + height + '%"></i></div><span>' + date.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit'}) + '</span></div>';
+        }).join('') + '</div>';
+    }
+
     if (overview) overview.innerHTML = `
         <div class="team-overview-card"><span>Мастеров в команде</span><strong>${mockStaff.length}</strong><small>Активные профили</small></div>
         <div class="team-overview-card"><span>Записей сегодня</span><strong>${teamToday}</strong><small>По всем мастерам</small></div>
