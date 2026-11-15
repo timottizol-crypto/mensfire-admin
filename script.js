@@ -881,6 +881,9 @@ let reportDatePickerTarget = null;
 let clientsPeriodMode = 'sixMonths';
 let clientsRangeStart = new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1).toLocaleDateString('ru-RU');
 let clientsRangeEnd = new Date().toLocaleDateString('ru-RU');
+let teamPeriodMode = 'month';
+let teamRangeStart = new Date(new Date().getFullYear(),new Date().getMonth(),1).toLocaleDateString('ru-RU');
+let teamRangeEnd = new Date().toLocaleDateString('ru-RU');
 
 // Массив фраз для пустого расписания
 const emptyPhrases = [
@@ -1923,10 +1926,13 @@ function renderCalendar() {
                 if (target === 'financeEnd') { financeRangeEnd = thisDateStr; if (parseReportDate(financeRangeEnd) < parseReportDate(financeRangeStart)) financeRangeStart = thisDateStr; }
                 if (target === 'clientsStart') { clientsRangeStart = thisDateStr; if (parseReportDate(clientsRangeStart) > parseReportDate(clientsRangeEnd)) clientsRangeEnd = thisDateStr; }
                 if (target === 'clientsEnd') { clientsRangeEnd = thisDateStr; if (parseReportDate(clientsRangeEnd) < parseReportDate(clientsRangeStart)) clientsRangeStart = thisDateStr; }
+                if (target === 'teamStart') { teamRangeStart = thisDateStr; if (parseReportDate(teamRangeStart) > parseReportDate(teamRangeEnd)) teamRangeEnd = thisDateStr; }
+                if (target === 'teamEnd') { teamRangeEnd = thisDateStr; if (parseReportDate(teamRangeEnd) < parseReportDate(teamRangeStart)) teamRangeStart = thisDateStr; }
                 reportDatePickerTarget = null;
                 closeModal('calendarModal');
                 if (target.startsWith('finance')) renderFinance();
-                else renderClients(currentClientsTab);
+                else if (target.startsWith('clients')) renderClients(currentClientsTab);
+                else renderTeam();
                 return;
             }
             if (calendarTargetInputId === 'newBookingDate') {
@@ -2490,7 +2496,7 @@ function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
 function openReportDatePicker(target) {
     calendarTargetInputId = null;
     reportDatePickerTarget = target;
-    const value = target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : clientsRangeEnd;
+    const value = target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : target === 'clientsEnd' ? clientsRangeEnd : target === 'teamStart' ? teamRangeStart : teamRangeEnd;
     const date = parseReportDate(value) || new Date();
     selectedBlockDate = formatReportDate(date);
     pickerYear = date.getFullYear();
@@ -2530,6 +2536,20 @@ function setClientsPeriod(mode) {
         clientsRangeEnd = formatReportDate(now);
     }
     renderClients(currentClientsTab);
+}
+function setTeamPeriod(mode) {
+    if (!['month','custom'].includes(mode)) return;
+    teamPeriodMode = mode;
+    if (mode === 'month') {
+        const now = new Date();
+        teamRangeStart = formatReportDate(new Date(now.getFullYear(),now.getMonth(),1));
+        teamRangeEnd = formatReportDate(now);
+    } else if (!parseReportDate(teamRangeStart) || !parseReportDate(teamRangeEnd)) {
+        const now = new Date();
+        teamRangeStart = formatReportDate(new Date(now.getFullYear(),now.getMonth(),1));
+        teamRangeEnd = formatReportDate(now);
+    }
+    renderTeam();
 }
 function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
@@ -2820,43 +2840,64 @@ function renderTeam() {
     const listPC = document.getElementById('teamListPC');
     const listMobile = document.getElementById('teamList');
 
-    const todayKey = new Date().toLocaleDateString('ru-RU');
-    const monthParts = todayKey.split('.').map(Number);
-    const monthStart = new Date(monthParts[2], monthParts[1] - 1, 1);
-    const parseDate = value => {
-        const parts = String(value || '').split('.').map(Number);
-        return parts.length === 3 && parts.every(Number.isFinite) ? new Date(parts[2], parts[1] - 1, parts[0]) : null;
-    };
-    const inCurrentMonth = value => { const date = parseDate(value); return date && date >= monthStart && date <= new Date(); };
-    const teamCompleted = bookings.filter(item => item.status === 'completed' && inCurrentMonth(item.date));
-    const teamRevenue = bookings.reduce((sum,item) => sum + (inCurrentMonth(item.date) ? getBookingCollectedAmount(item) : 0),0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayKey = today.toLocaleDateString('ru-RU');
+    let rangeStart = teamPeriodMode === 'month' ? new Date(today.getFullYear(),today.getMonth(),1) : parseReportDate(teamRangeStart);
+    let rangeEnd = teamPeriodMode === 'month' ? today : parseReportDate(teamRangeEnd);
+    rangeStart = rangeStart || new Date(today.getFullYear(),today.getMonth(),1);
+    rangeEnd = rangeEnd || today;
+    if (rangeEnd < rangeStart) [rangeStart,rangeEnd] = [rangeEnd,rangeStart];
+    const rangeEndExclusive = new Date(rangeEnd); rangeEndExclusive.setDate(rangeEndExclusive.getDate()+1);
+    const inSelectedPeriod = value => { const date = parseReportDate(value); return date && date >= rangeStart && date < rangeEndExclusive; };
+    const periodLabel = formatReportDate(rangeStart) + ' — ' + formatReportDate(rangeEnd);
+    const teamCompleted = bookings.filter(item => item.status === 'completed' && inSelectedPeriod(item.date));
+    const teamRevenue = bookings.reduce((sum,item) => sum + (inSelectedPeriod(item.date) ? getBookingCollectedAmount(item) : 0),0);
+    const controls = document.getElementById('teamPeriodControls');
+    if (controls) controls.innerHTML = `
+        <div class="finance-range-toolbar clients-range-toolbar">
+            <div class="finance-range-presets" role="group" aria-label="Период статистики команды">
+                <button type="button" class="finance-range-btn ${teamPeriodMode==='month'?'active':''}" onclick="setTeamPeriod('month')">Месяц</button>
+                <button type="button" class="finance-range-btn ${teamPeriodMode==='custom'?'active':''}" onclick="setTeamPeriod('custom')">Период</button>
+            </div>
+            <div class="finance-range-fields" ${teamPeriodMode==='custom'?'':'hidden'}>
+                <button type="button" class="finance-range-date" onclick="openReportDatePicker('teamStart')">${teamRangeStart}</button><span>—</span>
+                <button type="button" class="finance-range-date" onclick="openReportDatePicker('teamEnd')">${teamRangeEnd}</button>
+            </div>
+        </div>`;
     const teamToday = bookings.filter(item => item.date === todayKey && item.status !== 'cancelled').length;
     const overview = document.getElementById('teamOverview');
     const trend = document.getElementById('teamRevenueTrend');
     if (trend) {
-        const days = Array.from({length:7},(_,index) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (6-index));
-            return date;
-        });
-        const values = days.map(date => {
-            const key = date.toLocaleDateString('ru-RU');
-            return bookings.filter(item => item.date === key && item.status === 'completed')
-                .reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
-        });
+        const spanDays = Math.round((rangeEndExclusive-rangeStart)/86400000);
+        const buckets = [];
+        if (spanDays > 45) {
+            const cursor = new Date(rangeStart.getFullYear(),rangeStart.getMonth(),1);
+            while (cursor < rangeEndExclusive && buckets.length < 12) {
+                const bucketStart = new Date(cursor), bucketEnd = new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+                buckets.push({start:bucketStart,end:bucketEnd,label:bucketStart.toLocaleDateString('ru-RU',{month:'short',year:'2-digit'}).replace('.','')});
+                cursor.setMonth(cursor.getMonth()+1);
+            }
+        } else {
+            const step = spanDays > 7 ? Math.ceil(spanDays/7) : 1;
+            for (let cursor = new Date(rangeStart); cursor < rangeEndExclusive && buckets.length < 7; cursor.setDate(cursor.getDate()+step)) {
+                const bucketStart = new Date(cursor), bucketEnd = new Date(Math.min(new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()+step).getTime(),rangeEndExclusive.getTime()));
+                buckets.push({start:bucketStart,end:bucketEnd,label:bucketStart.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')});
+            }
+        }
+        const values = buckets.map(bucket=>bookings.filter(item=>item.status==='completed'&&(()=>{const date=parseReportDate(item.date);return date&&date>=bucket.start&&date<bucket.end;})()).reduce((sum,item)=>sum+getBookingCollectedAmount(item),0));
         const max = Math.max(1,...values);
-        trend.innerHTML = '<div class="team-trend-bars">' + days.map((date,index) => {
+        trend.innerHTML = '<div class="team-trend-bars" style="grid-template-columns:repeat(' + Math.min(buckets.length,7) + ',minmax(0,1fr))">' + buckets.map((bucket,index) => {
             const height = Math.max(values[index] > 0 ? 5 : 2,values[index]/max*100);
             const amount = values[index] ? Math.round(values[index]).toLocaleString('ru-RU') + ' ₽' : '—';
-            return '<div class="team-trend-column"><strong>' + amount + '</strong><div class="team-trend-track"><i style="height:' + height + '%"></i></div><span>' + date.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit'}) + '</span></div>';
+            return '<div class="team-trend-column"><strong>' + amount + '</strong><div class="team-trend-track"><i style="height:' + height + '%"></i></div><span>' + bucket.label + '</span></div>';
         }).join('') + '</div>';
     }
 
     if (overview) overview.innerHTML = `
         <div class="team-overview-card"><span>Мастеров в команде</span><strong>${mockStaff.length}</strong><small>Активные профили</small></div>
         <div class="team-overview-card"><span>Записей сегодня</span><strong>${teamToday}</strong><small>По всем мастерам</small></div>
-        <div class="team-overview-card"><span>Визитов за месяц</span><strong>${teamCompleted.length}</strong><small>Завершённые записи</small></div>
-        <div class="team-overview-card"><span>Получено за месяц</span><strong>${Math.round(teamRevenue).toLocaleString('ru-RU')} ₽</strong><small>Фактические оплаты</small></div>`;
+        <div class="team-overview-card"><span>Визитов за период</span><strong>${teamCompleted.length}</strong><small>${teamPeriodMode === 'month' ? 'Текущий месяц' : periodLabel}</small></div>
+        <div class="team-overview-card"><span>Получено за период</span><strong>${Math.round(teamRevenue).toLocaleString('ru-RU')} ₽</strong><small>${teamPeriodMode === 'month' ? 'Текущий месяц' : periodLabel}</small></div>`;
 
     if (mockStaff.length === 0) {
         const empty = '<p class="team-empty-state">Нет мастеров</p>';
@@ -2873,7 +2914,7 @@ function renderTeam() {
         const roleLabel = isAdmin ? 'Главный мастер' : 'Барбер';
         const initials = escapeBookingHtml(String(staff.name || '?').trim().slice(0, 1).toUpperCase() || '?');
         const staffBookings = bookings.filter(item => String(item.barberId) === String(staff.id));
-        const staffMonthBookings = staffBookings.filter(item => inCurrentMonth(item.date));
+        const staffMonthBookings = staffBookings.filter(item => inSelectedPeriod(item.date));
         const staffCompleted = staffMonthBookings.filter(item => item.status === 'completed').length;
         const staffRevenue = staffMonthBookings.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
         return `
