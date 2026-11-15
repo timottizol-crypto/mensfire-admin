@@ -2535,7 +2535,7 @@ function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
     if (!container) return;
     container.innerHTML = '';
-    container.style.display = financePeriodMode === 'day' ? 'flex' : 'none';
+    container.classList.toggle('is-hidden', financePeriodMode !== 'day');
     const fields = document.getElementById('financeRangeFields');
     if (fields) fields.hidden = financePeriodMode !== 'custom';
     document.querySelectorAll('[data-finance-period]').forEach(button => button.classList.toggle('active', button.dataset.financePeriod === financePeriodMode));
