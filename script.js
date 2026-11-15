@@ -1707,12 +1707,15 @@ function getBookingClientTypeMeta(booking) {
         : { label: 'Повторный клиент', className: 'returning' };
 }
 
-function getBookingCollectedAmount(booking) {
-    const services = Array.isArray(booking?.services) ? booking.services : [];
-    const serviceTotal = services.reduce((sum, service) => {
+function getBookingServiceTotal(booking) {
+    return (Array.isArray(booking?.services) ? booking.services : []).reduce((sum, service) => {
         const amount = Number(service?.price);
         return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
     }, 0);
+}
+
+function getBookingCollectedAmount(booking) {
+    const serviceTotal = getBookingServiceTotal(booking);
     const transactions = Array.isArray(booking?.payments) ? booking.payments : [];
     if (transactions.length) {
         const collected = transactions.reduce((sum, payment) => {
@@ -1769,8 +1772,7 @@ function openBookingPaymentEditor(id) {
     if (booking.status === 'cancelled') {
         return showToast('Нельзя добавлять оплату к отменённой записи', 'error');
     }
-    const total = (Array.isArray(booking.services) ? booking.services : [])
-        .reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const total = getBookingServiceTotal(booking);
     const paymentState = getBookingPaymentState(booking, total);
     const balance = Math.max(0, total - paymentState.paid);
     if (balance <= 0) return showToast('Запись уже оплачена полностью', 'info');
@@ -1798,8 +1800,7 @@ function saveBookingPayment() {
         return showToast('Запись не найдена', 'error');
     }
 
-    const total = (Array.isArray(booking.services) ? booking.services : [])
-        .reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const total = getBookingServiceTotal(booking);
     const paymentState = getBookingPaymentState(booking, total);
     const balance = Math.max(0, total - paymentState.paid);
     const amountInput = document.getElementById('bookingPaymentAmount');
@@ -1854,8 +1855,7 @@ function openActionModal(id) {
 
     const barber = mockStaff.find(s => s.id === booking.barberId);
     const services = Array.isArray(booking.services) ? booking.services : [];
-    const total = services.reduce((sum, service) =>
-        sum + (Number(service.price) || 0), 0);
+    const total = getBookingServiceTotal(booking);
     const duration = getBookingDurationMinutes(booking);
     const [startHour = 0, startMinute = 0] = String(booking.time || '00:00').split(':').map(Number);
     const endMinutes = startHour * 60 + startMinute + duration;
