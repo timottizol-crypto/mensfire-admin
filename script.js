@@ -2476,7 +2476,7 @@ function renderClients(tab = 'all') {
         }
         clients[clientKey].visits.push(b);
         if (b.status === 'completed') {
-            clients[clientKey].totalSpent += b.services.reduce((s, serv) => s + serv.price, 0);
+            clients[clientKey].totalSpent += getBookingCollectedAmount(b);
         }
     });
 
@@ -2586,8 +2586,10 @@ function showClientDetails(name, barberId) {
     let completedCount = 0;
     
     const historyHTML = myBookings.map(b => {
+        const serviceTotal = (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
+        const paymentState = getBookingPaymentState(b, serviceTotal);
         if (b.status === 'completed') {
-            total += (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
+            total += getBookingCollectedAmount(b);
             completedCount++;
         }
         
@@ -2606,6 +2608,7 @@ function showClientDetails(name, barberId) {
                     <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
                     <div style="font-size: 12px; color: var(--gold); margin-top: 4px;">${servicesText}</div>
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${escapeBookingHtml(masterName)}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Оплата: <b style="color: ${paymentState.status === 'paid' ? '#38c77b' : paymentState.status === 'partial' ? '#e9b949' : '#f16c6c'}">${paymentState.label}</b> · ${paymentState.paid.toLocaleString('ru-RU')} / ${serviceTotal.toLocaleString('ru-RU')} ₽</div>
                 </div>
             </div>
         `;
