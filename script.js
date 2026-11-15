@@ -2140,17 +2140,50 @@ let clientProfiles = JSON.parse(
 
 let selectedClientProfileKey = null;
 
+function normalizeClientPhone(phone) {
+    return String(phone || '').replace(/\\D/g, '');
+}
+
+function getClientProfileKey(name, barberId, phone = '') {
+    const normalizedPhone = normalizeClientPhone(phone);
+    return normalizedPhone.length >= 7
+        ? 'phone:' + normalizedPhone
+        : JSON.stringify([name, barberId]);
+}
+
+function findClientProfile(name, barberId) {
+    const legacyKey = JSON.stringify([name, barberId]);
+    const legacyProfile = clientProfiles[legacyKey] || {};
+    const canonicalKey = getClientProfileKey(name, barberId, legacyProfile.phone);
+    return {
+        key: canonicalKey,
+        profile: clientProfiles[canonicalKey] || legacyProfile,
+        legacyKey
+    };
+}
+
 function saveClientProfile() {
     if (!selectedClientProfileKey) return;
 
     const previousProfile = clientProfiles[selectedClientProfileKey] || {};
-    clientProfiles[selectedClientProfileKey] = {
+    const phone = document.getElementById('clientDetailsPhone').value.trim();
+    const canonicalKey = getClientProfileKey(
+        previousProfile.clientName || '',
+        previousProfile.barberId || '',
+        phone
+    );
+    const updatedProfile = {
         ...previousProfile,
-        phone: document.getElementById('clientDetailsPhone').value.trim(),
+        phone,
         birthday: document.getElementById('clientDetailsBirthday')?.value || '',
         tag: document.getElementById('clientDetailsTag')?.value || 'regular',
         notes: document.getElementById('clientDetailsNotes').value.trim()
     };
+    clientProfiles[canonicalKey] = updatedProfile;
+    if (canonicalKey !== selectedClientProfileKey) {
+        delete clientProfiles[selectedClientProfileKey];
+        selectedClientProfileKey = canonicalKey;
+    }
 
     localStorage.setItem(
         'mensfire_client_profiles',
@@ -2204,8 +2237,8 @@ function renderClients(tab = 'all') {
 
     const clientArray = Object.values(clients)
     .filter(c => {
-        const key = JSON.stringify([c.name, c.barberId]);
-        const phone = clientProfiles[key]?.phone || '';
+        const { profile } = findClientProfile(c.name, c.barberId);
+        const phone = profile.phone || '';
 
         return (
             c.name.toLowerCase().includes(clientsSearchQuery) ||
@@ -2223,7 +2256,7 @@ function renderClients(tab = 'all') {
     list.innerHTML = clientArray.map(c => {
         const sortedVisits = c.visits.sort((a, b) => b.date.localeCompare(a.date));
         const lastVisit = sortedVisits[0];
-        const profile = clientProfiles[JSON.stringify([c.name, c.barberId])] || {};
+        const { profile } = findClientProfile(c.name, c.barberId);
         const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
         const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
 
@@ -2249,7 +2282,14 @@ function renderClients(tab = 'all') {
 }
 
 function showClientDetails(name, barberId) {
-    const myBookings = bookings.filter(b => b.clientName === name && b.barberId === barberId);
+    const selectedProfile = findClientProfile(name, barberId);
+    const selectedPhone = normalizeClientPhone(selectedProfile.profile.phone);
+    const myBookings = bookings.filter(b => {
+        if (b.clientName === name && b.barberId === barberId) return true;
+        if (!selectedPhone) return false;
+        const otherProfile = findClientProfile(b.clientName, b.barberId).profile;
+        return normalizeClientPhone(otherProfile.phone) === selectedPhone;
+    });
     
     // Правильная сортировка: от старых к новым
     myBookings.sort((a, b) => {
@@ -2294,7 +2334,12 @@ function showClientDetails(name, barberId) {
     }).join('');
 
     document.getElementById('clientDetailsName').innerText = name;
-    selectedClientProfileKey = JSON.stringify([name, barberId]);
+    selectedClientProfileKey = selectedProfile.key;
+    clientProfiles[selectedClientProfileKey] = {
+        ...selectedProfile.profile,
+        clientName: name,
+        barberId
+    };
 
     const profile = clientProfiles[selectedClientProfileKey] || {};
 
