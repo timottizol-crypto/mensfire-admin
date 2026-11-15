@@ -1094,12 +1094,12 @@ function renderDesktopSchedule() {
 
         html += `
             <div class="desktop-staff-column">
-                <button class="desktop-staff-heading" onclick="showBarberStats('${barber.id}')">
-                    <strong>${dayHeading}</strong><span>${subHeading}</span>
+                <button class="desktop-staff-heading" onclick="showBarberStats('${escapeBookingHtml(String(barber.id))}')">
+                    <strong>${escapeBookingHtml(dayHeading)}</strong><span>${escapeBookingHtml(subHeading)}</span>
                 </button>
                 <div class="desktop-staff-track"
                     style="height:${totalHeight}px"
-                    onclick="openNewBookingFromSlot(event, '${barber.id}', '${dateKey}')">
+                    onclick="openNewBookingFromSlot(event, '${escapeBookingHtml(String(barber.id))}', '${escapeBookingHtml(dateKey)}')">
         `;
 
         for (let i = 0; i <= (END_HOUR - START_HOUR) * 4; i++) {
