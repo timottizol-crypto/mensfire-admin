@@ -5696,3 +5696,73 @@ html.light-theme .available-slot{background:#fff;color:#433b2b}
 .booking-client-match-copy small{color:var(--text-muted);font-size:9px;line-height:1.4}
 .booking-client-match-tag{color:var(--gold);font-size:9px;white-space:nowrap}
 html.light-theme .booking-client-match{background:#fbf8ef}
+
+
+/* MensFire desktop schedule: actions integrated into calendar toolbar */
+@media (min-width: 768px) {
+    #viewSchedule > .workspace-heading .home-cta-btn,
+    #viewSchedule > .schedule-management-actions {
+        display: none !important;
+    }
+    #viewSchedule {
+        min-height: calc(100vh - 90px);
+    }
+    #desktopSchedule {
+        width: 100%;
+        min-height: 0;
+        flex: 1 1 auto;
+    }
+    .desktop-calendar-toolbar {
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+    .desktop-calendar-tabs {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .desktop-calendar-tabs .desktop-calendar-action {
+        padding: 10px 15px;
+        min-height: 40px;
+        border-radius: 10px;
+        border: 1px solid rgba(212,175,55,.45);
+        background: rgba(212,175,55,.10);
+        color: var(--text-main);
+        font-weight: 700;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .desktop-calendar-tabs .desktop-calendar-action:hover {
+        background: rgba(212,175,55,.2);
+        border-color: var(--gold);
+        transform: translateY(-1px);
+    }
+    .desktop-calendar-tabs .desktop-calendar-action.is-primary {
+        background: var(--gold);
+        border-color: var(--gold);
+        color: #17130a;
+    }
+    .desktop-calendar-scroll {
+        max-height: calc(100vh - 235px);
+        min-height: 560px;
+    }
+    .desktop-calendar-grid {
+        grid-template-columns: 76px repeat(auto-fit, minmax(230px, 1fr));
+        min-width: 900px;
+    }
+    .desktop-calendar-scroll.is-week-view .desktop-calendar-grid {
+        grid-template-columns: 76px repeat(var(--calendar-column-count), minmax(195px, 1fr));
+        min-width: max-content;
+    }
+    .desktop-month-grid {
+        min-height: 620px;
+    }
+    .desktop-month-day {
+        min-height: 112px;
+        padding: 13px;
+    }
+}
