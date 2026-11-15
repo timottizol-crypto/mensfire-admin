@@ -4054,6 +4054,9 @@ function showClientDetails(name, barberId) {
     const historyHTML = myBookings.map(b => {
         const serviceTotal = (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
         const paymentState = getBookingPaymentState(b, serviceTotal);
+        const paymentMethodKey = ['cash', 'card', 'transfer', 'online', 'mixed'].includes(paymentState.method)
+            ? paymentState.method : 'other';
+        const paymentMethodLabel = paymentState.methodLabel || 'Не указан';
         total += getBookingCollectedAmount(b);
         if (b.status === 'completed') {
             completedRevenue += getBookingCollectedAmount(b);
@@ -4081,6 +4084,7 @@ function showClientDetails(name, barberId) {
                     <div class="client-history-payment">
                         Оплата: <b class="payment-state payment-${escapeBookingHtml(paymentState.status)}">${escapeBookingHtml(paymentState.label)}</b>
                         <span>${paymentState.paid.toLocaleString('ru-RU')} / ${serviceTotal.toLocaleString('ru-RU')} ₽</span>
+                        <span class="finance-payment-method finance-payment-method--${paymentMethodKey}"><i></i>${escapeBookingHtml(paymentMethodLabel)}</span>
                     </div>
                 </div>
             </article>
