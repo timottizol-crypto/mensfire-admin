@@ -800,143 +800,135 @@ function renderDesktopSchedule() {
     if (!view) return;
 
     let calendar = document.getElementById('desktopSchedule');
-
     if (!calendar) {
         calendar = document.createElement('div');
         calendar.id = 'desktopSchedule';
         view.insertBefore(calendar, view.querySelector('.home-cta-btn'));
     }
 
-    const date = selectedScheduleDate;
+    const [day, month, year] = selectedScheduleDate.split('.').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
+    if (Number.isNaN(selectedDate.getTime())) return;
+
     const staff = currentUser.role === 'admin'
         ? mockStaff
         : mockStaff.filter(s => s.id === currentUser.id);
-
+    const viewMode = window.desktopCalendarMode === 'week' ? 'week' : 'day';
     const START_HOUR = 8;
     const END_HOUR = 22;
-    const SLOT_HEIGHT = 24; // 15 минут = 24px
+    const SLOT_HEIGHT = 24;
     const HOUR_HEIGHT = SLOT_HEIGHT * 4;
-
     const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
-
     const toMinutes = time => {
         const [h, m] = time.split(':').map(Number);
         return h * 60 + m;
     };
-
-    const timeLabel = hour =>
-        `${String(hour).padStart(2, '0')}:00`;
+    const toDateKey = date => date.toLocaleDateString('ru-RU');
+    const weekStart = new Date(selectedDate);
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+    const dates = viewMode === 'week'
+        ? Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(weekStart);
+            d.setDate(weekStart.getDate() + i);
+            return d;
+        })
+        : [selectedDate];
+    const columns = dates.flatMap(date => staff.map(barber => ({ date, barber })));
+    const rangeLabel = viewMode === 'week'
+        ? dates[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) +
+          ' — ' + dates[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+        : selectedScheduleDate;
 
     let html = `
         <div class="desktop-calendar-toolbar">
             <div class="desktop-calendar-date-controls">
-                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(-1)" aria-label="Предыдущий день">‹</button>
+                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(-${viewMode === 'week' ? 7 : 1})" aria-label="Назад">‹</button>
                 <button type="button" class="calendar-today-btn" onclick="goToScheduleToday()">Сегодня</button>
-                <strong>${date}</strong>
-                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(1)" aria-label="Следующий день">›</button>
+                <strong>${rangeLabel}</strong>
+                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(${viewMode === 'week' ? 7 : 1})" aria-label="Вперёд">›</button>
                 <span>${staff.length} маст.</span>
             </div>
             <div class="desktop-calendar-tabs">
-                <button class="${currentScheduleTab === 'bookings' ? 'active' : ''}"
-                    onclick="switchScheduleTab('bookings')">Записи</button>
-                <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}"
-                    onclick="switchScheduleTab('breaks')">Перерывы</button>
+                <button class="${viewMode === 'day' ? 'active' : ''}" onclick="setDesktopCalendarMode('day')">День</button>
+                <button class="${viewMode === 'week' ? 'active' : ''}" onclick="setDesktopCalendarMode('week')">Неделя</button>
+                <button class="${currentScheduleTab === 'bookings' ? 'active' : ''}" onclick="switchScheduleTab('bookings')">Записи</button>
+                <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}" onclick="switchScheduleTab('breaks')">Перерывы</button>
             </div>
         </div>
-
-        <div class="desktop-calendar-scroll">
-            <div class="desktop-calendar-grid">
+        <div class="desktop-calendar-scroll ${viewMode === 'week' ? 'is-week-view' : ''}">
+            <div class="desktop-calendar-grid" style="--calendar-column-count:${Math.max(columns.length, 1)}">
                 <div class="desktop-time-column">
                     <div class="desktop-staff-heading">Время</div>
                     <div class="desktop-time-track" style="height:${totalHeight}px">
                         ${Array.from({length: END_HOUR - START_HOUR + 1}, (_, i) =>
-                            `<div class="desktop-time-label" style="top:${i * HOUR_HEIGHT}px">
-                                ${timeLabel(START_HOUR + i)}
-                            </div>`
+                            `<div class="desktop-time-label" style="top:${i * HOUR_HEIGHT}px">${String(START_HOUR + i).padStart(2, '0')}:00</div>`
                         ).join('')}
                     </div>
                 </div>
     `;
 
-    staff.forEach(barber => {
-        const barberBookings = bookings.filter(b =>
-            b.date === date && b.barberId === barber.id
-        );
-
-        const barberBlocks = timeBlocks.filter(b =>
-            b.date === date && b.barberId === barber.id
-        );
+    columns.forEach(({ date, barber }) => {
+        const dateKey = toDateKey(date);
+        const barberBookings = bookings.filter(b => b.date === dateKey && b.barberId === barber.id);
+        const barberBlocks = timeBlocks.filter(b => b.date === dateKey && b.barberId === barber.id);
+        const dayHeading = viewMode === 'week'
+            ? date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })
+            : barber.name;
+        const subHeading = viewMode === 'week' ? barber.name : (barber.role === 'admin' ? 'Администратор' : 'Барбер');
 
         html += `
             <div class="desktop-staff-column">
-                <button class="desktop-staff-heading"
-                    onclick="showBarberStats('${barber.id}')">
-                    <strong>${barber.name}</strong>
-                    <span>${barber.role === 'admin' ? 'Администратор' : 'Барбер'}</span>
+                <button class="desktop-staff-heading" onclick="showBarberStats('${barber.id}')">
+                    <strong>${dayHeading}</strong><span>${subHeading}</span>
                 </button>
-
                 <div class="desktop-staff-track"
                     style="height:${totalHeight}px"
-                    onclick="openNewBookingFromSlot(event, '${barber.id}', '${date}')">
+                    onclick="openNewBookingFromSlot(event, '${barber.id}', '${dateKey}')">
         `;
 
         for (let i = 0; i <= (END_HOUR - START_HOUR) * 4; i++) {
-            html += `<div class="desktop-time-line ${i % 4 === 0 ? 'hour' : ''}"
-                style="top:${i * SLOT_HEIGHT}px"></div>`;
+            html += `<div class="desktop-time-line ${i % 4 === 0 ? 'hour' : ''}" style="top:${i * SLOT_HEIGHT}px"></div>`;
         }
 
         if (currentScheduleTab === 'bookings') {
             barberBookings.forEach(booking => {
-                const start = toMinutes(booking.time);
-                const top = (start - START_HOUR * 60) / 15 * SLOT_HEIGHT;
-
+                const top = (toMinutes(booking.time) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
                 if (top < 0 || top >= totalHeight) return;
-
                 const duration = Math.max(45, (booking.services || []).length * 45);
-                const height = duration / 15 * SLOT_HEIGHT;
-                const serviceNames = (booking.services || [])
-                    .map(s => s.title).join(', ');
-
+                const height = Math.min(duration / 15 * SLOT_HEIGHT, totalHeight - top);
+                const serviceNames = (booking.services || []).map(s => s.title).join(', ');
                 html += `
-                    <button type="button"
-                        class="desktop-booking-card ${booking.status || 'active'}"
+                    <button type="button" class="desktop-booking-card ${booking.status || 'active'}"
                         style="top:${top}px;height:${height}px"
                         onclick="event.stopPropagation(); openActionModal('${booking.id}')">
                         <strong>${booking.time} · ${booking.clientName}</strong>
                         <span>${serviceNames}</span>
-                        <small>${duration} мин. · ${booking.status === 'completed'
-                            ? 'Завершена'
-                            : booking.status === 'cancelled'
-                                ? 'Отменена' : 'Активная'}</small>
-                    </button>
-                `;
+                        <small>${duration} мин. · ${booking.status === 'completed' ? 'Завершена' : booking.status === 'cancelled' ? 'Отменена' : 'Активная'}</small>
+                    </button>`;
             });
         } else {
             barberBlocks.forEach(block => {
-                const start = toMinutes(block.startTime);
+                const top = (toMinutes(block.startTime) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
                 const end = toMinutes(block.endTime);
-                const top = (start - START_HOUR * 60) / 15 * SLOT_HEIGHT;
-                const height = (end - start) / 15 * SLOT_HEIGHT;
-
+                const height = (end - toMinutes(block.startTime)) / 15 * SLOT_HEIGHT;
                 if (top < 0 || top >= totalHeight || height <= 0) return;
-
                 html += `
-                    <button class="desktop-break-card"
-                        style="top:${top}px;height:${height}px"
+                    <button class="desktop-break-card" style="top:${top}px;height:${Math.min(height, totalHeight - top)}px"
                         onclick="event.stopPropagation(); openBlockActionModal(${block.id})">
-                        <strong>${block.startTime}–${block.endTime}</strong>
-                        <span>Перерыв</span>
-                    </button>
-                `;
+                        <strong>${block.startTime}–${block.endTime}</strong><span>Перерыв</span>
+                    </button>`;
             });
         }
-
-        html += `</div></div>`;
+        html += '</div></div>';
     });
 
-    html += `</div></div>`;
-
+    html += '</div></div>';
     calendar.innerHTML = html;
+}
+
+function setDesktopCalendarMode(mode) {
+    window.desktopCalendarMode = mode === 'week' ? 'week' : 'day';
+    renderDesktopSchedule();
 }
 
 
