@@ -893,6 +893,7 @@ ensureDemoSampleData();
 // Выбранная дата в расписании (по умолчанию — сегодня)
 let selectedScheduleDate = new Date().toLocaleDateString('ru-RU');
 let currentScheduleTab = 'bookings'; // 'bookings' или 'breaks'
+let selectedScheduleBarberFilter = 'all';
 let selectedFinanceDate = new Date().toLocaleDateString('ru-RU');
 let financePeriodMode = 'day';
 let financeRangeStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('ru-RU');
@@ -939,11 +940,15 @@ function renderSchedule() {
     setTimeout(() => {
         renderDateSelector();
         const scheduleDate = selectedScheduleDate;
+        const staffFilterHost = document.getElementById('scheduleBarberFilterMobile');
+        if (staffFilterHost) staffFilterHost.innerHTML = renderScheduleBarberFilter(mockStaff).replace('schedule-barber-filter','schedule-barber-filter-mobile');
         const visibleBookings = bookings.filter(item => item.date === scheduleDate &&
             item.status !== 'cancelled' &&
-            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
+            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)) &&
+            (selectedScheduleBarberFilter === 'all' || String(item.barberId) === String(selectedScheduleBarberFilter)));
         const visibleBlocks = timeBlocks.filter(item => item.date === scheduleDate &&
-            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
+            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)) &&
+            (selectedScheduleBarberFilter === 'all' || String(item.barberId) === String(selectedScheduleBarberFilter)));
         const completedCount = visibleBookings.filter(item => item.status === 'completed').length;
         const collected = visibleBookings.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
         const planned = visibleBookings.reduce((sum,item) => sum + (item.services || []).reduce((n,service) => n + Number(service.price || 0),0),0);
@@ -1138,6 +1143,19 @@ function renderSchedule() {
 }
 
 
+
+function renderScheduleBarberFilter(staff) {
+    if (!currentUser || currentUser.role !== 'admin') return '';
+    const options = [{ id: 'all', name: 'Все мастера' }, ...staff];
+    return `<div class="schedule-barber-filter" role="group" aria-label="Фильтр по мастерам">${options.map(person => `<button type="button" class="${String(selectedScheduleBarberFilter)===String(person.id)?'active':''}" aria-pressed="${String(selectedScheduleBarberFilter)===String(person.id)}" onclick="setScheduleBarberFilter('${escapeBookingHtml(String(person.id))}')">${escapeBookingHtml(person.name)}</button>`).join('')}</div>`;
+}
+function setScheduleBarberFilter(barberId) {
+    const allowed = currentUser?.role === 'admin' ? ['all', ...mockStaff.map(person => String(person.id))] : [String(currentUser?.id || '')];
+    if (!allowed.includes(String(barberId))) return;
+    selectedScheduleBarberFilter = String(barberId);
+    renderSchedule();
+}
+
 function renderDesktopSchedule() {
     const view = document.getElementById('viewSchedule');
     if (!view) return;
@@ -1158,9 +1176,12 @@ function renderDesktopSchedule() {
     const selectedDate = new Date(year, month - 1, day);
     if (Number.isNaN(selectedDate.getTime())) return;
 
-    const staff = currentUser.role === 'admin'
+    const availableStaff = currentUser.role === 'admin'
         ? mockStaff
         : mockStaff.filter(s => s.id === currentUser.id);
+    const staff = selectedScheduleBarberFilter === 'all'
+        ? availableStaff
+        : availableStaff.filter(person => String(person.id) === String(selectedScheduleBarberFilter));
     const viewMode = ['week', 'month'].includes(window.desktopCalendarMode) ? window.desktopCalendarMode : 'day';
     if (viewMode === 'month') {
         const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
@@ -1190,6 +1211,7 @@ function renderDesktopSchedule() {
                     <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}" onclick="switchScheduleTab('breaks')">Перерывы</button>
                 </div>
             </div>
+            ${renderScheduleBarberFilter(availableStaff)}
             <div class="desktop-month-grid">
                 ${weekDays.map(dayName => `<div class="desktop-month-weekday">${dayName}</div>`).join('')}
                 ${monthDays.map(date => {
@@ -1255,6 +1277,7 @@ function renderDesktopSchedule() {
                 <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}" onclick="switchScheduleTab('breaks')">Перерывы</button>
             </div>
         </div>
+        ${renderScheduleBarberFilter(availableStaff)}
         <div class="desktop-calendar-scroll ${viewMode === 'week' ? 'is-week-view' : ''}">
             <div class="desktop-calendar-grid" style="--calendar-column-count:${Math.max(columns.length, 1)}">
                 <div class="desktop-time-column">
