@@ -5054,3 +5054,21 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .client-segment-btn { min-height:34px; padding:7px 13px; border:1px solid rgba(255,255,255,.08); border-radius:999px; color:var(--text-muted); background:rgba(255,255,255,.025); font:inherit; font-size:10px; font-weight:700; cursor:pointer; transition:all .2s ease; }
 .client-segment-btn.active { color:var(--gold); border-color:rgba(212,175,55,.38); background:rgba(212,175,55,.09); }
 @media(max-width:600px) { .client-segment-tabs { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; } .client-segment-btn { flex:0 0 auto; } }
+
+/* Schedule date counts and richer mobile appointment cards */
+.date-selector-item { position:relative; }
+.date-selector-meta { display:flex; align-items:center; justify-content:center; gap:4px; min-height:12px; margin-top:3px; }
+.date-booking-count { color:var(--text-muted); font-size:8px; line-height:1; white-space:nowrap; }
+.date-selector-item.selected .date-booking-count { color:var(--gold); }
+.date-block-indicator { width:5px; height:5px; border-radius:50%; background:#8b8b8b; display:inline-block; }
+.mobile-booking-time { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.mobile-booking-time strong { font-size:16px; letter-spacing:.2px; }
+.mobile-booking-time span { color:var(--text-muted); font-size:10px; }
+.mobile-booking-finance { display:flex; align-items:center; flex-wrap:wrap; gap:5px 10px; margin-top:7px; font-size:9px; color:var(--text-muted); }
+.mobile-booking-finance strong { color:var(--text-main); font-size:12px; }
+@media(max-width:767px) {
+    #scheduleDateSelector .date-selector-item { min-width:54px; padding:9px 5px 7px; }
+    #scheduleList .home-booking-item { border-radius:13px; }
+    #scheduleList .hb-info { display:flex; flex-direction:column; gap:4px; }
+    #scheduleList .hb-services { line-height:1.4; }
+}
