@@ -2,6 +2,15 @@
    ЧАСТЬ 1: БАЗА, АВТОРИЗАЦИЯ И НАВИГАЦИЯ
    ========================================= */
 
+// Раздельные пространства данных для демо и рабочей базы.
+let mensfireDataMode = localStorage.getItem('mensfire_data_mode') === 'demo' ? 'demo' : 'live';
+function appStorageKey(key) { return mensfireDataMode === 'demo' ? 'mensfire_demo_' + key.replace(/^mensfire_/, '') : key; }
+function setMensfireDataMode(mode) {
+ if (!['demo','live'].includes(mode) || mode === mensfireDataMode) return;
+ if (!confirm(mode === 'demo' ? 'Перейти в ДЕМО-режим? Тестовые данные будут отдельно от рабочей базы.' : 'Перейти в РАБОЧИЙ режим? Демо-данные останутся отдельно.')) return;
+ localStorage.removeItem('mensfire_admin_user'); localStorage.setItem('mensfire_data_mode', mode); location.reload();
+}
+
 // --- МОК-ДАННЫЕ (В будущем заменятся на YCLIENTS API) ---
 let mockStaff = [
     { id: 'b_al', name: 'Али', role: 'admin', pin: '1111', type: 'top' },
@@ -620,7 +629,7 @@ function handleSwipe(startX, startY, endX, endY) {
 
 // Подгружаем обновленный список мастеров из localStorage (если добавляли новых)
 try {
-    const savedStaff = JSON.parse(localStorage.getItem('mensfire_admin_staff') || 'null');
+    const savedStaff = JSON.parse(localStorage.getItem(appStorageKey('mensfire_admin_staff')) || 'null');
     if (Array.isArray(savedStaff)) mockStaff = savedStaff;
 } catch (error) {
     console.error('Не удалось прочитать список мастеров:', error);
@@ -646,7 +655,7 @@ if (currentUser) {
 // Финансовые данные и карточки клиентов также загружаются безопасно.
 let expenses = (() => {
     try {
-        const saved = JSON.parse(localStorage.getItem('mensfire_admin_expenses') || '[]');
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_admin_expenses')) || '[]');
         return Array.isArray(saved) ? saved : [];
     } catch (error) {
         console.error('Не удалось прочитать расходы:', error);
@@ -656,7 +665,7 @@ let expenses = (() => {
 
 let clientProfiles = (() => {
     try {
-        const saved = JSON.parse(localStorage.getItem('mensfire_client_profiles') || '{}');
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_client_profiles')) || '{}');
         return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
     } catch (error) {
         console.error('Не удалось прочитать карточки клиентов:', error);
@@ -668,7 +677,7 @@ let clientProfiles = (() => {
 // к неопределённой переменной bookings и полностью прекращает отрисовку.
 let bookings = (() => {
     try {
-        const saved = JSON.parse(localStorage.getItem('mensfire_admin_bookings') || '[]');
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_admin_bookings')) || '[]');
         return Array.isArray(saved) ? saved : [];
     } catch (error) {
         console.error('Не удалось прочитать сохранённые записи:', error);
@@ -679,7 +688,7 @@ let bookings = (() => {
 // Дополнительные данные для блокировок
 let timeBlocks = (() => {
     try {
-        const saved = JSON.parse(localStorage.getItem('mensfire_admin_blocks') || '[]');
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_admin_blocks')) || '[]');
         return Array.isArray(saved) ? saved : [];
     } catch (error) {
         console.error('Не удалось прочитать блокировки времени:', error);
@@ -1334,7 +1343,7 @@ function completeBooking() {
     const booking = bookings.find(b => String(b.id) === String(selectedBookingId));
     if (booking) {
         booking.status = 'completed';
-        localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
+        localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
         closeModal('actionModal');
         showToast('Запись завершена', 'success');
         renderSchedule();
@@ -1348,7 +1357,7 @@ function cancelBooking() {
     const booking = bookings.find(b => b.id === selectedBookingId);
     if (booking) {
         booking.status = 'cancelled';
-        localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
+        localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
         closeModal('actionModal');
         showToast('Запись отменена', 'success');
         renderSchedule();
@@ -1704,7 +1713,7 @@ function saveNewBooking() {
 
     editingBookingId = null;
 
-    localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
+    localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
 
     selectedScheduleDate = date;
     closeModal('newBookingModal');
@@ -1814,7 +1823,7 @@ function addTimeBlock() {
         });
     }
 
-    localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
+    localStorage.setItem(appStorageKey('mensfire_admin_blocks'), JSON.stringify(timeBlocks));
 
     closeModal('blockTimeModal');
     showToast(editingBlockId ? 'Перерыв обновлён' : 'Перерыв добавлен', 'success');
@@ -1865,7 +1874,7 @@ function deleteTimeBlock() {
         'Да, удалить', 
         () => {
             timeBlocks = timeBlocks.filter(tb => String(tb.id) !== String(editingBlockId));
-            localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
+            localStorage.setItem(appStorageKey('mensfire_admin_blocks'), JSON.stringify(timeBlocks));
             closeModal('blockActionModal');
             showToast('Перерыв удален', 'success');
             renderSchedule();
@@ -2080,7 +2089,7 @@ function addExpense() {
     };
 
     expenses.push(newExpense);
-    localStorage.setItem('mensfire_admin_expenses', JSON.stringify(expenses));
+    localStorage.setItem(appStorageKey('mensfire_admin_expenses'), JSON.stringify(expenses));
     closeModal('expenseModal');
     showToast(`Расход добавлен на ${selectedFinanceDate}`, 'success');
     renderFinance();
@@ -2142,7 +2151,7 @@ function addStaff() {
     };
 
     mockStaff.push(newStaff);
-    localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+    localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
     closeModal('staffModal');
     showToast('Мастер добавлен', 'success');
     renderTeam();
@@ -2170,7 +2179,7 @@ function submitAdminResetPin() {
     const staff = mockStaff.find(s => s.id === staffToResetPin);
     if (staff) {
         staff.pin = newPin;
-        localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+        localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
         closeModal('adminResetPinModal');
         showToast('PIN обновлен', 'success');
         renderTeam();
@@ -2192,7 +2201,7 @@ function deleteStaff(id) {
             const index = mockStaff.findIndex(s => s.id === id);
             if (index !== -1) {
                 mockStaff.splice(index, 1);
-                localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+                localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
                 showToast('Мастер удален', 'success');
                 renderTeam();
             }
@@ -2600,7 +2609,7 @@ function exportMensfireBackup() {
     if (!requireAdminAction('Создавать резервные копии может только Али')) return;
     const data = {};
     MENSFIRE_BACKUP_KEYS.forEach(key => {
-        const raw = localStorage.getItem(key);
+        const raw = localStorage.getItem(appStorageKey(key));
         if (raw !== null) {
             try { data[key] = JSON.parse(raw); }
             catch (error) { throw new Error('Не удалось прочитать данные для копии: ' + key); }
@@ -2686,7 +2695,7 @@ function importMensfireBackup(input) {
             'Восстановить',
             () => {
                 MENSFIRE_BACKUP_KEYS.forEach(key => {
-                    localStorage.setItem(key, JSON.stringify(backup.data[key]));
+                    localStorage.setItem(appStorageKey(key), JSON.stringify(backup.data[key]));
                 });
                 showToast('Данные восстановлены. Перезагружаю приложение…', 'success');
                 setTimeout(() => window.location.reload(), 700);
@@ -2719,7 +2728,7 @@ function changePassword() {
     if (staff) {
         staff.pin = newPin;
         // Сессия не содержит PIN; сохраняем только обновлённые данные мастеров.
-        localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
+        localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
         closeModal('passwordModal');
         showToast('Пароль успешно изменен', 'success');
     }
