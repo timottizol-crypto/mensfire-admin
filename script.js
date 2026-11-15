@@ -170,7 +170,7 @@ function buildBottomNav() {
         ];
     } else {
         navItems = [
-            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
+            { id: 'viewSchedule', title: 'Главная', icon: calendarIcon },
             { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
             { id: 'viewProfile', title: 'Профиль', icon: clientsIcon }
         ];
