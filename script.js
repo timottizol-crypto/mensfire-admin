@@ -2644,6 +2644,26 @@ function importMensfireBackup(input) {
                     throw new Error('В копии отсутствуют или повреждены данные: ' + key);
                 }
             }
+
+            const staff = backup.data.mensfire_admin_staff;
+            const staffIds = new Set();
+            const staffPins = new Set();
+            const hasAdmin = staff.some(member =>
+                member && member.role === 'admin' && member.id && /^\\d{4}$/.test(String(member.pin || ''))
+            );
+            if (!hasAdmin) {
+                throw new Error('В резервной копии нет действующего администратора с корректным PIN. Восстановление отменено.');
+            }
+            for (const member of staff) {
+                if (!member || typeof member.id !== 'string' || !member.id ||
+                    typeof member.name !== 'string' || !member.name.trim() ||
+                    !/^\\d{4}$/.test(String(member.pin || '')) ||
+                    staffIds.has(member.id) || staffPins.has(String(member.pin))) {
+                    throw new Error('Список мастеров или PIN в резервной копии повреждён. Восстановление отменено.');
+                }
+                staffIds.add(member.id);
+                staffPins.add(String(member.pin));
+            }
         } catch (error) {
             showToast(error.message || 'Не удалось прочитать резервную копию', 'error');
             input.value = '';
