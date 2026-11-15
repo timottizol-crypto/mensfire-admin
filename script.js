@@ -2652,6 +2652,10 @@ function renderFinance() {
     setText('financeProfit', fmt(dayProfit));
     setText('profitWeek', fmt(weekRevenue - weekExpenseTotal));
     setText('profitMonth', fmt(monthProfit));
+    const profitMonthLabel = document.querySelector('#finTabExpenses .finance-period-metrics > div:nth-child(3) span');
+    if (profitMonthLabel) profitMonthLabel.textContent = financePeriodMode === 'day' ? 'За месяц' : 'За период';
+    const teamPeriodHint = document.querySelector('#finTabRevenue .finance-panel-heading p');
+    if (teamPeriodHint) teamPeriodHint.textContent = 'Поступления и завершённые визиты · ' + aggregationLabel;
     setText('financeMonthExpenses', fmt(monthExpenseTotal));
     const expensePeriodLabel = document.querySelector('#finTabExpenses .finance-total-row span');
     if (expensePeriodLabel) expensePeriodLabel.textContent = financePeriodMode === 'day' ? 'Расходы за месяц' : 'Расходы за период';
