@@ -5427,3 +5427,17 @@ html.light-theme .clients-chart-card { background:linear-gradient(145deg,rgba(25
 html.light-theme .clients-donut::before { background:#fff; border-color:rgba(0,0,0,.07); }
 html.light-theme .clients-monthly-strip { background:rgba(255,255,255,.7); border-color:rgba(0,0,0,.07); }
 html.light-theme .clients-chart-gridline { stroke:rgba(0,0,0,.10); }
+
+
+/* Booking origin and customer type chips */
+.booking-card-badges{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 7px;min-width:0}
+.booking-card-badges i{display:inline-flex;align-items:center;max-width:100%;padding:3px 7px;border-radius:999px;font-size:9px;font-style:normal;font-weight:750;line-height:1.2;letter-spacing:.01em;white-space:normal}
+.booking-origin{color:#c6d4e6;background:rgba(118,153,198,.13);border:1px solid rgba(118,153,198,.22)}
+.booking-origin.origin-web,.booking-origin.origin-pwa{color:#9ed9d1;background:rgba(66,181,164,.12);border-color:rgba(66,181,164,.24)}
+.booking-origin.origin-app,.booking-origin.origin-barber{color:#c4b5fd;background:rgba(139,112,220,.14);border-color:rgba(139,112,220,.25)}
+.booking-origin.origin-phone{color:#f4cb83;background:rgba(212,165,78,.12);border-color:rgba(212,165,78,.24)}
+.booking-client-type.type-new{color:#a8e4c0;background:rgba(67,176,119,.12);border:1px solid rgba(67,176,119,.24)}
+.booking-client-type.type-returning{color:#e7c77f;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.24)}
+.desktop-booking-card .booking-card-badges{gap:3px;margin:3px 0}
+.desktop-booking-card .booking-card-badges i{font-size:8px;padding:2px 5px}
+@media(max-width:520px){.booking-card-badges i{font-size:8px}.home-booking-item .booking-card-badges{margin:5px 0 6px}}
