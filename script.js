@@ -1331,7 +1331,7 @@ function openEditBooking() {
 
 function completeBooking() {
     if (!requireAdminAction('Изменять статус записи может только Али')) return;
-    const booking = bookings.find(b => b.id === selectedBookingId);
+    const booking = bookings.find(b => String(b.id) === String(selectedBookingId));
     if (booking) {
         booking.status = 'completed';
         localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
@@ -2228,7 +2228,7 @@ function showBarberStats(id) {
 
     // Считаем суммы
     const monthRevenue = monthBookings.reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
-    const todayRevenue = todayBookings.reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+    const todayRevenue = todayBookings.reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
     
     const monthSalary = Math.round(monthRevenue * 0.4);
     const todaySalary = Math.round(todayRevenue * 0.4);
@@ -2564,11 +2564,11 @@ function renderBarberRevenue() {
         // АДМИН: Считаем общую прибыль (Вся выручка за сегодня - Все расходы за сегодня)
         const totalRevenue = bookings
             .filter(b => b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+            .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
         
         const totalExpenses = expenses
             .filter(e => e.date === today)
-            .reduce((sum, e) => sum + e.amount, 0);
+            .reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
         const totalProfit = totalRevenue - totalExpenses;
         revenueEl.innerText = `${totalProfit} ₽`;
