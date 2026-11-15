@@ -291,6 +291,14 @@
                         <div style="font-size: 24px; font-weight: 800;" id="barberRevenue">0 ₽</div>
                     </div>
 
+                    <div class="glass-card profile-backup-card" id="profileBackupCard" style="margin-top: 15px;">
+                        <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 8px;">Резервная копия</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Сохрани копию записей, перерывов, расходов, мастеров и клиентских карточек на отдельное устройство.</p>
+                        <button type="button" class="checkout-btn" onclick="exportMensfireBackup()">Скачать резервную копию</button>
+                        <button type="button" class="btn-cancel" style="margin-top: 8px;" onclick="document.getElementById('mensfireBackupFile').click()">Восстановить из файла</button>
+                        <input id="mensfireBackupFile" type="file" accept="application/json,.json" hidden onchange="importMensfireBackup(this)">
+                    </div>
+
                     <button class="checkout-btn" style="margin-top: 15px;" onclick="openChangePasswordModal()">Сменить пароль</button>
                     <button class="logout-btn" style="margin-top: 15px;" onclick="logout()">Выйти</button>
                 </div>
