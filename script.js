@@ -874,6 +874,13 @@ ensureDemoSampleData();
 let selectedScheduleDate = new Date().toLocaleDateString('ru-RU');
 let currentScheduleTab = 'bookings'; // 'bookings' или 'breaks'
 let selectedFinanceDate = new Date().toLocaleDateString('ru-RU');
+let financePeriodMode = 'day';
+let financeRangeStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('ru-RU');
+let financeRangeEnd = new Date().toLocaleDateString('ru-RU');
+let reportDatePickerTarget = null;
+let clientsPeriodMode = 'sixMonths';
+let clientsRangeStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('ru-RU');
+let clientsRangeEnd = new Date().toLocaleDateString('ru-RU');
 
 // Массив фраз для пустого расписания
 const emptyPhrases = [
@@ -1910,6 +1917,18 @@ function renderCalendar() {
 
         dayDiv.onclick = () => {
             selectedBlockDate = thisDateStr;
+            if (reportDatePickerTarget) {
+                const target = reportDatePickerTarget;
+                if (target === 'financeStart') financeRangeStart = thisDateStr;
+                if (target === 'financeEnd') financeRangeEnd = thisDateStr;
+                if (target === 'clientsStart') clientsRangeStart = thisDateStr;
+                if (target === 'clientsEnd') clientsRangeEnd = thisDateStr;
+                reportDatePickerTarget = null;
+                closeModal('calendarModal');
+                if (target.startsWith('finance')) renderFinance();
+                else renderClients(currentClientsTab);
+                return;
+            }
             if (calendarTargetInputId === 'newBookingDate') {
                 const target = document.getElementById('newBookingDate');
                 if (target) target.value = thisDateStr;
@@ -2460,10 +2479,69 @@ function switchFinanceTab(tab) {
     renderFinance();
 }
 
+function parseReportDate(value) {
+    const parts = String(value || '').split('.').map(Number);
+    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+    const date = new Date(parts[2], parts[1] - 1, parts[0]);
+    date.setHours(0,0,0,0);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
+function openReportDatePicker(target) {
+    reportDatePickerTarget = target;
+    const value = target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : clientsRangeEnd;
+    const date = parseReportDate(value) || new Date();
+    selectedBlockDate = formatReportDate(date);
+    pickerYear = date.getFullYear();
+    pickerMonth = date.getMonth();
+    renderCalendar();
+    openModal('calendarModal');
+}
+function setFinancePeriod(mode) {
+    if (!['day','month','custom'].includes(mode)) return;
+    financePeriodMode = mode;
+    if (mode === 'month') {
+        const selected = parseReportDate(selectedFinanceDate) || new Date();
+        financeRangeStart = formatReportDate(new Date(selected.getFullYear(),selected.getMonth(),1));
+        financeRangeEnd = formatReportDate(new Date(selected.getFullYear(),selected.getMonth()+1,0));
+    } else if (mode === 'custom') {
+        if (!parseReportDate(financeRangeStart) || !parseReportDate(financeRangeEnd)) {
+            financeRangeStart = formatReportDate(new Date(new Date().getFullYear(),new Date().getMonth(),1));
+            financeRangeEnd = formatReportDate(new Date());
+        }
+    }
+    renderFinance();
+}
+function setClientsPeriod(mode) {
+    if (!['sixMonths','month','custom'].includes(mode)) return;
+    clientsPeriodMode = mode;
+    if (mode === 'month') {
+        const now = new Date();
+        clientsRangeStart = formatReportDate(new Date(now.getFullYear(),now.getMonth(),1));
+        clientsRangeEnd = formatReportDate(new Date());
+    } else if (mode === 'sixMonths') {
+        const now = new Date();
+        clientsRangeStart = formatReportDate(new Date(now.getFullYear(),now.getMonth()-5,1));
+        clientsRangeEnd = formatReportDate(new Date());
+    } else if (!parseReportDate(clientsRangeStart) || !parseReportDate(clientsRangeEnd)) {
+        const now = new Date();
+        clientsRangeStart = formatReportDate(new Date(now.getFullYear(),now.getMonth(),1));
+        clientsRangeEnd = formatReportDate(now);
+    }
+    renderClients(currentClientsTab);
+}
 function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
     if (!container) return;
     container.innerHTML = '';
+    container.style.display = financePeriodMode === 'day' ? 'flex' : 'none';
+    const fields = document.getElementById('financeRangeFields');
+    if (fields) fields.hidden = financePeriodMode !== 'custom';
+    document.querySelectorAll('[data-finance-period]').forEach(button => button.classList.toggle('active', button.dataset.financePeriod === financePeriodMode));
+    const startButton = document.getElementById('financeRangeStartButton');
+    const endButton = document.getElementById('financeRangeEndButton');
+    if (startButton) startButton.textContent = financeRangeStart;
+    if (endButton) endButton.textContent = financeRangeEnd;
     const selectedParts = selectedFinanceDate.split('.').map(Number);
     const base = selectedParts.length === 3 ? new Date(selectedParts[2],selectedParts[1]-1,selectedParts[0]) : new Date();
     base.setHours(0,0,0,0);
@@ -2485,7 +2563,7 @@ function renderFinanceDateSelector() {
         div.className = 'date-selector-item' + (selectedFinanceDate === dateStr ? ' selected' : '') + (isToday ? ' is-today' : '');
         div.setAttribute('aria-pressed',String(selectedFinanceDate === dateStr));
         div.innerHTML = '<div class="day-name">' + (isToday ? 'Сегодня' : days[d.getDay()]) + '</div><div class="day-num">' + d.getDate() + '</div>';
-        div.onclick = () => { selectedFinanceDate = dateStr; renderFinance(); };
+        div.onclick = () => { selectedFinanceDate = dateStr; financePeriodMode = 'day'; renderFinance(); };
         container.appendChild(div);
     }
     requestAnimationFrame(() => {
@@ -2511,6 +2589,15 @@ function renderFinance() {
     const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
     const inRange = (value, start, end) => { const date = parseDate(value); return date && date >= start && date < end; };
+    let periodStart = financePeriodMode === 'day' ? selectedDate : parseReportDate(financeRangeStart) || monthStart;
+    let periodLastDay = financePeriodMode === 'day' ? selectedDate : parseReportDate(financeRangeEnd) || new Date(selectedDate.getFullYear(),selectedDate.getMonth()+1,0);
+    if (financePeriodMode === 'month') {
+        periodStart = monthStart;
+        periodLastDay = new Date(selectedDate.getFullYear(),selectedDate.getMonth()+1,0);
+    }
+    if (periodLastDay < periodStart) [periodStart, periodLastDay] = [periodLastDay, periodStart];
+    const periodEnd = shift(periodLastDay, 1);
+    const periodLabel = financePeriodMode === 'day' ? formatReportDate(selectedDate) : (formatReportDate(periodStart) + ' — ' + formatReportDate(periodLastDay));
     const dayEnd = shift(selectedDate, 1);
     const weekStart = startOfWeek(selectedDate);
     const weekEnd = shift(weekStart, 7);
@@ -2522,11 +2609,11 @@ function renderFinance() {
         .reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
     const dayRevenue = revenue(selectedDate, dayEnd);
     const weekRevenue = revenue(weekStart, weekEnd);
-    const monthRevenue = revenue(monthStart, nextMonth);
-    const dayExpenses = expenses.filter(item => item.date === selectedFinanceDate);
+    const monthRevenue = revenue(periodStart, periodEnd);
+    const dayExpenses = financePeriodMode === 'day' ? expenses.filter(item => item.date === selectedFinanceDate) : expenses.filter(item => inRange(item.date, periodStart, periodEnd));
     const dayExpenseTotal = dayExpenses.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
     const weekExpenseTotal = expensesTotal(weekStart, weekEnd);
-    const monthExpenseTotal = expensesTotal(monthStart, nextMonth);
+    const monthExpenseTotal = expensesTotal(periodStart, periodEnd);
     const dayProfit = dayRevenue - dayExpenseTotal;
     const monthProfit = monthRevenue - monthExpenseTotal;
     const activeBookings = bookings.filter(item => item.status !== 'cancelled');
@@ -2535,7 +2622,7 @@ function renderFinance() {
         return sum + Math.max(0, total - getBookingPaymentState(item, total).paid);
     }, 0);
     const paymentTotals = { cash: 0, card: 0, transfer: 0, online: 0, other: 0 };
-    bookings.filter(item => inRange(item.date, monthStart, nextMonth)).forEach(item => {
+    bookings.filter(item => inRange(item.date, periodStart, periodEnd)).forEach(item => {
         const payments = Array.isArray(item.payments) && item.payments.length
             ? item.payments
             : (getBookingCollectedAmount(item) > 0 ? [{ amount: getBookingCollectedAmount(item), method: item.paymentMethod || 'other' }] : []);
@@ -2549,10 +2636,18 @@ function renderFinance() {
     setText('financeToday', fmt(dayRevenue));
     setText('financeWeek', fmt(weekRevenue));
     setText('financeMonth', fmt(monthRevenue));
+    const monthLabel = document.querySelector('#finTabRevenue .finance-kpi-card:nth-child(3) .finance-kpi-label');
+    if (monthLabel) monthLabel.textContent = financePeriodMode === 'day' ? 'Месяц' : 'Период';
+    const monthHint = document.querySelector('#finTabRevenue .finance-kpi-card:nth-child(3) small');
+    if (monthHint) monthHint.textContent = periodLabel;
     setText('financeProfit', fmt(dayProfit));
     setText('profitWeek', fmt(weekRevenue - weekExpenseTotal));
     setText('profitMonth', fmt(monthProfit));
     setText('financeMonthExpenses', fmt(monthExpenseTotal));
+    const expensePeriodLabel = document.querySelector('#finTabExpenses .finance-total-row span');
+    if (expensePeriodLabel) expensePeriodLabel.textContent = financePeriodMode === 'day' ? 'Расходы за месяц' : 'Расходы за период';
+    const paymentSubtitle = document.querySelector('#finTabExpenses .finance-panel:nth-child(3) .finance-panel-heading p');
+    if (paymentSubtitle) paymentSubtitle.textContent = financePeriodMode === 'day' ? 'Распределение поступлений за месяц' : 'Распределение поступлений за период';
 
     const expensesList = document.getElementById('expensesList');
     if (expensesList) expensesList.innerHTML = dayExpenses.length ? dayExpenses.map(item => `
@@ -2564,11 +2659,11 @@ function renderFinance() {
 
     const summary = document.getElementById('financeExecutiveSummary');
     if (summary) summary.innerHTML = `
-        <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">Получено за день</span><strong>${fmt(dayRevenue)}</strong><small>${dayCompleted.length} завершённых визитов</small></div>
-        <div class="finance-kpi-card"><span class="finance-kpi-label">Чистый результат дня</span><strong class="${dayProfit < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(dayProfit)}</strong><small>После расходов за день</small></div>
+        <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Получено за день' : 'Получено за период'}</span><strong>${fmt(financePeriodMode === 'day' ? dayRevenue : monthRevenue)}</strong><small>${financePeriodMode === 'day' ? dayCompleted.length + ' завершённых визитов' : periodLabel}</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Чистый результат дня' : 'Чистый результат периода'}</span><strong class="${(financePeriodMode === 'day' ? dayProfit : monthProfit) < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(financePeriodMode === 'day' ? dayProfit : monthProfit)}</strong><small>После расходов</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Ожидает оплаты</span><strong>${fmt(unpaidBalance)}</strong><small>Баланс по активным записям</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt(dayCompleted.length ? dayCompleted.reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / dayCompleted.length : 0)}</strong><small>По завершённым визитам</small></div>
-        <div class="finance-kpi-card finance-kpi-comparison"><span class="finance-kpi-label">К прошлому дню</span><strong class="${dayRevenue >= revenue(shift(selectedDate,-1),selectedDate) ? 'finance-positive' : 'finance-negative'}">${dayRevenue >= revenue(shift(selectedDate,-1),selectedDate) ? '+' : '−'}${fmt(Math.abs(dayRevenue - revenue(shift(selectedDate,-1),selectedDate)))}</strong><small>Поступления относительно предыдущего дня</small></div>`;
+        <div class="finance-kpi-card finance-kpi-comparison"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'К прошлому дню' : 'Выбранный период'}</span><strong>${periodLabel}</strong><small>${financePeriodMode === 'day' ? 'Сравнение с предыдущим днём' : 'Интервал для всех расчётов ниже'}</small></div>`;
 
     const chart = document.getElementById('financeRevenueChart');
     if (chart) {
@@ -2594,7 +2689,7 @@ function renderFinance() {
     if (teamStats) {
         const staff = Array.isArray(mockStaff) ? mockStaff : [];
         const rows = staff.map(person => {
-            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, monthStart, nextMonth));
+            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, periodStart, periodEnd));
             const paid = own.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
             const visits = own.filter(item => item.status === 'completed').length;
             return {name:person.name,paid,visits};
@@ -2607,10 +2702,11 @@ function renderFinance() {
         }).join('') : '<div class="finance-empty">Добавьте мастеров, чтобы увидеть статистику</div>';
     }
 
+    const analyticsBookings = bookings.filter(item => inRange(item.date, periodStart, periodEnd) && item.status !== 'cancelled');
     const analyticsHeader = document.getElementById('analyticsHeaderBlock');
-    if (analyticsHeader) analyticsHeader.innerHTML = `<div><strong>${selectedFinanceDate}</strong><span class="finance-muted">Сводка по записям</span></div><strong>${dayBookings.length} записей</strong>`;
+    if (analyticsHeader) analyticsHeader.innerHTML = `<div><strong>${periodLabel}</strong><span class="finance-muted">Сводка по записям за период</span></div><strong>${analyticsBookings.length} записей</strong>`;
     const analyticsList = document.getElementById('analyticsHistoryList');
-    if (analyticsList) analyticsList.innerHTML = dayBookings.length ? dayBookings.map(item => {
+    if (analyticsList) analyticsList.innerHTML = analyticsBookings.length ? analyticsBookings.map(item => {
         const total = (item.services || []).reduce((sum,service) => sum + Number(service.price || 0),0);
         const state = getBookingPaymentState(item,total);
         const methodKey = ['cash','card','transfer','online','mixed'].includes(state.method) ? state.method : 'other';
@@ -2623,11 +2719,10 @@ function renderFinance() {
             </div>
             <strong>${fmt(state.paid)} / ${fmt(total)}</strong>
         </div>`;
-    }).join('') : '<div class="finance-empty">На эту дату записей нет</div>';
+    }).join('') : '<div class="finance-empty">За выбранный период записей нет</div>';
 
-    const thirtyDaysStart = shift(new Date(), -29);
     const serviceCounts = {};
-    bookings.filter(item => item.status === 'completed' && inRange(item.date, thirtyDaysStart, shift(new Date(),1))).forEach(item => {
+    bookings.filter(item => item.status === 'completed' && inRange(item.date, periodStart, periodEnd)).forEach(item => {
         (Array.isArray(item.services) ? item.services : []).forEach(service => {
             const name = String(service.title || 'Услуга');
             if (!serviceCounts[name]) serviceCounts[name] = {count:0,revenue:0};
@@ -2653,7 +2748,7 @@ function renderFinance() {
         });
         const rows = Object.entries(groups).sort((a,b) => b[1]-a[1]);
         const maxExpense = Math.max(1,...rows.map(([,amount]) => amount));
-        expenseBreakdown.innerHTML = rows.length ? '<div class="finance-breakdown-heading">Структура расходов за день</div>' + rows.map(([label,amount]) => `
+        expenseBreakdown.innerHTML = rows.length ? '<div class="finance-breakdown-heading">Структура расходов за период</div>' + rows.map(([label,amount]) => `
             <div class="finance-expense-breakdown-row"><div><span>${escapeBookingHtml(label)}</span><strong>${fmt(amount)}</strong></div><div class="finance-expense-track"><i style="width:${amount/maxExpense*100}%"></i></div></div>`
         ).join('') : '<div class="finance-empty">Добавьте расходы, чтобы увидеть структуру</div>';
     }
