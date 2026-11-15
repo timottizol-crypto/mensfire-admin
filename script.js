@@ -2488,6 +2488,7 @@ function parseReportDate(value) {
 }
 function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
 function openReportDatePicker(target) {
+    calendarTargetInputId = null;
     reportDatePickerTarget = target;
     const value = target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : clientsRangeEnd;
     const date = parseReportDate(value) || new Date();
