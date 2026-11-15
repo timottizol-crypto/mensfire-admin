@@ -2292,31 +2292,62 @@ function renderTeam() {
     if (!requireAdminAction('Просматривать команду и управлять PIN может только Али')) return;
     const listPC = document.getElementById('teamListPC');
     const listMobile = document.getElementById('teamList');
-    
+
     if (mockStaff.length === 0) {
-        const empty = '<p style="text-align: center; color: var(--text-muted);">Нет мастеров</p>';
+        const empty = '<p class="team-empty-state">Нет мастеров</p>';
         if (listPC) listPC.innerHTML = empty;
         if (listMobile) listMobile.innerHTML = empty;
         return;
     }
 
-    const html = mockStaff.map(s => `
-        <div class="glass-card" onclick="showBarberStats('${s.id}')" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding: 15px; cursor: pointer;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="font-size: 16px; color: var(--gold);">${s.name}</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">${s.role === 'admin' ? 'Главный мастер' : 'Барбер'} | PIN: ${s.pin}</p>
+    const html = mockStaff.map(staff => {
+        const id = escapeBookingHtml(staff.id);
+        const name = escapeBookingHtml(staff.name);
+        const pin = escapeBookingHtml(staff.pin);
+        const isAdmin = staff.role === 'admin';
+        const roleLabel = isAdmin ? 'Главный мастер' : 'Барбер';
+        const initials = escapeBookingHtml(String(staff.name || '?').trim().slice(0, 1).toUpperCase() || '?');
+        return `
+            <article class="team-card team-member-card" data-staff-card data-staff-id="${id}" tabindex="0" role="button" aria-label="Статистика: ${name}">
+                <div class="team-avatar" aria-hidden="true">${initials}</div>
+                <div class="team-info">
+                    <h3 class="team-name">${name}</h3>
+                    <span class="team-role">${roleLabel}</span>
+                    <span class="team-pin">PIN: ${pin}</span>
                 </div>
-                <div style="display: flex; gap: 5px;">
-                    <button class="action-modal-btn action-btn-primary" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="event.stopPropagation(); resetStaffPin('${s.id}')">Сбросить PIN</button>
-                    ${s.role !== 'admin' ? `<button class="action-modal-btn action-btn-danger" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto;" onclick="event.stopPropagation(); deleteStaff('${s.id}')">Удалить</button>` : ''}
+                <div class="team-actions">
+                    <button type="button" class="team-action-btn reset" data-staff-action="reset" data-staff-id="${id}">Сбросить PIN</button>
+                    ${!isAdmin ? `<button type="button" class="team-action-btn delete" data-staff-action="delete" data-staff-id="${id}">Удалить</button>` : ''}
                 </div>
-            </div>
-        </div>
-    `).join('');
+            </article>
+        `;
+    }).join('');
 
-    if (listPC) listPC.innerHTML = html;
-    if (listMobile) listMobile.innerHTML = html;
+    [listPC, listMobile].forEach(container => {
+        if (!container) return;
+        container.innerHTML = html;
+        container.querySelectorAll('[data-staff-card]').forEach(card => {
+            const id = card.getAttribute('data-staff-id');
+            const openStats = () => showBarberStats(id);
+            card.addEventListener('click', event => {
+                if (event.target.closest('[data-staff-action]')) return;
+                openStats();
+            });
+            card.addEventListener('keydown', event => {
+                if (event.target !== card || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                openStats();
+            });
+        });
+        container.querySelectorAll('[data-staff-action]').forEach(button => {
+            button.addEventListener('click', event => {
+                event.stopPropagation();
+                const id = button.getAttribute('data-staff-id');
+                if (button.getAttribute('data-staff-action') === 'reset') resetStaffPin(id);
+                if (button.getAttribute('data-staff-action') === 'delete') deleteStaff(id);
+            });
+        });
+    });
 }
 
 function openStaffModal() {
