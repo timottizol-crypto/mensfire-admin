@@ -829,8 +829,11 @@ function renderDesktopSchedule() {
 
     let html = `
         <div class="desktop-calendar-toolbar">
-            <div>
+            <div class="desktop-calendar-date-controls">
+                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(-1)" aria-label="Предыдущий день">‹</button>
+                <button type="button" class="calendar-today-btn" onclick="goToScheduleToday()">Сегодня</button>
                 <strong>${date}</strong>
+                <button type="button" class="calendar-date-arrow" onclick="shiftScheduleDate(1)" aria-label="Следующий день">›</button>
                 <span>${staff.length} маст.</span>
             </div>
             <div class="desktop-calendar-tabs">
@@ -943,12 +946,16 @@ function renderDateSelector() {
     container.innerHTML = '';
     
     const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    
-    for (let i = 0; i < 30; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
+    const [day, month, year] = selectedScheduleDate.split('.').map(Number);
+    const selected = new Date(year, month - 1, day);
+    if (Number.isNaN(selected.getTime())) return;
+
+    for (let i = -14; i <= 15; i++) {
+        const d = new Date(selected);
+        d.setDate(selected.getDate() + i);
         const dateStr = d.toLocaleDateString('ru-RU');
-        const dayName = i === 0 ? 'Сегодня' : i === 1 ? 'Завтра' : days[d.getDay()];
+        const todayStr = new Date().toLocaleDateString('ru-RU');
+        const dayName = dateStr === todayStr ? 'Сегодня' : days[d.getDay()];
         
         const div = document.createElement('div');
         div.className = `date-selector-item ${selectedScheduleDate === dateStr ? 'selected' : ''}`;
@@ -963,6 +970,20 @@ function renderDateSelector() {
         container.appendChild(div);
     }
 }
+function shiftScheduleDate(offset) {
+    const [day, month, year] = selectedScheduleDate.split('.').map(Number);
+    const date = new Date(year, month - 1, day);
+    if (Number.isNaN(date.getTime())) return;
+    date.setDate(date.getDate() + Number(offset || 0));
+    selectedScheduleDate = date.toLocaleDateString('ru-RU');
+    renderSchedule();
+}
+
+function goToScheduleToday() {
+    selectedScheduleDate = new Date().toLocaleDateString('ru-RU');
+    renderSchedule();
+}
+
 function switchScheduleTab(tab) {
     if (!['bookings', 'breaks'].includes(tab)) return;
     currentScheduleTab = tab;
