@@ -1708,27 +1708,51 @@ function getBookingClientTypeMeta(booking) {
 }
 
 function getBookingCollectedAmount(booking) {
-    const serviceTotal = (booking.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
-    if (Array.isArray(booking.payments) && booking.payments.length) {
-        return booking.payments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount || 0)), 0);
+    const services = Array.isArray(booking?.services) ? booking.services : [];
+    const serviceTotal = services.reduce((sum, service) => {
+        const amount = Number(service?.price);
+        return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
+    }, 0);
+    const transactions = Array.isArray(booking?.payments) ? booking.payments : [];
+    if (transactions.length) {
+        const collected = transactions.reduce((sum, payment) => {
+            const amount = Number(payment?.amount);
+            return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
+        }, 0);
+        return Math.min(serviceTotal, collected);
     }
-    if (Object.prototype.hasOwnProperty.call(booking, 'paidAmount')) {
-        return Math.max(0, Number(booking.paidAmount || 0));
+    if (Object.prototype.hasOwnProperty.call(booking || {}, 'paidAmount')) {
+        const legacyPaid = Number(booking.paidAmount);
+        return Math.min(serviceTotal, Number.isFinite(legacyPaid) ? Math.max(0, legacyPaid) : 0);
     }
     // Для старых записей сохраняем выручку только по завершённым визитам.
     // Будущие и незавершённые записи без отметки оплаты не считаем оплаченными.
-    return booking.status === 'completed' ? serviceTotal : 0;
+    return booking?.status === 'completed' ? serviceTotal : 0;
 }
 function getBookingPaymentState(booking, total) {
-    const transactions = Array.isArray(booking.payments) ? booking.payments : [];
-    const transactionTotal = transactions.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
-    const legacyPaid = Number(booking.paidAmount || 0);
-    const paid = Math.max(0, Math.min(total, transactions.length ? transactionTotal : legacyPaid));
-    const status = paid <= 0 || total <= 0 ? 'unpaid' : paid >= total ? 'paid' : 'partial';
-    const methods = [...new Set(transactions.map(item => item.method).filter(Boolean))];
-    const method = methods.length > 1 ? 'mixed' : (methods[0] || booking.paymentMethod);
-    return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
-        method, methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан', transactions };
+    const safeTotal = Number.isFinite(Number(total)) ? Math.max(0, Number(total)) : 0;
+    const transactions = Array.isArray(booking?.payments) ? booking.payments : [];
+    const transactionTotal = transactions.reduce((sum, item) => {
+        const amount = Number(item?.amount);
+        return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
+    }, 0);
+    const legacyPaidValue = Number(booking?.paidAmount || 0);
+    const legacyPaid = Number.isFinite(legacyPaidValue) ? Math.max(0, legacyPaidValue) : 0;
+    const paid = Math.min(safeTotal, transactions.length ? transactionTotal : legacyPaid);
+    const status = paid <= 0 || safeTotal <= 0 ? 'unpaid' : paid >= safeTotal ? 'paid' : 'partial';
+    const methods = [...new Set(transactions
+        .filter(item => Number.isFinite(Number(item?.amount)) && Number(item.amount) > 0)
+        .map(item => item?.method)
+        .filter(Boolean))];
+    const method = methods.length > 1 ? 'mixed' : (methods[0] || booking?.paymentMethod);
+    return {
+        paid,
+        status,
+        label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
+        method,
+        methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан',
+        transactions
+    };
 }
 let selectedPaymentBookingId = null;
 
