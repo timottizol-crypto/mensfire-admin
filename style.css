@@ -5615,3 +5615,11 @@ html.light-theme .dashboard-team-row,html.light-theme .dashboard-upcoming-row{bo
 #clientDetailsMetrics b{display:block;color:var(--text-main);font-size:12px;margin-top:3px}
 html.light-theme #clientDetailsMetrics span{border-color:rgba(48,60,78,.12);background:rgba(48,60,78,.035)}
 @media(max-width:420px){.client-profile-actions{grid-template-columns:1fr}#clientDetailsMetrics{grid-template-columns:1fr 1fr!important}}
+
+/* Schedule master filter */
+.schedule-barber-filter,.schedule-barber-filter-mobile{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0 13px}
+.schedule-barber-filter button,.schedule-barber-filter-mobile button{appearance:none;border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.035);color:var(--text-muted);font:inherit;font-size:10px;font-weight:700;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.schedule-barber-filter button.active,.schedule-barber-filter-mobile button.active{border-color:rgba(212,175,55,.42);background:rgba(212,175,55,.12);color:var(--gold)}
+html.light-theme .schedule-barber-filter button,html.light-theme .schedule-barber-filter-mobile button{border-color:rgba(48,60,78,.14);background:rgba(48,60,78,.035);color:#647084}
+html.light-theme .schedule-barber-filter button.active,html.light-theme .schedule-barber-filter-mobile button.active{border-color:rgba(172,132,40,.35);background:rgba(212,175,55,.12);color:#8a681e}
+@media(max-width:767px){.schedule-barber-filter{display:none}.schedule-barber-filter-mobile{display:flex;margin:8px 0 10px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px}.schedule-barber-filter-mobile button{flex:0 0 auto}}
