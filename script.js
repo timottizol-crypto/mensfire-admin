@@ -792,6 +792,8 @@ function renderSchedule() {
                 `;
             } else {
                 const servicesText = (b.services || []).map(s => escapeBookingHtml(s.title || 'Услуга')).join(', ');
+                const bookingTotal = (b.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
+                const payState = getBookingPaymentState(b, bookingTotal);
                 let itemClass = b.status === 'completed' ? 'completed' : (b.status === 'cancelled' ? 'cancelled' : '');
                 let statusBadge = '';
                 if (b.status === 'completed') statusBadge = `<div class="status-badge completed" style="margin:0;">Завершена</div>`;
@@ -799,11 +801,12 @@ function renderSchedule() {
                 else statusBadge = `<div class="status-badge active" style="margin:0;">Активная</div>`;
 
                 return `
-                    <div class="home-booking-item ${itemClass}" onclick="openActionModal(${b.id})" style="cursor: pointer; margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%; box-sizing: border-box;">
+                    <div class="home-booking-item ${itemClass}" onclick="openActionModal('${escapeBookingHtml(String(b.id))}')" style="cursor: pointer; margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%; box-sizing: border-box;">
                         <div class="hb-info" style="flex: 1; min-width: 0;">
                             <div class="hb-date" style="font-size: 14px;">${b.time}</div>
                             <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? (mockStaff.find(s=>s.id === b.barberId)?.name || 'Мастер') + ' · ' : ''}${b.clientName}</div>
                             <div class="hb-services" style="font-size: 11px; white-space: normal;">${servicesText}</div>
+                            <span class="calendar-payment-label payment-${payState.status}">${payState.label}</span>
                         </div>
                         <div style="flex-shrink: 0; margin-left: 10px;">
                             ${statusBadge}
