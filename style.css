@@ -3912,3 +3912,54 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking-card-meta {
     color: #4a4a4a !important;
 }
+
+/* Mobile booking rows: keep time, client, service and status in separate lanes. */
+@media (max-width: 767px) {
+    #scheduleList .home-booking-item {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        min-width: 0;
+    }
+
+    #scheduleList .home-booking-item > .hb-info {
+        flex: 1 1 0%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    #scheduleList .home-booking-item > div:last-child {
+        flex: 0 0 auto;
+        min-width: 0;
+        max-width: 34%;
+        margin-left: 0 !important;
+    }
+
+    #scheduleList .home-booking-item .hb-date,
+    #scheduleList .home-booking-item .hb-master,
+    #scheduleList .home-booking-item .hb-services {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    #scheduleList .home-booking-item .status-badge {
+        display: inline-block;
+        max-width: 100%;
+        padding: 5px 7px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    #scheduleList .home-booking-item .calendar-payment-label {
+        display: inline-block;
+        max-width: 100%;
+        margin-top: 5px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+}
