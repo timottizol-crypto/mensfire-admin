@@ -5648,3 +5648,12 @@ html.light-theme .waitlist-row{background:#fff;border-color:#e0e5eb}
 html.light-theme .waitlist-actions .waitlist-remove{color:#647084;border-color:#d5dce5}
 @media(max-width:760px){.schedule-waitlist{padding:15px;border-radius:18px}.waitlist-form{grid-template-columns:repeat(2,minmax(0,1fr));padding:11px}.waitlist-form .checkout-btn{grid-column:1/-1}.waitlist-row{align-items:flex-start;flex-direction:column}.waitlist-actions{width:100%}.waitlist-actions button{flex:1}}
 @media(max-width:390px){.waitlist-form{grid-template-columns:1fr}}
+
+/* Working hours and recurring time-off controls */
+.block-mode-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 15px}
+.block-mode-choice{display:flex;align-items:flex-start;gap:9px;padding:11px;border:1px solid rgba(212,175,55,.16);border-radius:13px;background:rgba(212,175,55,.045);cursor:pointer}
+.block-mode-choice input{width:15px;height:15px;accent-color:var(--gold);margin:2px 0 0;flex-shrink:0}
+.block-mode-choice span{display:flex;flex-direction:column;gap:4px}.block-mode-choice strong{font-size:10px;color:var(--text-main)}.block-mode-choice small{font-size:9px;line-height:1.35;color:var(--text-muted)}
+#blockStartTime:disabled,#blockEndTime:disabled{opacity:.4;cursor:not-allowed}
+html.light-theme .block-mode-choice{background:#fbf8ef;border-color:rgba(172,132,40,.2)}
+@media(max-width:420px){.block-mode-options{grid-template-columns:1fr}}
