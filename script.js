@@ -2256,6 +2256,7 @@ function renderBookingBarberChoices() {
 function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
     if (!requireAdminAction('Создавать записи может только Али')) return;
     editingBookingId = null;
+    editingWaitlistId = null;
 
     document.querySelector('#newBookingModal h2').textContent = 'Новая запись';
     document.querySelector('#newBookingModal .checkout-btn').textContent = 'Создать запись';
@@ -2497,6 +2498,12 @@ function saveNewBooking() {
     editingBookingId = null;
 
     localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    if (!wasEditing && editingWaitlistId) {
+        waitlistEntries = waitlistEntries.filter(item => String(item.id) !== String(editingWaitlistId));
+        editingWaitlistId = null;
+        persistWaitlist();
+        renderWaitlist();
+    }
 
     selectedScheduleDate = date;
     closeModal('newBookingModal');
