@@ -120,6 +120,19 @@
                 <div id="scheduleList" class="home-scroll-area" style="transition:opacity .3s ease;"><!-- Карточки записей генерируются через JS --></div>
             </div>
             <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
+            <section class="glass-card schedule-waitlist" id="scheduleWaitlist">
+                <div class="schedule-waitlist-heading"><div><span class="workspace-eyebrow">CLIENT QUEUE</span><h3>Лист ожидания</h3><p>Клиенты, которым нужно предложить свободное окно</p></div><span class="waitlist-count" id="waitlistCount">0</span></div>
+                <div class="waitlist-form">
+                    <div class="form-group"><label for="waitlistClient">Имя клиента</label><input id="waitlistClient" type="text" placeholder="Например, Алексей"></div>
+                    <div class="form-group"><label for="waitlistPhone">Телефон</label><input id="waitlistPhone" type="tel" placeholder="+7 900 000-00-00"></div>
+                    <div class="form-group"><label for="waitlistDate">Желаемая дата</label><input id="waitlistDate" class="mensfire-picker-trigger" type="text" inputmode="none" readonly placeholder="Выбрать дату" onclick="openWaitlistDatePicker()"></div>
+                    <div class="form-group"><label for="waitlistTime">Желаемое время</label><input id="waitlistTime" type="text" inputmode="none" readonly placeholder="Любое время" onclick="openTimePicker('waitlistTime')"></div>
+                    <div class="form-group"><label for="waitlistBarber">Мастер</label><select id="waitlistBarber"></select></div>
+                    <div class="form-group"><label for="waitlistService">Услуга</label><select id="waitlistService"></select></div>
+                    <button type="button" class="checkout-btn" onclick="addWaitlistEntry()">＋ Добавить в ожидание</button>
+                </div>
+                <div class="waitlist-list" id="waitlistList"><div class="waitlist-empty">Пока нет клиентов в листе ожидания</div></div>
+            </section>
         </div>
 
         <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
