@@ -849,7 +849,7 @@ function isWithinBarberWorkSchedule(barberId,dateValue,start,end) {
 function openWorkScheduleModal() {
     if (!requireAdminAction('Настраивать график может только администратор')) return;
     const select=document.getElementById('workScheduleBarber');
-    select.innerHTML=mockStaff.filter(person=>person.role!=='admin').map(person=>'<option value="'+escapeBookingHtml(person.id)+'">'+escapeBookingHtml(person.name)+'</option>').join('');
+    select.innerHTML=mockStaff.map(person=>'<option value="'+escapeBookingHtml(person.id)+'">'+escapeBookingHtml(person.name)+'</option>').join('');
     renderWorkScheduleEditor();
     openModal('workScheduleModal');
 }
@@ -967,6 +967,8 @@ function promoteWaitlistEntry(id) {
     openNewBookingModal(barberId, item.time || '', date);
     const client = document.getElementById('newBookingClient');
     if (client) client.value = item.clientName;
+    const phoneInput = document.getElementById('newBookingClientPhone');
+    if (phoneInput) phoneInput.value = item.phone || '';
     const barberSelect = document.getElementById('newBookingBarber');
     if (barberSelect && item.barberId) barberSelect.value = item.barberId;
     renderBookingBarberChoices();
@@ -1372,8 +1374,8 @@ function renderDesktopSchedule() {
                 ${monthDays.map(date => {
                     const dateKey = date.toLocaleDateString('ru-RU');
                     const inMonth = date.getMonth() === selectedDate.getMonth();
-                    const dayBookings = bookings.filter(b => b.date === dateKey && staff.some(member => member.id === b.barberId));
-                    const dayBlocks = timeBlocks.filter(b => b.date === dateKey && staff.some(member => member.id === b.barberId));
+                    const dayBookings = bookings.filter(b => b.date === dateKey && b.status !== 'cancelled' && staff.some(member => String(member.id) === String(b.barberId)));
+                    const dayBlocks = timeBlocks.filter(b => b.date === dateKey && staff.some(member => String(member.id) === String(b.barberId)));
                     const count = currentScheduleTab === 'bookings' ? dayBookings.length : dayBlocks.length;
                     const active = dateKey === selectedScheduleDate;
                     const preview = (currentScheduleTab === 'bookings' ? dayBookings : dayBlocks).slice(0, 3);
@@ -1447,8 +1449,8 @@ function renderDesktopSchedule() {
 
     columns.forEach(({ date, barber }) => {
         const dateKey = toDateKey(date);
-        const barberBookings = bookings.filter(b => b.date === dateKey && b.barberId === barber.id);
-        const barberBlocks = timeBlocks.filter(b => b.date === dateKey && b.barberId === barber.id);
+        const barberBookings = bookings.filter(b => b.date === dateKey && String(b.barberId) === String(barber.id) && b.status !== 'cancelled');
+        const barberBlocks = timeBlocks.filter(b => b.date === dateKey && String(b.barberId) === String(barber.id));
         const dayHeading = viewMode === 'week'
             ? date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })
             : barber.name;
@@ -1995,6 +1997,8 @@ function openEditBooking() {
     renderBookingBarberChoices();
 
     document.getElementById('newBookingClient').value = booking.clientName;
+    const phoneInput = document.getElementById('newBookingClientPhone');
+    if (phoneInput) phoneInput.value = booking.clientPhone || '';
 
     document.getElementById('newBookingDate').value = booking.date;
 
@@ -2615,7 +2619,7 @@ function saveNewBooking() {
     const bookingConflict = bookings.some(b => {
         if (String(b.id) === String(editingBookingId)) return false;
 
-        if (b.date !== date || b.barberId !== barberId || !isBookingBlockingSchedule(b)) {
+        if (b.date !== date || String(b.barberId) !== String(barberId) || !isBookingBlockingSchedule(b)) {
             return false;
         }
 
@@ -2631,7 +2635,7 @@ function saveNewBooking() {
     }
 
     const blockConflict = timeBlocks.some(block => {
-        if (block.date !== date || block.barberId !== barberId) return false;
+        if (block.date !== date || String(block.barberId) !== String(barberId)) return false;
 
         const blockStart = parseScheduleTimeMinutes(block.startTime);
         const blockEnd = parseScheduleTimeMinutes(block.endTime);
