@@ -3099,13 +3099,24 @@ function renderFinance() {
     }, 0);
     const paymentTotals = { cash: 0, card: 0, transfer: 0, online: 0, other: 0 };
     bookings.filter(item => inRange(item.date, aggregationStart, aggregationEnd)).forEach(item => {
-        const payments = Array.isArray(item.payments) && item.payments.length
-            ? item.payments
-            : (getBookingCollectedAmount(item) > 0 ? [{ amount: getBookingCollectedAmount(item), method: item.paymentMethod || 'other' }] : []);
-        payments.forEach(payment => {
-            const method = Object.prototype.hasOwnProperty.call(paymentTotals, payment.method) ? payment.method : 'other';
-            paymentTotals[method] += Math.max(0, Number(payment.amount || 0));
-        });
+        const serviceTotal = (Array.isArray(item.services) ? item.services : [])
+            .reduce((sum, service) => sum + Math.max(0, Number(service.price) || 0), 0);
+        const transactions = Array.isArray(item.payments) ? item.payments : [];
+        let remaining = getBookingCollectedAmount(item);
+        if (transactions.length) {
+            // Не учитываем дубли/переплаты сверх стоимости заказа и пропускаем некорректные суммы.
+            transactions.forEach(payment => {
+                const rawAmount = Number(payment?.amount);
+                if (!Number.isFinite(rawAmount) || rawAmount <= 0 || remaining <= 0) return;
+                const amount = Math.min(rawAmount, remaining, serviceTotal);
+                const method = Object.prototype.hasOwnProperty.call(paymentTotals, payment?.method) ? payment.method : 'other';
+                paymentTotals[method] += amount;
+                remaining -= amount;
+            });
+        } else if (remaining > 0) {
+            const method = Object.prototype.hasOwnProperty.call(paymentTotals, item.paymentMethod) ? item.paymentMethod : 'other';
+            paymentTotals[method] += remaining;
+        }
     });
 
     const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
