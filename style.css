@@ -4212,3 +4212,115 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         height: 100%;
     }
 }
+
+/* Profile layout: replace rigid 48% columns that overflow once the gap is added. */
+#viewProfile .profile-pc-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    gap: 20px;
+}
+
+#viewProfile .profile-left-col,
+#viewProfile .profile-right-col {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+}
+
+#viewProfile .profile-right-col > *,
+#viewProfile .profile-left-col > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#viewProfile .profile-main-card,
+#viewProfile .profile-backup-card,
+#viewProfile #barberRevenueCard {
+    box-sizing: border-box;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#viewProfile .profile-info h1 {
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    #viewProfile.active {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    #viewProfile .profile-pc-wrapper {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 18px !important;
+    }
+
+    #viewProfile .profile-left-col,
+    #viewProfile .profile-right-col {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #viewProfile .profile-left-col {
+        order: 2;
+    }
+
+    #viewProfile .profile-right-col {
+        order: 1;
+    }
+}
+
+@media (min-width: 1024px) {
+    #viewProfile .profile-pc-wrapper {
+        display: grid !important;
+        grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
+        align-items: start;
+        gap: clamp(20px, 3vw, 40px) !important;
+    }
+
+    #viewProfile .profile-left-col,
+    #viewProfile .profile-right-col {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    #viewProfile .profile-pc-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #viewProfile .profile-right-col,
+    #viewProfile .profile-left-col {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #viewProfile .profile-avatar-gold {
+        width: 58px;
+        height: 58px;
+    }
+
+    #viewProfile .profile-avatar-gold svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    #viewProfile .profile-info h1 {
+        font-size: clamp(17px, 5vw, 22px);
+    }
+
+    #viewProfile .profile-main-card,
+    #viewProfile .profile-backup-card {
+        padding: 16px;
+        border-radius: 18px;
+    }
+}
