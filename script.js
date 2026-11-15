@@ -1951,8 +1951,17 @@ function renderCalendar() {
                 reportDatePickerTarget = null;
                 closeModal('calendarModal');
                 if (target.startsWith('dashboard')) {
-                    if (target === 'dashboardStart') { dashboardRangeStart = thisDateStr; if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeEnd = thisDateStr; }
-                    else { dashboardRangeEnd = thisDateStr; if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeStart = thisDateStr; }
+                    if (target === 'dashboardDay') {
+                        dashboardSelectedDate = thisDateStr;
+                        dashboardRangeStart = dashboardRangeEnd = thisDateStr;
+                        dashboardPeriodMode = 'day';
+                    } else if (target === 'dashboardStart') {
+                        dashboardRangeStart = thisDateStr;
+                        if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeEnd = thisDateStr;
+                    } else {
+                        dashboardRangeEnd = thisDateStr;
+                        if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeStart = thisDateStr;
+                    }
                     renderDashboard();
                 }
                 else if (target.startsWith('finance')) renderFinance();
@@ -2521,7 +2530,7 @@ function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
 function openReportDatePicker(target) {
     calendarTargetInputId = null;
     reportDatePickerTarget = target;
-    const value = target === 'dashboardStart' ? dashboardRangeStart : target === 'dashboardEnd' ? dashboardRangeEnd : target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : target === 'clientsEnd' ? clientsRangeEnd : target === 'teamStart' ? teamRangeStart : teamRangeEnd;
+    const value = target === 'dashboardDay' ? dashboardSelectedDate : target === 'dashboardStart' ? dashboardRangeStart : target === 'dashboardEnd' ? dashboardRangeEnd : target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : target === 'clientsEnd' ? clientsRangeEnd : target === 'teamStart' ? teamRangeStart : teamRangeEnd;
     const date = parseReportDate(value) || new Date();
     selectedBlockDate = formatReportDate(date);
     pickerYear = date.getFullYear();
@@ -2613,7 +2622,7 @@ function renderDashboard() {
                 <button type="button" class="finance-range-btn ${dashboardPeriodMode==='month'?'active':''}" onclick="setDashboardPeriod('month')">Месяц</button>
                 <button type="button" class="finance-range-btn ${dashboardPeriodMode==='custom'?'active':''}" onclick="setDashboardPeriod('custom')">Период</button>
             </div>
-            ${dashboardPeriodMode==='custom' ? `<div class="finance-range-fields"><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardStart')">${dashboardEscape(startKey)}</button><span>—</span><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardEnd')">${dashboardEscape(endKey)}</button></div>` : ''}
+            ${dashboardPeriodMode==='day' ? `<div class="finance-range-fields"><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardDay')">${dashboardEscape(startKey)}</button></div>` : dashboardPeriodMode==='custom' ? `<div class="finance-range-fields"><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardStart')">${dashboardEscape(startKey)}</button><span>—</span><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardEnd')">${dashboardEscape(endKey)}</button></div>` : ''}
         </div>`;
     const scoped = bookings.filter(item => inRange(item.date) && item.status !== 'cancelled' && (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
     const completed = scoped.filter(item => item.status === 'completed');
