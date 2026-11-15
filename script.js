@@ -4014,12 +4014,16 @@ function renderClients(tab = 'all') {
 /* Лояльность MensFire — правила синхронизированы с клиентским приложением. */
 function getClientLoyaltyState(sourceBookings) {
     const eligible = (Array.isArray(sourceBookings) ? sourceBookings : [])
-        .filter(booking => ['active', 'completed'].includes(String(booking.status || 'active').toLowerCase()))
+        .filter(booking => booking && ['active', 'completed'].includes(String(booking.status || '').toLowerCase()))
         .map(booking => {
             const serviceTotal = (Array.isArray(booking.services) ? booking.services : [])
-                .reduce((sum, service) => sum + Math.max(0, Number(service.price) || 0), 0);
-            const total = Number.isFinite(Number(booking.total)) && booking.total !== '' 
-                ? Number(booking.total) : serviceTotal;
+                .reduce((sum, service) => {
+                    const amount = Number(service?.price);
+                    return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
+                }, 0);
+            const rawTotal = booking.total;
+            const parsedTotal = rawTotal !== '' && rawTotal != null ? Number(rawTotal) : NaN;
+            const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : serviceTotal;
             const parsedTimestamp = parseClientDateTime(booking);
             return {
                 booking,
@@ -4027,7 +4031,7 @@ function getClientLoyaltyState(sourceBookings) {
                 timestamp: parsedTimestamp > 0 ? parsedTimestamp : Number.POSITIVE_INFINITY
             };
         })
-        .filter(item => item.total > 1000)
+        .filter(item => Number.isFinite(item.total) && item.total > 1000)
         // Повторяем порядок клиентского приложения: дата и точное время визита.
         .sort((a, b) => a.timestamp - b.timestamp);
 
