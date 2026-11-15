@@ -1179,14 +1179,16 @@ function renderDesktopSchedule() {
             renderCluster(cluster);
         } else {
             barberBlocks.forEach(block => {
-                const top = (toMinutes(block.startTime) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
-                const end = toMinutes(block.endTime);
-                const height = (end - toMinutes(block.startTime)) / 15 * SLOT_HEIGHT;
+                const blockStart = parseScheduleTimeMinutes(block.startTime);
+                const blockEnd = parseScheduleTimeMinutes(block.endTime);
+                if (blockStart === null || blockEnd === null || blockStart >= blockEnd) return;
+                const top = (blockStart - START_HOUR * 60) / 15 * SLOT_HEIGHT;
+                const height = (blockEnd - blockStart) / 15 * SLOT_HEIGHT;
                 if (top < 0 || top >= totalHeight || height <= 0) return;
                 html += `
-                    <button class="desktop-break-card" style="top:${top}px;height:${Math.min(height, totalHeight - top)}px"
-                        onclick="event.stopPropagation(); openBlockActionModal(${block.id})">
-                        <strong>${block.startTime}–${block.endTime}</strong><span>Перерыв</span>
+                    <button type="button" class="desktop-break-card" style="top:${top}px;height:${Math.min(height, totalHeight - top)}px"
+                        onclick="event.stopPropagation(); openBlockActionModal('${escapeBookingHtml(String(block.id))}')">
+                        <strong>${escapeBookingHtml(block.startTime)}–${escapeBookingHtml(block.endTime)}</strong><span>Перерыв</span>
                     </button>`;
             });
         }
@@ -1808,6 +1810,12 @@ function updateNewBookingSummary() {
 
 
 
+function parseScheduleTimeMinutes(value) {
+    if (typeof value !== 'string' || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value)) return null;
+    const [hours, minutes] = value.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
 function getBookingDurationMinutes(booking) {
     const services = Array.isArray(booking?.services) ? booking.services : [];
     return Math.max(45, services.length * 45);
@@ -1872,8 +1880,8 @@ function saveNewBooking() {
             return false;
         }
 
-        const [h, m] = b.time.split(':').map(Number);
-        const bStart = h * 60 + m;
+        const bStart = parseScheduleTimeMinutes(b.time);
+        if (bStart === null) return false;
         const bDuration = getBookingDurationMinutes(b);
 
         return overlaps(start, end, bStart, bStart + bDuration);
@@ -1886,10 +1894,11 @@ function saveNewBooking() {
     const blockConflict = timeBlocks.some(block => {
         if (block.date !== date || block.barberId !== barberId) return false;
 
-        const [sh, sm] = block.startTime.split(':').map(Number);
-        const [eh, em] = block.endTime.split(':').map(Number);
+        const blockStart = parseScheduleTimeMinutes(block.startTime);
+        const blockEnd = parseScheduleTimeMinutes(block.endTime);
+        if (blockStart === null || blockEnd === null || blockStart >= blockEnd) return false;
 
-        return overlaps(start, end, sh * 60 + sm, eh * 60 + em);
+        return overlaps(start, end, blockStart, blockEnd);
     });
 
     if (blockConflict) {
@@ -1987,7 +1996,8 @@ function addTimeBlock() {
     );
 
     const conflict = activeBookings.find(b => {
-        const bookingStart = toMinutes(b.time);
+        const bookingStart = parseScheduleTimeMinutes(b.time);
+        if (bookingStart === null) return false;
         const duration = getBookingDurationMinutes(b);
 
         return overlaps(
@@ -2006,12 +2016,11 @@ function addTimeBlock() {
         if (block.barberId !== barberId || block.date !== date) return false;
         if (editingBlockId && String(block.id) === String(editingBlockId)) return false;
 
-        return overlaps(
-            newStart,
-            newEnd,
-            toMinutes(block.startTime),
-            toMinutes(block.endTime)
-        );
+        const blockStart = parseScheduleTimeMinutes(block.startTime);
+        const blockEnd = parseScheduleTimeMinutes(block.endTime);
+        if (blockStart === null || blockEnd === null || blockStart >= blockEnd) return false;
+
+        return overlaps(newStart, newEnd, blockStart, blockEnd);
     });
 
     if (blockConflict) {
