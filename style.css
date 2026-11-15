@@ -4494,3 +4494,129 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         padding-bottom: 16px;
     }
 }
+
+/* Client profile modal — stable header, editable profile and readable visit history. */
+#clientDetailsModal .modal-content {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
+
+#clientDetailsModal #clientDetailsName {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#clientDetailsModal .form-group {
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-bottom: 12px;
+}
+
+#clientDetailsModal #clientDetailsMetrics {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    border: 1px solid rgba(212,175,55,.16);
+    border-radius: 12px;
+    background: rgba(212,175,55,.045);
+}
+
+#clientDetailsModal #clientDetailsMetrics span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+#clientDetailsModal #clientDetailsHistory {
+    flex: 1 1 auto;
+    min-height: 110px;
+    max-height: min(38vh, 360px);
+    padding: 4px 5px 4px 0;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
+.client-history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,.06);
+    border-left: 3px solid #888;
+    border-radius: 12px;
+    background: rgba(255,255,255,.025);
+}
+
+.client-history-item.status-completed { border-left-color: #4CAF50; }
+.client-history-item.status-cancelled { border-left-color: #ff4d4d; }
+.client-history-item.status-confirmed,
+.client-history-item.status-active,
+.client-history-item.status-pending { border-left-color: var(--gold); }
+
+.client-history-icon {
+    flex: 0 0 22px;
+    margin-top: 1px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.client-history-content {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.client-history-date {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.client-history-services {
+    margin-top: 4px;
+    color: var(--gold);
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.client-history-master {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.client-history-payment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin-top: 5px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.client-history-payment .payment-state { font-weight: 750; }
+
+@media (max-width: 767px) {
+    #clientDetailsModal .modal-content {
+        max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        padding: 18px 14px;
+    }
+
+    #clientDetailsModal #clientDetailsHistory {
+        max-height: 34vh;
+        min-height: 100px;
+    }
+
+    .client-history-item { padding: 10px; gap: 8px; }
+    .client-history-date { font-size: 12px; }
+}
