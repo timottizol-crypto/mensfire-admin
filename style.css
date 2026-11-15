@@ -5556,3 +5556,6 @@ html.light-theme .finance-range-date { color:#344052; background:#fff8e7; border
 html.light-theme .clients-period-summary>div { background:linear-gradient(145deg,#fffaf0,#f7f8fa); border-color:rgba(140,105,25,.17); }
 html.light-theme .clients-period-summary strong { color:#202631; }
 @media(max-width:520px) { .clients-period-summary { gap:6px; } .clients-period-summary>div { padding:10px 8px; border-radius:12px; } .clients-period-summary span { font-size:9px; } .clients-period-summary strong { font-size:15px; } }
+
+#viewFinance #financeDateSelector.is-hidden { display:none!important; min-height:0!important; height:0!important; padding:0!important; margin:0!important; overflow:hidden!important; }
+.clients-period-controls { margin:0 0 12px; }
