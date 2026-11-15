@@ -1920,7 +1920,7 @@ function renderCalendar() {
             if (reportDatePickerTarget) {
                 const target = reportDatePickerTarget;
                 if (target === 'financeStart') { financeRangeStart = thisDateStr; if (parseReportDate(financeRangeStart) > parseReportDate(financeRangeEnd)) financeRangeEnd = thisDateStr; }
-                if (target === 'financeEnd') { financeRangeEnd = thisDateStr; if (parseReportDate(financeEnd = financeRangeEnd) < parseReportDate(financeRangeStart)) financeRangeStart = thisDateStr; }
+                if (target === 'financeEnd') { financeRangeEnd = thisDateStr; if (parseReportDate(financeRangeEnd) < parseReportDate(financeRangeStart)) financeRangeStart = thisDateStr; }
                 if (target === 'clientsStart') { clientsRangeStart = thisDateStr; if (parseReportDate(clientsRangeStart) > parseReportDate(clientsRangeEnd)) clientsRangeEnd = thisDateStr; }
                 if (target === 'clientsEnd') { clientsRangeEnd = thisDateStr; if (parseReportDate(clientsRangeEnd) < parseReportDate(clientsRangeStart)) clientsRangeStart = thisDateStr; }
                 reportDatePickerTarget = null;
