@@ -1860,6 +1860,52 @@ function openNewBookingFromSlot(event, barberId, date) {
 }
 
 
+
+let activeTimePickerInputId = null;
+
+function openTimePicker(inputId) {
+    const input = document.getElementById(inputId);
+    const grid = document.getElementById('timePickerGrid');
+    if (!input || !grid) return;
+    activeTimePickerInputId = inputId;
+    const current = input.value || '10:00';
+    grid.innerHTML = '';
+    for (let minutes = 8 * 60; minutes <= 21 * 60 + 45; minutes += 15) {
+        const value = String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0');
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'time-picker-option' + (value === current ? ' is-selected' : '');
+        option.textContent = value;
+        option.onclick = () => selectTimePickerValue(value);
+        grid.appendChild(option);
+    }
+    openModal('timePickerModal');
+}
+
+function selectTimePickerValue(value) {
+    const input = document.getElementById(activeTimePickerInputId);
+    if (!input) return;
+    if (inputIdIsBookingTime(activeTimePickerInputId) && input.max && value > input.max) {
+        return showToast('Это время не подходит для выбранной длительности услуг', 'error');
+    }
+    input.value = value;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    closeModal('timePickerModal');
+}
+
+function inputIdIsBookingTime(inputId) {
+    return inputId === 'newBookingTime';
+}
+
+function setBookingPaymentMethod(method) {
+    const select = document.getElementById('bookingPaymentMethod');
+    if (!select || !['cash', 'card', 'transfer', 'online'].includes(method)) return;
+    select.value = method;
+    document.querySelectorAll('#bookingPaymentMethodChoices .payment-choice').forEach(button => {
+        button.classList.toggle('is-selected', button.dataset.method === method);
+    });
+}
+
 function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
     if (!requireAdminAction('Создавать записи может только Али')) return;
     editingBookingId = null;
