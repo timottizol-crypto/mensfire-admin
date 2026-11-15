@@ -408,6 +408,11 @@
             </div>
 
             <div class="form-group">
+                <label for="newBookingClientPhone">Телефон клиента</label>
+                <input id="newBookingClientPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" oninput="lookupBookingClientByPhone()">
+                <div id="bookingClientLookup" class="booking-client-lookup" aria-live="polite"></div>
+            </div>
+            <div class="form-group">
                 <label for="newBookingClient">Имя клиента</label>
                 <input id="newBookingClient" type="text" placeholder="Введите имя клиента">
             </div>
