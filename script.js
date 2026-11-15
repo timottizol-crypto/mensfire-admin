@@ -2487,14 +2487,14 @@ function showClientDetails(name, barberId) {
         if (b.status === 'completed') { statusIcon = '✅'; statusColor = '#4CAF50'; }
         else if (b.status === 'cancelled') { statusIcon = '❌'; statusColor = '#ff4d4d'; }
 
-        const servicesText = (b.services || []).map(s => s.title).join(', ');
+        const servicesText = (b.services || []).map(s => escapeBookingHtml(s.title || 'Услуга')).join(', ');
         const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
 
         return `
             <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border-left: 3px solid ${statusColor}; flex-shrink: 0;">
                 <div style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">${statusIcon}</div>
                 <div style="flex-grow: 1;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
                     <div style="font-size: 12px; color: var(--gold); margin-top: 4px;">${servicesText}</div>
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${escapeBookingHtml(masterName)}</div>
                 </div>
