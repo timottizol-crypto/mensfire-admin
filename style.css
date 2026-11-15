@@ -5657,3 +5657,18 @@ html.light-theme .waitlist-actions .waitlist-remove{color:#647084;border-color:#
 #blockStartTime:disabled,#blockEndTime:disabled{opacity:.4;cursor:not-allowed}
 html.light-theme .block-mode-choice{background:#fbf8ef;border-color:rgba(172,132,40,.2)}
 @media(max-width:420px){.block-mode-options{grid-template-columns:1fr}}
+
+/* Per-barber weekly working hours */
+.schedule-management-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.schedule-management-actions .home-cta-btn{margin:0;width:100%;min-width:0}
+.work-schedule-modal-content{max-width:540px}
+.work-schedule-hint{font-size:11px;line-height:1.5;color:var(--text-muted);margin:0 0 14px}
+.work-schedule-days{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:48vh;overflow:auto}
+.work-schedule-day{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--glass-border);border-radius:13px;background:rgba(255,255,255,.025)}
+.work-schedule-day-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-main);min-width:120px}
+.work-schedule-day-toggle input{accent-color:var(--gold)}
+.work-schedule-times{display:flex;align-items:center;gap:7px}
+.work-schedule-times input{width:78px;text-align:center;padding:9px 5px;font-size:12px}
+.work-schedule-times span{color:var(--text-muted);font-size:11px}
+html.light-theme .work-schedule-day{background:rgba(255,255,255,.65)}
+@media(max-width:520px){.schedule-management-actions{grid-template-columns:1fr}.work-schedule-day{align-items:flex-start;flex-direction:column}.work-schedule-times{width:100%}.work-schedule-times input{flex:1}}
