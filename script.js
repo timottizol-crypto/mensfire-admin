@@ -1662,6 +1662,7 @@ function openEditBooking() {
     }
 
     barberSelect.value = booking.barberId;
+    renderBookingBarberChoices();
 
     document.getElementById('newBookingClient').value = booking.clientName;
 
@@ -1929,6 +1930,27 @@ function setBookingPaymentMethod(method) {
     });
 }
 
+function renderBookingBarberChoices() {
+    const select = document.getElementById('newBookingBarber');
+    const container = document.getElementById('bookingBarberChoices');
+    if (!select || !container) return;
+
+    container.innerHTML = '';
+    Array.from(select.options).forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'booking-barber-choice' + (option.value === select.value ? ' is-selected' : '');
+        button.textContent = option.textContent;
+        button.setAttribute('aria-pressed', option.value === select.value ? 'true' : 'false');
+        button.addEventListener('click', () => {
+            select.value = option.value;
+            renderBookingBarberChoices();
+            updateNewBookingServices();
+        });
+        container.appendChild(button);
+    });
+}
+
 function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
     if (!requireAdminAction('Создавать записи может только Али')) return;
     editingBookingId = null;
@@ -1954,6 +1976,7 @@ function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDa
     if (availableStaff.some(s => s.id === defaultBarber)) {
         barberSelect.value = defaultBarber;
     }
+    renderBookingBarberChoices();
 
     const parts = date.split('.');
     dateInput.value = parts.length === 3 ? date : '';
