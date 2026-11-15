@@ -2735,15 +2735,18 @@ function showClientDetails(name, barberId) {
         const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
 
         return `
-            <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border-left: 3px solid ${statusColor}; flex-shrink: 0;">
-                <div style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">${statusIcon}</div>
-                <div style="flex-grow: 1;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
-                    <div style="font-size: 12px; color: var(--gold); margin-top: 4px;">${servicesText}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${escapeBookingHtml(masterName)}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Оплата: <b style="color: ${paymentState.status === 'paid' ? '#38c77b' : paymentState.status === 'partial' ? '#e9b949' : '#f16c6c'}">${paymentState.label}</b> · ${paymentState.paid.toLocaleString('ru-RU')} / ${serviceTotal.toLocaleString('ru-RU')} ₽</div>
+            <article class="client-history-item status-${escapeBookingHtml(b.status || 'active')}">
+                <div class="client-history-icon" aria-hidden="true">${statusIcon}</div>
+                <div class="client-history-content">
+                    <div class="client-history-date">${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
+                    <div class="client-history-services">${servicesText || 'Услуги не указаны'}</div>
+                    <div class="client-history-master">Мастер: ${escapeBookingHtml(masterName)}</div>
+                    <div class="client-history-payment">
+                        Оплата: <b class="payment-state payment-${escapeBookingHtml(paymentState.status)}">${escapeBookingHtml(paymentState.label)}</b>
+                        <span>${paymentState.paid.toLocaleString('ru-RU')} / ${serviceTotal.toLocaleString('ru-RU')} ₽</span>
+                    </div>
                 </div>
-            </div>
+            </article>
         `;
     }).join('');
 
