@@ -42,67 +42,6 @@ function requireAdminAction(message = 'Это действие доступно 
     return false;
 }
 // --- ГЕНЕРАЦИЯ ДЕМО-ДАННЫХ ---
-function seedDatabase() {
-    let existing = JSON.parse(localStorage.getItem('mensfire_admin_bookings')) || [];
-    let hasOtherBarbers = existing.some(b => b.barberId === 'b_ben' || b.barberId === 'b_ism');
-    
-    if (existing.length > 5 && hasOtherBarbers) return; 
-    
-    let demoBookings = [];
-    let demoExpenses = [];
-    const staff = ['b_al', 'b_ben', 'b_ism'];
-    const clients = ['Иван', 'Дмитрий', 'Сергей', 'Алексей', 'Максим', 'Андрей', 'Никита', 'Роман', 'Артем', 'Егор'];
-    const servicesTop = servicesData.top;
-    const servicesBarber = servicesData.barber;
-
-    // Генерируем на 30 дней (от -7 до +22)
-    for (let i = -7; i < 23; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        const dateStr = d.toLocaleDateString('ru-RU');
-
-        staff.forEach(barberId => {
-            const numBookings = Math.floor(Math.random() * 4) + 2; // 2-5 записей в день
-            for (let j = 0; j < numBookings; j++) {
-                const timeH = 10 + j * 2;
-                const services = barberId === 'b_al' ? servicesTop : servicesBarber;
-                const randomService = services[Math.floor(Math.random() * services.length)];
-                
-                let status = 'active';
-                if (i < 0) status = 'completed';
-                else if (i === 0 && timeH < new Date().getHours()) status = 'completed';
-
-                demoBookings.push({
-                    id: Date.now() + Math.random(),
-                    barberId: barberId,
-                    clientName: clients[Math.floor(Math.random() * clients.length)],
-                    time: `${timeH.toString().padStart(2, '0')}:00`,
-                    date: dateStr,
-                    services: [randomService],
-                    status: status
-                });
-            }
-        });
-
-        if (i % 2 === 0) {
-            demoExpenses.push({
-                id: Date.now() + Math.random(),
-                title: ['Закупка кофе', 'Расходники', 'Химия', 'Аренда'][Math.floor(Math.random() * 4)],
-                amount: Math.floor(Math.random() * 3000) + 500,
-                date: dateStr
-            });
-        }
-    }
-
-    bookings = demoBookings;
-    expenses = demoExpenses;
-    localStorage.setItem('mensfire_admin_bookings', JSON.stringify(bookings));
-    localStorage.setItem('mensfire_admin_expenses', JSON.stringify(expenses));
-    localStorage.setItem('mensfire_db_seeded_v3', 'true');
-}
-let bookings = JSON.parse(localStorage.getItem('mensfire_admin_bookings')) || [];
-let expenses = JSON.parse(localStorage.getItem('mensfire_admin_expenses')) || [];
-
 // Демоданные больше не генерируются автоматически: это предотвращает перезапись данных салона.
 
 let selectedBookingId = null;
@@ -223,7 +162,7 @@ function buildBottomNav() {
 
     if (currentUser.role === 'admin') {
         navItems = [
-            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
+            { id: 'viewSchedule', title: 'Главная', icon: calendarIcon },
             { id: 'viewFinance', title: 'Финансы', icon: financeIcon },
             { id: 'viewTeam', title: 'Команда', icon: teamIcon },
             { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
@@ -255,6 +194,21 @@ function buildBottomNav() {
         div.innerHTML = `<svg viewBox="0 0 24 24">${item.icon}</svg><span class="nav-item-label">${item.title}</span>`;
         div.onclick = () => switchView(item.id, div);
         nav.appendChild(div);
+
+        if (item.id === 'viewSchedule') {
+            const subnav = document.createElement('div');
+            subnav.className = 'desktop-schedule-subnav';
+            subnav.id = 'desktopScheduleSubnav';
+            subnav.innerHTML = `
+                <button type="button" class="${currentScheduleTab === 'bookings' ? 'active' : ''}" onclick="switchScheduleTab('bookings')">
+                    <span class="schedule-subnav-dot"></span><span class="schedule-subnav-label">Расписание</span>
+                </button>
+                <button type="button" class="${currentScheduleTab === 'breaks' ? 'active' : ''}" onclick="switchScheduleTab('breaks')">
+                    <span class="schedule-subnav-dot"></span><span class="schedule-subnav-label">Запрет времени</span>
+                </button>
+            `;
+            nav.appendChild(subnav);
+        }
     });
 
     initDesktopNav();
@@ -1010,7 +964,11 @@ function renderDateSelector() {
     }
 }
 function switchScheduleTab(tab) {
+    if (!['bookings', 'breaks'].includes(tab)) return;
     currentScheduleTab = tab;
+    document.querySelectorAll('#desktopScheduleSubnav button').forEach((button, index) => {
+        button.classList.toggle('active', (index === 0 && tab === 'bookings') || (index === 1 && tab === 'breaks'));
+    });
     document.getElementById('tabBookings').classList.toggle('active', tab === 'bookings');
     document.getElementById('tabBreaks').classList.toggle('active', tab === 'breaks');
     renderSchedule();
