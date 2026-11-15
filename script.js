@@ -3892,6 +3892,7 @@ function renderClients(tab = 'all') {
             return Number.isFinite(parsed) ? parsed : 0;
         };
         const completedAverageCheck = c.completedCount ? Math.round(c.completedRevenue / c.completedCount) : 0;
+        const loyalty = getClientLoyaltyState(c.visits);
         const upcomingVisit = c.visits.filter(visit => visit.status !== 'cancelled' && parseClientDateTime(visit) >= Date.now())
             .sort((a,b) => parseClientDateTime(a) - parseClientDateTime(b))[0];
         const completedVisits = c.visits
@@ -3920,6 +3921,7 @@ function renderClients(tab = 'all') {
                 <div class="client-info">
                     <div class="client-name">${safeNames} <span class="client-tag-badge tag-${safeTag}">${clientTag}</span></div>
                     <div class="client-meta">Визитов: <span class="gold-text">${c.completedCount}</span> · Отмен: <span class="gold-text">${c.cancelledCount}</span></div>
+                    <div class="client-loyalty-list-badge"><span class="client-loyalty-dot" style="background:${loyalty.level.color}"></span><b>${loyalty.level.name}</b><span>${loyalty.count} лояльных визитов</span><span>·</span><span>${loyalty.points.toLocaleString('ru-RU')} баллов</span></div>
                     <div class="booking-card-badges"><i class="booking-client-type type-${c.completedCount > 0 ? 'returning' : 'new'}">${c.completedCount > 0 ? 'Повторный клиент' : 'Новый клиент'}</i><i class="booking-origin origin-other">${[...new Set(c.visits.map(visit => getBookingSourceMeta(visit).label))].slice(0,2).map(escapeBookingHtml).join(' · ') || 'Канал не указан'}</i></div>
                     <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span> · Средний чек: <span class="gold-text">${completedAverageCheck.toLocaleString('ru-RU')} ₽</span></div>
                     <div class="client-meta">${completedVisits.length ? 'Последний визит:' : 'Последняя запись:'} ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
@@ -3930,6 +3932,65 @@ function renderClients(tab = 'all') {
             </div>
         `;
     }).join('');
+}
+
+
+/* Лояльность MensFire — правила синхронизированы с клиентским приложением. */
+function getClientLoyaltyState(sourceBookings) {
+    const eligible = (Array.isArray(sourceBookings) ? sourceBookings : [])
+        .filter(booking => ['active', 'completed'].includes(String(booking.status || 'active').toLowerCase()))
+        .map(booking => {
+            const serviceTotal = (Array.isArray(booking.services) ? booking.services : [])
+                .reduce((sum, service) => sum + Math.max(0, Number(service.price) || 0), 0);
+            const total = Number.isFinite(Number(booking.total)) && booking.total !== '' 
+                ? Number(booking.total) : serviceTotal;
+            return { booking, total, timestamp: parseClientDateTime(booking) || 0 };
+        })
+        .filter(item => item.total > 1000)
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+    const count = eligible.length;
+    let level;
+    if (count < 10) level = { name: 'Бронзовый', next: 'Серебряный', percent: 1, base: 0, target: 10, color: '#CD7F32', light: '#A65D26' };
+    else if (count < 20) level = { name: 'Серебряный', next: 'Золотой', percent: 2, base: 10, target: 20, color: '#C0C0C0', light: '#8C8C8C' };
+    else level = { name: 'Золотой', next: 'Максимум', percent: 3, base: 20, target: 20, color: '#D4AF37', light: '#C79A2A' };
+
+    let points = 0;
+    const history = eligible.map((item, index) => {
+        const rate = index < 10 ? 0.01 : index < 20 ? 0.02 : 0.03;
+        const earned = Math.floor(item.total * rate);
+        points += earned;
+        return { ...item, rate, earned, runningPoints: points };
+    });
+    const progress = count >= 20 ? 100 : Math.max(0, Math.min(100, ((count - level.base) / (level.target - level.base)) * 100));
+    return { count, level, points, progress, remaining: Math.max(0, level.target - count), history };
+}
+
+function renderClientLoyaltyPanel(sourceBookings) {
+    const root = document.getElementById('clientLoyaltyPanel');
+    if (!root) return;
+    const state = getClientLoyaltyState(sourceBookings);
+    const history = state.history.slice().reverse().slice(0, 8);
+    root.innerHTML = `
+        <section class="client-loyalty-card level-${state.level.name.toLowerCase()}">
+            <div class="client-loyalty-heading">
+                <div><span class="client-loyalty-eyebrow">ПРОГРАММА ЛОЯЛЬНОСТИ</span><strong>${state.level.name} уровень</strong></div>
+                <span class="client-loyalty-percent">${state.level.percent}% кэшбэк</span>
+            </div>
+            <div class="client-loyalty-stats">
+                <div><strong>${state.count}</strong><span>засчитанных визитов</span></div>
+                <div><strong>${state.points.toLocaleString('ru-RU')}</strong><span>накоплено баллов</span></div>
+            </div>
+            <div class="client-loyalty-progress"><i style="width:${state.progress}%;background:${state.level.color}"></i></div>
+            <div class="client-loyalty-next">${state.count >= 20 ? 'Достигнут максимальный уровень' : 'До уровня «' + state.level.next + '» осталось: ' + state.remaining + ' виз.'}</div>
+            <div class="client-loyalty-history-title">Начисления баллов</div>
+            ${history.length ? history.map(item => {
+                const booking = item.booking;
+                const date = escapeBookingHtml(booking.date || 'Дата не указана');
+                const serviceNames = (booking.services || []).map(service => escapeBookingHtml(service.title || 'Услуга')).join(', ');
+                return '<div class="client-loyalty-row"><span><b>' + date + '</b><small>' + (serviceNames || 'Визит') + ' · ' + Math.round(item.rate * 100) + '%</small></span><strong>+' + item.earned.toLocaleString('ru-RU') + ' б.</strong></div>';
+            }).join('') : '<div class="client-loyalty-empty">Пока нет визитов, подходящих для начисления баллов</div>'}
+        </section>`;
 }
 
 function parseClientDateTime(booking) {
@@ -4052,6 +4113,8 @@ function showClientDetails(name, barberId) {
             <span>Следующая запись: <b>${nextVisit ? escapeBookingHtml(nextVisit.date + ' · ' + nextVisit.time) : 'нет'}</b></span>
         `;
     }
+
+    renderClientLoyaltyPanel(myBookings);
 
     const historyContainer = document.getElementById('clientDetailsHistory');
     if (historyContainer) {
