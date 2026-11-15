@@ -115,13 +115,15 @@
                 <div><span class="finance-eyebrow">MENSFIRE BUSINESS</span><h2>Финансы</h2><p>Контроль выручки, расходов и эффективности команды</p></div>
                 <button class="action-modal-btn action-btn-primary" onclick="openExpenseModal()">＋ Расход</button>
             </div>
+            <div class="finance-date-navigation">
+                <div class="finance-period-heading"><div><strong>Период отчёта</strong><span id="financeSelectedDateLabel">Выберите дату для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
+                <div class="date-selector finance-date-strip" id="financeDateSelector" aria-label="Быстрый выбор даты"></div>
+            </div>
             <div class="category-tabs finance-tabs" style="margin-bottom:15px;">
                 <button class="tab-btn active" id="tabFinExpenses" onclick="switchFinanceTab('expenses')">Обзор</button>
                 <button class="tab-btn" id="tabFinRevenue" onclick="switchFinanceTab('revenue')">Выручка</button>
                 <button class="tab-btn" id="tabFinAnalytics" onclick="switchFinanceTab('analytics')">Аналитика</button>
             </div>
-            <div class="finance-period-heading"><div><strong>Период отчёта</strong><span id="financeSelectedDateLabel">Выберите дату для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
-            <div class="date-selector finance-date-strip" id="financeDateSelector" aria-label="Быстрый выбор даты"></div>
             <section class="fin-tab-content" id="finTabExpenses" style="display:block;">
                 <div class="finance-kpi-grid" id="financeExecutiveSummary"></div>
                 <div class="finance-dashboard-grid">
