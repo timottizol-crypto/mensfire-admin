@@ -5279,3 +5279,92 @@ html:not(.light-theme) .login-btn:active { transform:scale(.975); }
 @media(prefers-reduced-motion:reduce) {
     html:not(.light-theme) *, .booking-barber-choice { transition:none!important; animation:none!important; }
 }
+
+
+/* MENSFIRE premium surfaces — second pass */
+html:not(.light-theme) .finance-kpi-card,
+html:not(.light-theme) .finance-panel,
+html:not(.light-theme) .team-trend-panel,
+html:not(.light-theme) .schedule-main-card,
+html:not(.light-theme) .clients-workspace,
+html:not(.light-theme) .profile-main-card,
+html:not(.light-theme) #barberRevenueCard,
+html:not(.light-theme) .profile-backup-card {
+    background:linear-gradient(145deg,rgba(255,255,255,.072),rgba(255,255,255,.022)) !important;
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:0 16px 44px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.055);
+    -webkit-backdrop-filter:blur(24px) saturate(150%);
+    backdrop-filter:blur(24px) saturate(150%);
+}
+html:not(.light-theme) .finance-kpi-primary {
+    background:linear-gradient(145deg,rgba(212,175,55,.19),rgba(255,255,255,.025)) !important;
+    border-color:rgba(212,175,55,.28);
+}
+html:not(.light-theme) .date-selector-item {
+    background:rgba(255,255,255,.035);
+    border-color:rgba(255,255,255,.075);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+html:not(.light-theme) .date-selector-item.selected {
+    background:linear-gradient(145deg,#e1c16c,#b48b31);
+    color:#17130a;
+    border-color:rgba(255,226,155,.75);
+    box-shadow:0 7px 22px rgba(185,143,48,.2),inset 0 1px 0 rgba(255,255,255,.35);
+}
+html:not(.light-theme) .new-booking-service-option {
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:14px;
+    transition:background .2s,border-color .2s,box-shadow .2s;
+}
+html:not(.light-theme) .new-booking-service-option:has(input:checked) {
+    background:linear-gradient(120deg,rgba(212,175,55,.14),rgba(212,175,55,.035));
+    border-color:rgba(212,175,55,.48);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+html:not(.light-theme) .new-booking-service-option input { accent-color:var(--gold); }
+html:not(.light-theme) .home-booking-item {
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:17px;
+    background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+    transition:border-color .2s,background .2s,box-shadow .2s;
+}
+html:not(.light-theme) #scheduleList .home-booking-item:hover {
+    background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025)) !important;
+    border-color:rgba(212,175,55,.25) !important;
+    box-shadow:0 12px 30px rgba(0,0,0,.16);
+}
+html:not(.light-theme) .finance-payment-method,
+html:not(.light-theme) .finance-payment-status {
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+}
+html:not(.light-theme) select:not(.visually-hidden-select) {
+    color:var(--text-main);
+    appearance:none;
+    -webkit-appearance:none;
+    padding-right:38px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 13px center;
+}
+html:not(.light-theme) select:not(.visually-hidden-select) option {
+    color:#f5f5f5;
+    background:#1b1c21;
+}
+html:not(.light-theme) .finance-panel-heading h3,
+html:not(.light-theme) .schedule-toolbar strong,
+html:not(.light-theme) .workspace-heading h2,
+html:not(.light-theme) .finance-page-heading h2 {
+    letter-spacing:-.35px;
+}
+@media(max-width:600px) {
+    html:not(.light-theme) .finance-panel,
+    html:not(.light-theme) .team-trend-panel { border-radius:19px; }
+    html:not(.light-theme) .finance-kpi-card { border-radius:17px; }
+    html:not(.light-theme) .new-booking-service-option { grid-template-columns:20px minmax(0,1fr); }
+    html:not(.light-theme) .new-booking-service-option strong { grid-column:2; white-space:normal; font-size:11px; }
+    .booking-barber-choice { min-height:58px; }
+}
