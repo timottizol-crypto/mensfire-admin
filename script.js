@@ -2115,8 +2115,9 @@ function renderFinance() {
 
     const serviceCountsForDay = {};
     dayBookings.forEach(b => {
-        b.services.forEach(s => {
-            serviceCountsForDay[s.title] = (serviceCountsForDay[s.title] || 0) + 1;
+        (Array.isArray(b.services) ? b.services : []).forEach(service => {
+            const title = String(service?.title || 'Услуга');
+            serviceCountsForDay[title] = (serviceCountsForDay[title] || 0) + 1;
         });
     });
 
@@ -2139,7 +2140,7 @@ function renderFinance() {
         if (sortedServicesDay.length > 0) {
             analyticsList.innerHTML = sortedServicesDay.map(([title, count]) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <span style="color: var(--text-main); font-weight: 600;">${title}</span>
+                    <span style="color: var(--text-main); font-weight: 600;">${escapeBookingHtml(title)}</span>
                     <span style="font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></span>
                 </div>
             `).join('');
@@ -2161,8 +2162,9 @@ function renderFinance() {
 
     const allServicesCount = {};
     recentBookings.forEach(b => {
-        b.services.forEach(s => {
-            allServicesCount[s.title] = (allServicesCount[s.title] || 0) + 1;
+        (Array.isArray(b.services) ? b.services : []).forEach(service => {
+            const title = String(service?.title || 'Услуга');
+            allServicesCount[title] = (allServicesCount[title] || 0) + 1;
         });
     });
 
@@ -2178,7 +2180,7 @@ function renderFinance() {
         } else {
             topServicesList.innerHTML = topServicesAll.map(([title, count]) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${title}</div>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${escapeBookingHtml(title)}</div>
                     <div style="font-size: 14px; font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></div>
                 </div>
             `).join('');
