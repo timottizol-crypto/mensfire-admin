@@ -2691,7 +2691,7 @@ function renderFinance() {
                 cursor.setMonth(cursor.getMonth()+1);
             }
         } else {
-            const step = spanDays > 21 ? 7 : 1;
+            const step = spanDays > 7 ? Math.ceil(spanDays / 7) : 1;
             for (let cursor = new Date(periodStart); cursor < periodEnd && buckets.length < 31; cursor = shift(cursor,step)) {
                 const end = new Date(Math.min(shift(cursor,step).getTime(),periodEnd.getTime()));
                 buckets.push({start:new Date(cursor),end,label:step===7?cursor.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.',''):cursor.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')});
@@ -2699,7 +2699,7 @@ function renderFinance() {
         }
         const values = buckets.map(bucket=>revenue(bucket.start,bucket.end));
         const max = Math.max(1,...values);
-        chart.innerHTML = `<div class="finance-chart-bars">${buckets.map((bucket,index) => {
+        chart.innerHTML = `<div class="finance-chart-bars" style="grid-template-columns:repeat(${Math.min(buckets.length,7)},minmax(0,1fr))">${buckets.map((bucket,index) => {
             const height = Math.max(values[index] > 0 ? 5 : 2, values[index] / max * 100);
             return `<div class="finance-chart-column"><strong>${values[index] ? fmt(values[index]) : '—'}</strong><div class="finance-chart-track"><i style="height:${height}%"></i></div><span>${bucket.label}</span></div>`;
         }).join('')}</div>`;
