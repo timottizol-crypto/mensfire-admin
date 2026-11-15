@@ -1224,9 +1224,9 @@ function getBookingCollectedAmount(booking) {
     if (Object.prototype.hasOwnProperty.call(booking, 'paidAmount')) {
         return Math.max(0, Number(booking.paidAmount || 0));
     }
-    // Старые записи без полей оплаты считаем исторически оплаченными,
-    // чтобы при обновлении не обнулить прошлую выручку.
-    return serviceTotal;
+    // Для старых записей сохраняем выручку только по завершённым визитам.
+    // Будущие и незавершённые записи без отметки оплаты не считаем оплаченными.
+    return booking.status === 'completed' ? serviceTotal : 0;
 }
 function getBookingPaymentState(booking, total) {
     const transactions = Array.isArray(booking.payments) ? booking.payments : [];
@@ -2037,33 +2037,52 @@ function renderFinance() {
     renderFinanceDateSelector();
     
     const targetDate = selectedFinanceDate;
-    
-    // --- 1. ВЫРУЧКА И ПРИБЫЛЬ ---
-    const revenueForDay = bookings
-        .filter(b => b.date === targetDate && b.status === 'completed')
+    const parseFinanceDate = value => {
+        const [day, month, year] = String(value || '').split('.').map(Number);
+        return day && month && year ? new Date(year, month - 1, day) : null;
+    };
+    const selectedDate = parseFinanceDate(targetDate) || new Date();
+    const weekStart = new Date(selectedDate);
+    weekStart.setDate(selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
+    const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+    const inRange = (value, start, end) => {
+        const date = parseFinanceDate(value);
+        return date && date >= start && date < end;
+    };
+    const revenueForRange = (start, end) => bookings
+        .filter(b => b.status !== 'cancelled' && inRange(b.date, start, end))
         .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
-    
+    const expensesForRange = (start, end) => expenses
+        .filter(e => inRange(e.date, start, end))
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    // --- 1. ВЫРУЧКА И ПРИБЫЛЬ ---
+    const revenueForDay = revenueForRange(selectedDate, new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1));
+    const revenueForWeek = revenueForRange(weekStart, weekEnd);
+    const revenueForMonth = revenueForRange(monthStart, monthEnd);
     const expensesForDay = expenses.filter(e => e.date === targetDate);
     const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const totalExpensesWeek = expensesForRange(weekStart, weekEnd);
+    const totalExpensesMonth = expensesForRange(monthStart, monthEnd);
 
-    const revenueForMonth = bookings
-        .filter(b => b.status === 'completed')
-        .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
-    const totalExpensesMonth = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
-    document.getElementById('financeToday').innerText = `${revenueForDay} ₽`;
-    document.getElementById('financeWeek').innerText = `${revenueForDay * 5} ₽`;
-    document.getElementById('financeMonth').innerText = `${revenueForMonth} ₽`;
+    document.getElementById('financeToday').innerText = `${revenueForDay.toLocaleString('ru-RU')} ₽`;
+    document.getElementById('financeWeek').innerText = `${revenueForWeek.toLocaleString('ru-RU')} ₽`;
+    document.getElementById('financeMonth').innerText = `${revenueForMonth.toLocaleString('ru-RU')} ₽`;
 
     const profitDay = revenueForDay - totalExpensesDay;
+    const profitWeek = revenueForWeek - totalExpensesWeek;
     const profitMonth = revenueForMonth - totalExpensesMonth;
     
     const profitEl = document.getElementById('financeProfit');
     profitEl.innerText = `${profitDay} ₽`;
     profitEl.style.color = profitDay >= 0 ? '#4CAF50' : '#ff4d4d';
 
-    document.getElementById('profitWeek').innerText = `${(revenueForDay * 5) - (totalExpensesDay * 5)} ₽`;
-    document.getElementById('profitMonth').innerText = `${profitMonth} ₽`;
+    document.getElementById('profitWeek').innerText = `${profitWeek.toLocaleString('ru-RU')} ₽`;
+    document.getElementById('profitMonth').innerText = `${profitMonth.toLocaleString('ru-RU')} ₽`;
 
     // --- 2. РАСХОДЫ ---
     const expensesList = document.getElementById('expensesList');
