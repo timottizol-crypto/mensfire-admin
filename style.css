@@ -5038,3 +5038,13 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .team-member-card .team-action-btn { min-height:34px; padding:7px 10px; }
 .team-member-card .team-action-btn.delete { border-color:rgba(255,90,90,.2); }
 #staffEditModal .modal-content { max-width:420px; }
+
+/* Team revenue trend */
+.team-trend-panel { padding:17px; margin-bottom:15px; border:1px solid rgba(255,255,255,.07); }
+.team-trend-bars { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; min-height:150px; align-items:end; }
+.team-trend-column { min-width:0; display:flex; flex-direction:column; align-items:center; gap:7px; height:145px; }
+.team-trend-column strong { font-size:9px; color:var(--text-muted); font-weight:600; white-space:nowrap; }
+.team-trend-track { width:min(100%,30px); flex:1; display:flex; align-items:flex-end; overflow:hidden; border-radius:8px; background:rgba(255,255,255,.045); }
+.team-trend-track i { display:block; width:100%; min-height:2px; border-radius:8px; background:linear-gradient(180deg,var(--gold),rgba(212,175,55,.38)); }
+.team-trend-column span { color:var(--text-muted); font-size:9px; text-transform:capitalize; }
+@media(max-width:700px) { .team-trend-bars { gap:5px; } .team-trend-column strong { font-size:8px; } }
