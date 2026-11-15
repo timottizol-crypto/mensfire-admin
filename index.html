@@ -81,17 +81,29 @@
                     </div>
                     <h2 class="login-title">MENS<span>FIRE</span></h2>
                     <p class="login-subtitle">Вход для мастеров</p>
-                    <div class="data-mode-switch">
-                        <button type="button" onclick="setMensfireDataMode('demo')">Демо-режим</button>
-                        <button type="button" onclick="setMensfireDataMode('live')">Рабочая база</button>
+                    <div class="data-mode-switch demo-only-switch">
+                        <button type="button" class="is-active" aria-pressed="true" onclick="setMensfireDataMode('demo')">Демо-режим</button>
                     </div>
-                    <p class="data-mode-caption">Демо-данные не затрагивают рабочие записи</p>
+                    <p class="data-mode-caption">Изолированные демонстрационные данные · рабочая база отключена</p>
                     
                     <input type="password" id="loginPin" maxlength="4" placeholder="••••" class="pin-input">
                     
                     <button class="login-btn" onclick="handleLogin()">Войти</button>
                     <p class="login-hint">Демо-доступ: Админ — 1111, Барберы — 2222 / 3333</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- ГЛАВНАЯ ПАНЕЛЬ -->
+        <div id="viewDashboard" class="view dashboard-workspace">
+            <div class="workspace-heading dashboard-heading"><div><span class="workspace-eyebrow">MENSFIRE OVERVIEW</span><h2>Обзор бизнеса</h2><p>Ключевые показатели и события за выбранный период</p></div><span class="dashboard-demo-tag">DEMO DATA</span></div>
+            <div id="dashboardPeriodControls" class="clients-period-controls"></div>
+            <div id="dashboardKpis" class="dashboard-kpi-grid"></div>
+            <div class="dashboard-content-grid">
+                <article class="glass-card dashboard-panel dashboard-main-panel"><div class="finance-panel-heading"><div><h3>Динамика поступлений</h3><p id="dashboardChartCaption">Фактические оплаты за период</p></div><span class="finance-panel-icon">↗</span></div><div id="dashboardRevenueChart"></div></article>
+                <article class="glass-card dashboard-panel"><div class="finance-panel-heading"><div><h3>Структура записей</h3><p>Состояние визитов за период</p></div></div><div id="dashboardBookingMix"></div></article>
+                <article class="glass-card dashboard-panel"><div class="finance-panel-heading"><div><h3>Команда</h3><p>Результаты мастеров за период</p></div></div><div id="dashboardTeamSnapshot"></div></article>
+                <article class="glass-card dashboard-panel"><div class="finance-panel-heading"><div><h3>Ближайшие записи</h3><p>Предстоящие визиты в выбранном интервале</p></div><button type="button" class="finance-text-action" onclick="switchView('viewSchedule')">Расписание →</button></div><div id="dashboardUpcoming"></div></article>
             </div>
         </div>
 
