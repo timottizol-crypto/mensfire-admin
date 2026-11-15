@@ -2556,6 +2556,19 @@ html.light-theme .calendar-day:hover:not(.empty) {
         min-width: 760px;
     }
 
+    .desktop-calendar-scroll.is-week-view .desktop-calendar-grid {
+        grid-template-columns: 65px repeat(var(--calendar-column-count), minmax(150px, 1fr));
+        min-width: max-content;
+    }
+
+    .desktop-calendar-scroll.is-week-view .desktop-staff-column {
+        width: 170px;
+    }
+
+    .desktop-calendar-scroll.is-week-view .desktop-staff-heading strong {
+        text-transform: capitalize;
+    }
+
     .desktop-time-column,
     .desktop-staff-column {
         min-width: 0;
