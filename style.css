@@ -4620,3 +4620,136 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
     .client-history-item { padding: 10px; gap: 8px; }
     .client-history-date { font-size: 12px; }
 }
+
+/* Booking detail sheet — keep prices, labels and payment history readable. */
+#actionModal .modal-content {
+    text-align: left;
+    min-width: 0;
+}
+
+#actionModal #actionBookingDetails {
+    min-width: 0;
+}
+
+#actionModal .booking-detail-status {
+    display: inline-flex;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+}
+
+#actionModal .booking-detail-client {
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-detail-date {
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-detail-row {
+    align-items: baseline;
+    gap: 8px 14px;
+}
+
+#actionModal .booking-detail-row span {
+    flex: 0 1 42%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-detail-row strong {
+    flex: 1 1 0%;
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-detail-service {
+    align-items: baseline;
+    min-width: 0;
+    gap: 8px 12px;
+}
+
+#actionModal .booking-detail-service span {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-detail-service strong {
+    flex: 0 0 auto;
+}
+
+#actionModal .booking-payment-panel {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#actionModal .booking-payment-heading {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#actionModal .booking-payment-heading > span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#actionModal .booking-payment-heading .payment-state {
+    white-space: normal;
+    text-align: center;
+}
+
+#actionModal .booking-payment-meta {
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-payment-transaction {
+    align-items: baseline;
+    min-width: 0;
+    gap: 6px 10px;
+}
+
+#actionModal .booking-payment-transaction span {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#actionModal .booking-payment-transaction strong {
+    flex: 0 0 auto;
+}
+
+#actionModal .booking-payment-edit,
+#actionModal .booking-client-link {
+    min-height: 44px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+    #actionModal .modal-content {
+        padding: 20px 16px;
+    }
+
+    #actionModal .booking-detail-client {
+        font-size: 20px;
+    }
+
+    #actionModal .booking-detail-row {
+        font-size: 12px;
+    }
+
+    #actionModal .booking-payment-panel {
+        padding: 11px;
+    }
+
+    #actionModal .booking-payment-transaction {
+        font-size: 10px;
+    }
+}
