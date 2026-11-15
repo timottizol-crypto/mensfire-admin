@@ -5623,3 +5623,8 @@ html.light-theme #clientDetailsMetrics span{border-color:rgba(48,60,78,.12);back
 html.light-theme .schedule-barber-filter button,html.light-theme .schedule-barber-filter-mobile button{border-color:rgba(48,60,78,.14);background:rgba(48,60,78,.035);color:#647084}
 html.light-theme .schedule-barber-filter button.active,html.light-theme .schedule-barber-filter-mobile button.active{border-color:rgba(172,132,40,.35);background:rgba(212,175,55,.12);color:#8a681e}
 @media(max-width:767px){.schedule-barber-filter{display:none}.schedule-barber-filter-mobile{display:flex;margin:8px 0 10px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px}.schedule-barber-filter-mobile button{flex:0 0 auto}}
+
+/* Calendar drag-and-drop affordance */
+.desktop-booking-card[draggable="true"]{cursor:grab}
+.desktop-booking-card[draggable="true"]:active{cursor:grabbing}
+.desktop-staff-track:has(.desktop-booking-card:active){background-color:rgba(212,175,55,.025)}
