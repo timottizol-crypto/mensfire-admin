@@ -4324,3 +4324,173 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         border-radius: 18px;
     }
 }
+
+/* MENSFIRE — unified modal sizing, form controls and mobile ergonomics. */
+.modal:not(.drawer-modal) {
+    box-sizing: border-box;
+    padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal:not(.drawer-modal) .modal-content {
+    box-sizing: border-box;
+    width: min(100%, 460px);
+    max-width: min(460px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    text-align: left;
+}
+
+.modal:not(.drawer-modal) .modal-content > h2 {
+    color: var(--gold);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.modal:not(.drawer-modal) .form-group {
+    min-width: 0;
+    margin-bottom: 16px;
+}
+
+.modal:not(.drawer-modal) .form-group label {
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 650;
+}
+
+.modal:not(.drawer-modal) .form-group input,
+.modal:not(.drawer-modal) .form-group select,
+.modal:not(.drawer-modal) .form-group textarea,
+.modal:not(.drawer-modal) input:not([type="checkbox"]):not([type="radio"]),
+.modal:not(.drawer-modal) select,
+.modal:not(.drawer-modal) textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 11px;
+    background: rgba(18,18,18,.58);
+    color: var(--text-main, #fff);
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.35;
+    outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.modal:not(.drawer-modal) .form-group input:focus,
+.modal:not(.drawer-modal) .form-group select:focus,
+.modal:not(.drawer-modal) .form-group textarea:focus,
+.modal:not(.drawer-modal) input:not([type="checkbox"]):not([type="radio"]):focus,
+.modal:not(.drawer-modal) select:focus,
+.modal:not(.drawer-modal) textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212,175,55,.12);
+}
+
+.modal:not(.drawer-modal) input::placeholder,
+.modal:not(.drawer-modal) textarea::placeholder {
+    color: var(--text-muted);
+    opacity: .78;
+}
+
+.modal:not(.drawer-modal) .checkout-btn,
+.modal:not(.drawer-modal) .btn-cancel,
+.modal:not(.drawer-modal) .action-modal-btn {
+    box-sizing: border-box;
+    min-height: 44px;
+    line-height: 1.3;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.modal:not(.drawer-modal) .booking-detail-heading,
+.modal:not(.drawer-modal) .new-booking-heading {
+    gap: 12px;
+}
+
+.modal:not(.drawer-modal) .booking-detail-heading h2,
+.modal:not(.drawer-modal) .new-booking-heading h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.modal:not(.drawer-modal) .new-booking-service-option {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    min-width: 0;
+}
+
+.modal:not(.drawer-modal) .new-booking-service-option span,
+.modal:not(.drawer-modal) .new-booking-service-option strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.modal:not(.drawer-modal) .new-booking-duration {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+}
+
+.modal:not(.drawer-modal) .booking-detail-row {
+    min-width: 0;
+}
+
+.modal:not(.drawer-modal) .booking-detail-row span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+    .modal:not(.drawer-modal) {
+        align-items: flex-start;
+        padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .modal:not(.drawer-modal) .modal-content {
+        width: 100%;
+        max-width: 520px;
+        max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        padding: 22px 18px;
+        margin: auto;
+        border-radius: 20px;
+    }
+
+    .modal:not(.drawer-modal) .booking-detail-modal,
+    .modal:not(.drawer-modal) .new-booking-modal {
+        width: 100%;
+        max-width: 520px;
+    }
+
+    .modal:not(.drawer-modal) .form-group input,
+    .modal:not(.drawer-modal) .form-group select,
+    .modal:not(.drawer-modal) .form-group textarea {
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    .modal:not(.drawer-modal) .checkout-btn,
+    .modal:not(.drawer-modal) .btn-cancel,
+    .modal:not(.drawer-modal) .action-modal-btn {
+        min-height: 46px;
+        padding: 12px 14px;
+    }
+}
+
+@media (max-height: 620px) {
+    .modal:not(.drawer-modal) .modal-content {
+        max-height: calc(100dvh - 16px);
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+}
