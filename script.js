@@ -639,6 +639,27 @@ if (currentUser) {
     }
 }
 
+// Финансовые данные и карточки клиентов также загружаются безопасно.
+let expenses = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mensfire_admin_expenses') || '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Не удалось прочитать расходы:', error);
+        return [];
+    }
+})();
+
+let clientProfiles = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mensfire_client_profiles') || '{}');
+        return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+    } catch (error) {
+        console.error('Не удалось прочитать карточки клиентов:', error);
+        return {};
+    }
+})();
+
 // Основные данные расписания. Без этой инициализации календарь обращается
 // к неопределённой переменной bookings и полностью прекращает отрисовку.
 let bookings = (() => {
@@ -2231,10 +2252,6 @@ function setClientsSearchQuery(value) {
     clientsSearchQuery = value.trim().toLowerCase();
     renderClients(currentClientsTab);
 }
-
-let clientProfiles = JSON.parse(
-    localStorage.getItem('mensfire_client_profiles')
-) || {};
 
 let selectedClientProfileKey = null;
 
