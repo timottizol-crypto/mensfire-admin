@@ -1321,6 +1321,9 @@ function openBookingPaymentEditor(id) {
     if (!currentUser) return showToast('Войдите в приложение, чтобы изменить оплату', 'error');
     const booking = bookings.find(item => String(item.id) === String(id));
     if (!booking) return;
+    if (booking.status === 'cancelled') {
+        return showToast('Нельзя добавлять оплату к отменённой записи', 'error');
+    }
     const total = (Array.isArray(booking.services) ? booking.services : [])
         .reduce((sum, item) => sum + (Number(item.price) || 0), 0);
     const paymentState = getBookingPaymentState(booking, total);
@@ -1457,7 +1460,7 @@ function openActionModal(id) {
             <div class="booking-payment-meta">Способ: ${escapeBookingHtml(payment.methodLabel)}</div>
             ${payment.transactions.length ? '<div class="booking-payment-history">' + payment.transactions.map(item => '<div class="booking-payment-transaction"><span>' + escapeBookingHtml(item.method ? (PAYMENT_METHOD_LABELS[item.method] || item.method) : 'Ранее внесено') + '</span><strong>' + Number(item.amount || 0).toLocaleString('ru-RU') + ' ₽</strong></div>').join('') + '</div>' : ''}
 
-            ${currentUser ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Добавить оплату</button>' : ''}
+            ${currentUser && booking.status !== 'cancelled' ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Добавить оплату</button>' : ''}
         </div>
         <div class="booking-detail-row">
             <span>Длительность</span><strong>${duration} мин.</strong>
@@ -1564,28 +1567,34 @@ function openEditBooking() {
 function completeBooking() {
     if (!requireAdminAction('Изменять статус записи может только Али')) return;
     const booking = bookings.find(b => String(b.id) === String(selectedBookingId));
-    if (booking) {
-        booking.status = 'completed';
-        localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
-        closeModal('actionModal');
-        showToast('Запись завершена', 'success');
-        renderSchedule();
-        if (currentUser.role === 'admin') renderFinance();
-        if (currentUser.role === 'barber') renderBarberRevenue();
+    if (!booking) return showToast('Запись не найдена', 'error');
+    if (!isBookingBlockingSchedule(booking)) {
+        return showToast('Эта запись уже завершена или отменена', 'info');
     }
+
+    booking.status = 'completed';
+    localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    closeModal('actionModal');
+    showToast('Запись завершена', 'success');
+    renderSchedule();
+    if (currentUser.role === 'admin') renderFinance();
+    renderBarberRevenue();
 }
 
 function cancelBooking() {
     if (!requireAdminAction('Отменять записи может только Али')) return;
-    const booking = bookings.find(b => b.id === selectedBookingId);
-    if (booking) {
-        booking.status = 'cancelled';
-        localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
-        closeModal('actionModal');
-        showToast('Запись отменена', 'success');
-        renderSchedule();
-        if (currentUser.role === 'admin') renderFinance();
+    const booking = bookings.find(b => String(b.id) === String(selectedBookingId));
+    if (!booking) return showToast('Запись не найдена', 'error');
+    if (!isBookingBlockingSchedule(booking)) {
+        return showToast('Эта запись уже завершена или отменена', 'info');
     }
+
+    booking.status = 'cancelled';
+    localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    closeModal('actionModal');
+    showToast('Запись отменена', 'success');
+    renderSchedule();
+    if (currentUser.role === 'admin') renderFinance();
 }
 
 
@@ -2218,8 +2227,10 @@ function renderFinance() {
         const date = parseFinanceDate(value);
         return date && date >= start && date < end;
     };
+    // Учитываем фактически полученные платежи даже по отменённым записям.
+    // Возвраты не вычитаются: отдельной операции возврата в приложении пока нет.
     const revenueForRange = (start, end) => bookings
-        .filter(b => b.status !== 'cancelled' && inRange(b.date, start, end))
+        .filter(b => inRange(b.date, start, end))
         .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
     const expensesForRange = (start, end) => expenses
         .filter(e => inRange(e.date, start, end))
