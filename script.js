@@ -1217,30 +1217,45 @@ function escapeBookingHtml(value) {
 
 const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
 function getBookingPaymentState(booking, total) {
-    const paid = Math.max(0, Math.min(total, Number(booking.paidAmount || 0)));
+    const transactions = Array.isArray(booking.payments) ? booking.payments : [];
+    const transactionTotal = transactions.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+    const legacyPaid = Number(booking.paidAmount || 0);
+    const paid = Math.max(0, Math.min(total, transactions.length ? transactionTotal : legacyPaid));
     const status = paid <= 0 || total <= 0 ? 'unpaid' : paid >= total ? 'paid' : 'partial';
+    const methods = [...new Set(transactions.map(item => item.method).filter(Boolean))];
+    const method = methods.length > 1 ? 'mixed' : (methods[0] || booking.paymentMethod);
     return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
-        methodLabel: PAYMENT_METHOD_LABELS[booking.paymentMethod] || 'Не указан' };
+        methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан', transactions };
 }
 function openBookingPaymentEditor(id) {
     if (!currentUser) return showToast('Войдите в приложение, чтобы изменить оплату', 'error');
     const booking = bookings.find(item => String(item.id) === String(id));
     if (!booking) return;
     const total = (booking.services || []).reduce((sum, item) => sum + Number(item.price || 0), 0);
-    const rawAmount = prompt('Сколько клиент внёс? Полная стоимость: ' + total + ' ₽', String(Number(booking.paidAmount || 0)));
+    const paymentState = getBookingPaymentState(booking, total);
+    const balance = Math.max(0, total - paymentState.paid);
+    if (balance <= 0) return showToast('Запись уже оплачена полностью', 'info');
+    const rawAmount = prompt('Сумма нового платежа. Остаток: ' + balance + ' ₽', String(balance));
     if (rawAmount === null) return;
-    const paid = Number(String(rawAmount).replace(',', '.'));
-    if (!Number.isFinite(paid) || paid < 0 || paid > total) return showToast('Введите сумму от 0 до ' + total + ' ₽', 'error');
-    const methods = Object.keys(PAYMENT_METHOD_LABELS);
-    const method = prompt('Способ оплаты: cash — наличные, card — карта, transfer — перевод, online — онлайн, mixed — смешанная', booking.paymentMethod || 'cash');
+    const amount = Number(String(rawAmount).replace(',', '.'));
+    if (!Number.isFinite(amount) || amount <= 0 || amount > balance) return showToast('Введите сумму больше 0 и не больше остатка ' + balance + ' ₽', 'error');
+    const method = prompt('Способ оплаты: cash — наличные, card — карта, transfer — перевод, online — онлайн', 'cash');
     if (method === null) return;
-    if (!methods.includes(method.trim())) return showToast('Неизвестный способ оплаты', 'error');
-    booking.paidAmount = paid;
-    booking.paymentMethod = method.trim();
+    const normalizedMethod = method.trim();
+    if (!['cash','card','transfer','online'].includes(normalizedMethod)) return showToast('Выберите cash, card, transfer или online', 'error');
+    if (!Array.isArray(booking.payments)) {
+        booking.payments = paymentState.paid > 0
+            ? [{ amount: paymentState.paid, method: booking.paymentMethod || '', createdAt: booking.paymentUpdatedAt || '' }]
+            : [];
+    }
+    booking.payments.push({ amount, method: normalizedMethod, createdAt: new Date().toISOString(), by: currentUser.name || '' });
+    booking.paidAmount = booking.payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const methods = [...new Set(booking.payments.map(item => item.method).filter(Boolean))];
+    booking.paymentMethod = methods.length > 1 ? 'mixed' : (methods[0] || normalizedMethod);
     booking.paymentUpdatedAt = new Date().toISOString();
     localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
     openActionModal(booking.id);
-    showToast('Оплата сохранена', 'success');
+    showToast('Платёж добавлен', 'success');
 }
 
 function openActionModal(id) {
@@ -1309,6 +1324,8 @@ function openActionModal(id) {
             <div class="booking-payment-heading"><span>Оплата</span><strong class="payment-state payment-${payment.status}">${payment.label}</strong></div>
             <div class="booking-payment-meta">Внесено: ${payment.paid.toLocaleString('ru-RU')} ₽ · Остаток: ${Math.max(0, total-payment.paid).toLocaleString('ru-RU')} ₽</div>
             <div class="booking-payment-meta">Способ: ${escapeBookingHtml(payment.methodLabel)}</div>
+            ${payment.transactions.length ? '<div class="booking-payment-history">' + payment.transactions.map(item => '<div class="booking-payment-transaction"><span>' + escapeBookingHtml(item.method ? (PAYMENT_METHOD_LABELS[item.method] || item.method) : 'Ранее внесено') + '</span><strong>' + Number(item.amount || 0).toLocaleString('ru-RU') + ' ₽</strong></div>').join('') + '</div>' : ''}
+
             ${canManage ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Изменить оплату</button>' : ''}
         </div>
         <div class="booking-detail-row">
