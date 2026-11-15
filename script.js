@@ -3711,11 +3711,12 @@ function renderClientsAnalytics(sourceBookings, clientGroups) {
     const areaPath=linePath+' L '+points[points.length-1].x.toFixed(1)+' '+(top+plotHeight)+' L '+points[0].x.toFixed(1)+' '+(top+plotHeight)+' Z';
     const periodGroups=(clientGroups||[]).map(client=>{
         const visits=client.visits.filter(inRange),done=visits.filter(visit=>visit.status==='completed');
-        return {...client,visits,completedCount:done.length,totalSpent:visits.reduce((sum,visit)=>sum+getBookingCollectedAmount(visit),0),completedRevenue:done.reduce((sum,visit)=>sum+getBookingCollectedAmount(visit),0)};
+        return {...client,visits,lifetimeCompletedCount:client.completedCount,completedCount:done.length,totalSpent:visits.reduce((sum,visit)=>sum+getBookingCollectedAmount(visit),0),completedRevenue:done.reduce((sum,visit)=>sum+getBookingCollectedAmount(visit),0)};
     }).filter(client=>client.visits.length);
     const totalClients=periodGroups.length,totalVisits=completed.length,totalRevenue=completed.reduce((sum,booking)=>sum+getBookingCollectedAmount(booking),0);
     const segmentCounts={new:0,regular:0,vip:0};
-    periodGroups.forEach(client=>{const tag=client.profileSummary.tag||(client.completedCount<=1?'new':client.completedCount>=8?'vip':'regular');segmentCounts[segmentCounts[tag]===undefined?'regular':tag]++;});
+    // Сегмент клиента — характеристика всей истории, а не только выбранного отчётного периода.
+    periodGroups.forEach(client=>{const tag=client.profileSummary.tag||(client.lifetimeCompletedCount<=1?'new':client.lifetimeCompletedCount>=8?'vip':'regular');segmentCounts[segmentCounts[tag]===undefined?'regular':tag]++;});
     const newPercent=totalClients?Math.round(segmentCounts.new/totalClients*100):0,regularPercent=totalClients?Math.round(segmentCounts.regular/totalClients*100):0,vipStart=newPercent+regularPercent;
     const maxVisits=Math.max(0,...monthStats.map(item=>item.visits));
     const periodLabel=formatReportDate(rangeStart)+' — '+formatReportDate(rangeEnd);
@@ -3890,7 +3891,7 @@ function renderClients(tab = 'all') {
         const caption=clientsPeriodMode==='sixMonths'?'Последние 6 месяцев':clientsPeriodMode==='month'?'Текущий месяц':formatReportDate(rangeStart)+' — '+formatReportDate(rangeEnd);
         clientsOverview.innerHTML=`
             <div class="client-overview-card"><span>Клиентов за период</span><strong>${periodGroups.length}</strong><small>${caption}</small></div>
-            <div class="client-overview-card"><span>Постоянных</span><strong>${loyalClients}</strong><small>От 3 визитов за период</small></div>
+            <div class="client-overview-card"><span>Повторных клиентов</span><strong>${loyalClients}</strong><small>От 3 завершённых визитов за период</small></div>
             <div class="client-overview-card"><span>Завершённых визитов</span><strong>${visitTotal}</strong><small>${caption}</small></div>
             <div class="client-overview-card"><span>Средний чек</span><strong>${averageCheck.toLocaleString('ru-RU')} ₽</strong><small>По завершённым визитам</small></div>
             <div class="client-overview-card"><span>Оплачено</span><strong>${Math.round(spentTotal).toLocaleString('ru-RU')} ₽</strong><small>Фактически получено</small></div>
