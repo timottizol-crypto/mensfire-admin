@@ -1177,7 +1177,7 @@ function renderDesktopSchedule() {
                 clusterEnd = Math.max(clusterEnd, item.endMinutes);
             });
             renderCluster(cluster);
-else {
+        } else {
             barberBlocks.forEach(block => {
                 const top = (toMinutes(block.startTime) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
                 const end = toMinutes(block.endTime);
