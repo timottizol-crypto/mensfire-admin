@@ -2966,6 +2966,33 @@ html.light-theme .calendar-day:hover:not(.empty) {
 }
 
 
+/* Текущая позиция времени в дневном расписании */
+@media (min-width: 768px) {
+    #viewSchedule > #desktopSchedule .desktop-current-time {
+        position: absolute;
+        z-index: 8;
+        left: 0;
+        right: 0;
+        height: 0;
+        border-top: 2px solid #e3bd42;
+        pointer-events: none;
+        filter: drop-shadow(0 0 4px rgba(227,189,66,.45));
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-current-time span {
+        position: absolute;
+        top: -10px;
+        left: 5px;
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #e3bd42;
+        color: #111;
+        font-size: 9px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+}
+
 /* MENSFIRE — BOOKING DETAILS */
 
 .booking-detail-modal {
