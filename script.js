@@ -600,8 +600,28 @@ function handleSwipe(startX, startY, endX, endY) {
 // Подгружаем обновленный список мастеров из localStorage (если добавляли новых)
 mockStaff = JSON.parse(localStorage.getItem('mensfire_admin_staff')) || mockStaff;
 
+// Основные данные расписания. Без этой инициализации календарь обращается
+// к неопределённой переменной bookings и полностью прекращает отрисовку.
+let bookings = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mensfire_admin_bookings') || '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Не удалось прочитать сохранённые записи:', error);
+        return [];
+    }
+})();
+
 // Дополнительные данные для блокировок
-let timeBlocks = JSON.parse(localStorage.getItem('mensfire_admin_blocks')) || [];
+let timeBlocks = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mensfire_admin_blocks') || '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Не удалось прочитать блокировки времени:', error);
+        return [];
+    }
+})();
 // Выбранная дата в расписании (по умолчанию — сегодня)
 let selectedScheduleDate = new Date().toLocaleDateString('ru-RU');
 let currentScheduleTab = 'bookings'; // 'bookings' или 'breaks'
