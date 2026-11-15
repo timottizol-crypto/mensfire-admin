@@ -184,7 +184,7 @@ function initAppForUser() {
     document.getElementById('profileName').innerText = currentUser.name;
     document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'Главный мастер' : 'Барбер';
     
-    document.getElementById('barberRevenueCard').style.display = isAdminUser() ? 'block' : 'none';
+    document.getElementById('barberRevenueCard').style.display = 'block';
     const backupCard = document.getElementById('profileBackupCard');
     if (backupCard) backupCard.style.display = isAdminUser() ? 'block' : 'none';
     if (isAdminUser()) {
@@ -202,6 +202,7 @@ function initAppForUser() {
     
     // Инициализируем данные (рендер расписания и т.д. - будет в части 2)
     if (typeof renderSchedule === 'function') renderSchedule();
+    if (typeof renderProfileOverview === 'function') renderProfileOverview();
 }
 
 function logout() {
@@ -3057,40 +3058,58 @@ function showClientDetails(name, barberId) {
 // --- ПРОФИЛЬ ---
 function renderBarberRevenue() {
     const card = document.getElementById('barberRevenueCard');
-    if (!isAdminUser()) {
+    if (!currentUser) {
         if (card) card.style.display = 'none';
         return;
     }
+    if (card) card.style.display = 'block';
     const today = new Date().toLocaleDateString('ru-RU');
     const revenueEl = document.getElementById('barberRevenue');
     const titleEl = document.getElementById('profileRevenueTitle');
-
-    if (currentUser.role === 'admin') {
-        // АДМИН: Считаем общую прибыль (Вся выручка за сегодня - Все расходы за сегодня)
-        const totalRevenue = bookings
-            .filter(b => b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
-        
-        const totalExpenses = expenses
-            .filter(e => e.date === today)
-            .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
-        const totalProfit = totalRevenue - totalExpenses;
-        revenueEl.innerText = `${totalProfit} ₽`;
-        revenueEl.style.color = totalProfit >= 0 ? '#4CAF50' : '#ff4d4d';
-        
+    if (!revenueEl || !titleEl) return;
+    if (isAdminUser()) {
+        const totalRevenue = bookings.filter(item => item.date === today && item.status === 'completed')
+            .reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+        const totalExpenses = expenses.filter(item => item.date === today)
+            .reduce((sum,item) => sum + Number(item.amount || 0),0);
+        const profit = totalRevenue-totalExpenses;
+        titleEl.textContent = 'Прибыль барбершопа за сегодня';
+        revenueEl.textContent = Math.round(profit).toLocaleString('ru-RU') + ' ₽';
+        revenueEl.style.color = profit >= 0 ? '#4CAF50' : '#ff4d4d';
     } else {
-        // БАРБЕР: Считаем его личную выручку (40%)
-        const todayRevenue = bookings
-            .filter(b => b.barberId === currentUser.id && b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
-        
-        const barberShare = Math.round(todayRevenue * 0.4);
-        revenueEl.innerText = `${barberShare} ₽`;
+        const revenue = bookings.filter(item => String(item.barberId) === String(currentUser.id) && item.date === today && item.status === 'completed')
+            .reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+        titleEl.textContent = 'Моя доля за сегодня · 40%';
+        revenueEl.textContent = Math.round(revenue * .4).toLocaleString('ru-RU') + ' ₽';
         revenueEl.style.color = 'var(--gold)';
     }
 }
-
+function renderProfileOverview() {
+    const container = document.getElementById('profileOverview');
+    if (!container || !currentUser) return;
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(),now.getMonth(),1);
+    const parseDate = value => {
+        const parts = String(value || '').split('.').map(Number);
+        return parts.length === 3 && parts.every(Number.isFinite) ? new Date(parts[2],parts[1]-1,parts[0]) : null;
+    };
+    const scope = bookings.filter(item => {
+        const date = parseDate(item.date);
+        return date && date >= monthStart && (isAdminUser() || String(item.barberId) === String(currentUser.id));
+    });
+    const completed = scope.filter(item => item.status === 'completed');
+    const collected = scope.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+    const clients = new Set(completed.map(item => String(item.clientName || '').trim().toLowerCase()).filter(Boolean));
+    const due = scope.filter(item => item.status !== 'cancelled').reduce((sum,item) => {
+        const total = (item.services || []).reduce((n,service) => n + Number(service.price || 0),0);
+        return sum + Math.max(0,total-getBookingPaymentState(item,total).paid);
+    },0);
+    container.innerHTML = `
+        <div class="profile-overview-card"><span>Визитов за месяц</span><strong>${completed.length}</strong></div>
+        <div class="profile-overview-card"><span>${isAdminUser() ? 'Получено за месяц' : 'Моя выручка за месяц'}</span><strong>${Math.round(collected).toLocaleString('ru-RU')} ₽</strong></div>
+        <div class="profile-overview-card"><span>Клиентов</span><strong>${clients.size}</strong></div>
+        <div class="profile-overview-card"><span>Остаток к оплате</span><strong>${Math.round(due).toLocaleString('ru-RU')} ₽</strong></div>`;
+}
 
 /* Резервное копирование данных салона (хранение остаётся локальным). */
 const MENSFIRE_BACKUP_KEYS = [
