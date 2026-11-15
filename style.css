@@ -2993,6 +2993,71 @@ html.light-theme .calendar-day:hover:not(.empty) {
     }
 }
 
+/* Booking cards: clearer hierarchy and status colors */
+@media (min-width: 768px) {
+    #viewSchedule > #desktopSchedule .desktop-booking-card {
+        gap: 5px;
+        padding: 8px 9px;
+        border-left-width: 4px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card .booking-card-client {
+        display: block;
+        width: 100%;
+        color: #fff1c2;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card .booking-card-service {
+        display: block;
+        width: 100%;
+        color: rgba(255,246,220,.82);
+        font-size: 10px;
+        line-height: 1.25;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card .booking-card-meta {
+        display: block;
+        width: 100%;
+        color: rgba(255,235,180,.72);
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card .booking-card-meta b {
+        color: #ffe08a;
+        font-weight: 800;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card.confirmed {
+        border-color: rgba(91,190,132,.75);
+        border-left-color: #5bbe84;
+        background: linear-gradient(110deg, rgba(49,145,92,.25), rgba(49,145,92,.09));
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card.pending {
+        border-color: rgba(220,174,73,.75);
+        border-left-color: #dcad49;
+        background: linear-gradient(110deg, rgba(220,174,73,.23), rgba(220,174,73,.08));
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card.completed {
+        border-color: rgba(110,155,130,.5);
+        border-left-color: #6e9b82;
+        background: rgba(65,110,83,.12);
+        opacity: .78;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card.cancelled {
+        border-color: rgba(190,95,95,.5);
+        border-left-color: #be5f5f;
+        background: rgba(150,60,60,.1);
+        opacity: .48;
+    }
+}
+
 /* MENSFIRE — BOOKING DETAILS */
 
 .booking-detail-modal {
