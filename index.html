@@ -96,36 +96,20 @@
         </div>
 
         <!-- ЭКРАН РАСПИСАНИЯ (Общий) -->
-        <div id="viewSchedule" class="view">
-            <div class="glass-card home-bookings-card" style="min-height: 200px;">
-                <h3 style="margin-top: 5px; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <span id="scheduleGreeting">Расписание</span>
-                    <span id="scheduleDateDisplay" style="font-size: 12px; color: var(--gold);"></span>
-                </h3>
-                
-                <!-- НОВЫЕ ТАБЫ -->
-                <div class="category-tabs" style="margin-bottom: 15px;">
-                    <button class="tab-btn active" onclick="switchScheduleTab('bookings')" id="tabBookings">Записи</button>
-                    <button class="tab-btn" onclick="switchScheduleTab('breaks')" id="tabBreaks">Перерывы</button>
+        <div id="viewSchedule" class="view schedule-workspace">
+            <div class="workspace-heading schedule-heading"><div><span class="workspace-eyebrow">MENSFIRE APPOINTMENTS</span><h2>Расписание</h2><p>Управление записями, загрузкой и рабочим временем</p></div><button class="home-cta-btn" onclick="openNewBookingModal()"><div class="cta-text"><span>＋ Новая запись</span></div></button></div>
+            <div id="scheduleOverview" class="schedule-overview-grid"></div>
+            <div class="glass-card home-bookings-card schedule-main-card">
+                <div class="schedule-toolbar"><div><strong id="scheduleGreeting">Записи</strong><span id="scheduleDateDisplay"></span></div>
+                    <div class="category-tabs schedule-tabs"><button class="tab-btn active" onclick="switchScheduleTab('bookings')" id="tabBookings">Записи</button><button class="tab-btn" onclick="switchScheduleTab('breaks')" id="tabBreaks">Перерывы</button></div>
                 </div>
-
-                <!-- Селектор дат -->
                 <div class="date-selector" id="scheduleDateSelector"></div>
-                
-                <div id="scheduleList" class="home-scroll-area" style="transition: opacity 0.3s ease;">
-                    <!-- Карточки записей генерируются через JS -->
-                </div>
+                <div id="scheduleList" class="home-scroll-area" style="transition:opacity .3s ease;"><!-- Карточки записей генерируются через JS --></div>
             </div>
-            
-            <button class="home-cta-btn" style="width: 100%; margin-top: 15px;" onclick="openBlockTimeModal()">
-                <div class="cta-text">
-                    <span>Заблокировать время</span>
-                    <small>Обед / Личные дела</small>
-                </div>
-            </button>
+            <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
         </div>
 
-            <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
+        <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
         <div id="viewFinance" class="view finance-view">
             <div class="finance-page-heading">
                 <div><span class="finance-eyebrow">MENSFIRE BUSINESS</span><h2>Финансы</h2><p>Контроль выручки, расходов и эффективности команды</p></div>
