@@ -368,7 +368,8 @@
 
             <div class="form-group">
                 <label for="newBookingBarber">Мастер</label>
-                <select id="newBookingBarber" onchange="updateNewBookingServices()"></select>
+                <select id="newBookingBarber" class="visually-hidden-select" onchange="renderBookingBarberChoices(); updateNewBookingServices();" aria-hidden="true" tabindex="-1"></select>
+                <div id="bookingBarberChoices" class="booking-barber-choices" role="group" aria-label="Выбор мастера"></div>
             </div>
 
             
