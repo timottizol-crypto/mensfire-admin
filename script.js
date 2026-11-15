@@ -1576,6 +1576,21 @@ function updateNewBookingSummary() {
 
     document.getElementById('newBookingPrice').textContent =
         `${price.toLocaleString('ru-RU')} ₽`;
+
+    // Ограничиваем последнее допустимое время начала так, чтобы все услуги
+    // завершались до закрытия расписания в 22:00.
+    const timeInput = document.getElementById('newBookingTime');
+    if (timeInput) {
+        const latestStart = Math.max(8 * 60, 22 * 60 - duration);
+        const maxHours = String(Math.floor(latestStart / 60)).padStart(2, '0');
+        const maxMinutes = String(latestStart % 60).padStart(2, '0');
+        timeInput.max = `${maxHours}:${maxMinutes}`;
+        if (timeInput.value && timeInput.value > timeInput.max) {
+            timeInput.setCustomValidity('Выбранное время не подходит для длительности услуг');
+        } else {
+            timeInput.setCustomValidity('');
+        }
+    }
 }
 
 
