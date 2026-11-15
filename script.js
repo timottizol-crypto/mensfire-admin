@@ -1665,7 +1665,7 @@ function openEditBooking() {
 
     document.getElementById('newBookingClient').value = booking.clientName;
 
-    document.getElementById('newBookingDate').value = dateValue;
+    document.getElementById('newBookingDate').value = booking.date;
 
     document.getElementById('newBookingTime').value = booking.time;
 
