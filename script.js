@@ -697,19 +697,30 @@ let timeBlocks = (() => {
 })();
 
 function ensureDemoSampleData() {
- if (mensfireDataMode !== 'demo' || bookings.length) return;
+ if (mensfireDataMode !== 'demo') return;
  const today = new Date();
  const dateFor = offset => { const d = new Date(today); d.setDate(d.getDate()+offset); return d.toLocaleDateString('ru-RU'); };
  const cut = { title: 'Мужская стрижка', price: 1300 };
  const beard = { title: 'Оформление бороды', price: 1000 };
- bookings = [
+ if (!bookings.length) bookings = [
   { id:'demo-1',clientName:'Александр',barberId:'b_ben',date:dateFor(0),time:'10:00',services:[cut],status:'confirmed',paidAmount:1300,paymentMethod:'card' },
   { id:'demo-2',clientName:'Михаил',barberId:'b_ism',date:dateFor(0),time:'11:00',services:[cut,beard],status:'confirmed',paidAmount:1000,paymentMethod:'cash' },
   { id:'demo-3',clientName:'Даниил',barberId:'b_al',date:dateFor(0),time:'13:00',services:[cut],status:'pending',paidAmount:0,paymentMethod:'' },
   { id:'demo-4',clientName:'Илья',barberId:'b_ben',date:dateFor(1),time:'12:00',services:[beard],status:'completed',paidAmount:1000,paymentMethod:'transfer' },
   { id:'demo-5',clientName:'Максим',barberId:'b_ism',date:dateFor(1),time:'15:00',services:[cut],status:'confirmed',paidAmount:0,paymentMethod:'' }
  ];
- localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+ if (!bookings.length) localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+ if (!expenses.length) {
+  expenses = [
+   { id:'demo-exp-1', title:'Расходные материалы', amount:850, date:dateFor(0) },
+   { id:'demo-exp-2', title:'Уборка', amount:500, date:dateFor(-1) }
+  ];
+  localStorage.setItem(appStorageKey('mensfire_admin_expenses'), JSON.stringify(expenses));
+ }
+ if (!timeBlocks.length) {
+  timeBlocks = [{ id:'demo-block-1', barberId:'b_ben', date:dateFor(2), startTime:'14:00', endTime:'15:00' }];
+  localStorage.setItem(appStorageKey('mensfire_admin_blocks'), JSON.stringify(timeBlocks));
+ }
 }
 ensureDemoSampleData();
 // Выбранная дата в расписании (по умолчанию — сегодня)
