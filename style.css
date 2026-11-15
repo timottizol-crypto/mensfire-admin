@@ -3784,3 +3784,6 @@ html.light-theme .calendar-day:hover:not(.empty) {
 .desktop-booking-card.payment-border-paid{border-left:4px solid #38c77b}
 .desktop-booking-card.payment-border-partial{border-left:4px solid #e9b949}
 .desktop-booking-card.payment-border-unpaid{border-left:4px solid #f16c6c}
+
+.desktop-booking-card .calendar-payment-label{display:inline-flex;align-self:flex-start;margin-top:5px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.home-booking-item .calendar-payment-label{display:inline-flex;margin-top:6px}
