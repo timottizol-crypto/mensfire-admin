@@ -116,7 +116,19 @@
                 <button class="action-modal-btn action-btn-primary" onclick="openExpenseModal()">＋ Расход</button>
             </div>
             <div class="finance-date-navigation">
-                <div class="finance-period-heading"><div><strong>Период отчёта</strong><span id="financeSelectedDateLabel">Выберите дату для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
+                <div class="finance-period-heading"><div><strong>Период отчёта</strong><span id="financeSelectedDateLabel">Выберите период</span></div><span class="finance-live-label">Локальные данные</span></div>
+                <div class="finance-range-toolbar">
+                    <div class="finance-range-presets" role="group" aria-label="Период отчёта">
+                        <button type="button" class="finance-range-btn active" data-finance-period="day" onclick="setFinancePeriod('day')">День</button>
+                        <button type="button" class="finance-range-btn" data-finance-period="month" onclick="setFinancePeriod('month')">Месяц</button>
+                        <button type="button" class="finance-range-btn" data-finance-period="custom" onclick="setFinancePeriod('custom')">Период</button>
+                    </div>
+                    <div class="finance-range-fields" id="financeRangeFields" hidden>
+                        <button type="button" id="financeRangeStartButton" class="finance-range-date" onclick="openReportDatePicker('financeStart')">Начало</button>
+                        <span>—</span>
+                        <button type="button" id="financeRangeEndButton" class="finance-range-date" onclick="openReportDatePicker('financeEnd')">Конец</button>
+                    </div>
+                </div>
                 <div class="date-selector finance-date-strip" id="financeDateSelector" aria-label="Быстрый выбор даты"></div>
             </div>
             <div class="category-tabs finance-tabs" style="margin-bottom:15px;">
