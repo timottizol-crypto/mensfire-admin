@@ -2623,7 +2623,7 @@ function renderDashboard() {
         return sum+Math.max(0,total-getBookingPaymentState(item,total).paid);
     },0);
     const periodExpenses = currentUser.role === 'admin' ? expenses.filter(item=>inRange(item.date)).reduce((sum,item)=>sum+Math.max(0,Number(item.amount)||0),0) : 0;
-    const newClients = completed.filter(item=>getBookingClientType(item).label==='Новый клиент').length;
+    const newClients = completed.filter(item=>getBookingClientType(item)==='new').length;
     const kpis = document.getElementById('dashboardKpis');
     if (kpis) {
         const cards = [
