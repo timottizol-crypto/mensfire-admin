@@ -826,6 +826,66 @@ let timeBlocks = (() => {
     }
 })();
 
+let barberWorkSchedules = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_work_schedules')) || '{}');
+        return saved && typeof saved === 'object' ? saved : {};
+    } catch (error) { return {}; }
+})();
+const workWeekDays = [{label:'Понедельник',short:'Пн'},{label:'Вторник',short:'Вт'},{label:'Среда',short:'Ср'},{label:'Четверг',short:'Чт'},{label:'Пятница',short:'Пт'},{label:'Суббота',short:'Сб'},{label:'Воскресенье',short:'Вс'}];
+function getBarberWorkDay(barberId, dateValue) {
+    const date = parseReportDate(dateValue);
+    if (!date) return { enabled:true, start:'08:00', end:'22:00' };
+    const dayIndex = (date.getDay()+6)%7;
+    const custom = barberWorkSchedules[String(barberId)]?.[dayIndex];
+    return custom ? {enabled:custom.enabled!==false,start:custom.start||'08:00',end:custom.end||'22:00'} : {enabled:true,start:'08:00',end:'22:00'};
+}
+function isWithinBarberWorkSchedule(barberId,dateValue,start,end) {
+    const day = getBarberWorkDay(barberId,dateValue);
+    if (!day.enabled) return false;
+    const workStart=parseScheduleTimeMinutes(day.start),workEnd=parseScheduleTimeMinutes(day.end);
+    return workStart!==null&&workEnd!==null&&start>=workStart&&end<=workEnd;
+}
+function openWorkScheduleModal() {
+    if (!requireAdminAction('Настраивать график может только администратор')) return;
+    const select=document.getElementById('workScheduleBarber');
+    select.innerHTML=mockStaff.filter(person=>person.role!=='admin').map(person=>'<option value="'+escapeBookingHtml(person.id)+'">'+escapeBookingHtml(person.name)+'</option>').join('');
+    renderWorkScheduleEditor();
+    openModal('workScheduleModal');
+}
+function renderWorkScheduleEditor() {
+    const select=document.getElementById('workScheduleBarber'),host=document.getElementById('workScheduleDays');
+    if(!select||!host)return;
+    const schedule=barberWorkSchedules[String(select.value)]||{};
+    host.innerHTML=workWeekDays.map((day,index)=>{
+        const item=schedule[index]||{enabled:true,start:'08:00',end:'22:00'};
+        return '<div class="work-schedule-day"><label class="work-schedule-day-toggle"><input type="checkbox" id="workDayEnabled_'+index+'" '+(item.enabled!==false?'checked':'')+'><span>'+day.label+'</span></label><div class="work-schedule-times"><input type="text" id="workDayStart_'+index+'" readonly inputmode="none" value="'+escapeBookingHtml(item.start||'08:00')+'" onclick="openTimePicker(\'workDayStart_'+index+'\')"><span>—</span><input type="text" id="workDayEnd_'+index+'" readonly inputmode="none" value="'+escapeBookingHtml(item.end||'22:00')+'" onclick="openTimePicker(\'workDayEnd_'+index+'\')"></div></div>';
+    }).join('');
+}
+function saveWorkSchedule() {
+    if (!requireAdminAction('Настраивать график может только администратор')) return;
+    const barberId=document.getElementById('workScheduleBarber')?.value;
+    if(!barberId)return;
+    const schedule={};
+    for(let index=0;index<7;index++){
+        const enabled=document.getElementById('workDayEnabled_'+index).checked;
+        const start=document.getElementById('workDayStart_'+index).value;
+        const end=document.getElementById('workDayEnd_'+index).value;
+        const a=parseScheduleTimeMinutes(start),b=parseScheduleTimeMinutes(end);
+        if(enabled&&(a===null||b===null||a>=b||a<480||b>1320))return showToast(workWeekDays[index].label+': проверьте рабочие часы (08:00–22:00)','error');
+        schedule[index]={enabled,start,end};
+    }
+    const conflicts=bookings.filter(booking=>String(booking.barberId)===String(barberId)&&isBookingBlockingSchedule(booking)).filter(booking=>{
+        const start=parseScheduleTimeMinutes(booking.time);return start!==null&&!isWithinBarberWorkSchedule(barberId,booking.date,start,start+getBookingDurationMinutes(booking));
+    });
+    if(conflicts.length)return showToast('Есть записи вне нового графика: '+conflicts.slice(0,2).map(item=>item.date+' '+item.time).join(', '),'error');
+    barberWorkSchedules[String(barberId)]=schedule;
+    localStorage.setItem(appStorageKey('mensfire_work_schedules'),JSON.stringify(barberWorkSchedules));
+    closeModal('workScheduleModal');
+    renderSchedule();
+    showToast('Рабочий график сохранён','success');
+}
+
 let waitlistEntries = (() => {
     try {
         const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_waitlist')) || '[]');
@@ -2136,6 +2196,7 @@ function moveBookingToSlot(event, barberId, date) {
     const duration = getBookingDurationMinutes(booking);
     const end = start + duration;
     if (start < 8 * 60 || end > 22 * 60) return showToast('Запись должна завершаться не позже 22:00', 'error');
+    if (!isWithinBarberWorkSchedule(barberId,date,start,end)) return showToast('Это время вне рабочего графика мастера','error');
     const time = `${String(Math.floor(start / 60)).padStart(2,'0')}:${String(start % 60).padStart(2,'0')}`;
     const overlaps = (a,b,c,d) => a < d && b > c;
     const conflict = bookings.find(other => {
@@ -2417,6 +2478,7 @@ function saveNewBooking() {
     if (start < 8 * 60 || end > 22 * 60) {
         return showToast('Запись должна завершаться не позже 22:00', 'error');
     }
+    if (!isWithinBarberWorkSchedule(barberId,date,start,end)) return showToast('Это время вне рабочего графика мастера','error');
 
     const overlaps = (aStart, aEnd, bStart, bEnd) =>
         aStart < bEnd && aEnd > bStart;
