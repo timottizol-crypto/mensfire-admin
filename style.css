@@ -3767,3 +3767,8 @@ html.light-theme .calendar-day:hover:not(.empty) {
         font-size: 12px;
     }
 }
+
+.data-mode-switch{display:flex;gap:8px;margin:16px 0 8px}
+.data-mode-switch button{flex:1;padding:11px 8px;border:1px solid var(--border-color,rgba(255,255,255,.18));border-radius:12px;background:rgba(255,255,255,.04);color:var(--text-color,#fff);font-weight:700;cursor:pointer}
+.data-mode-switch button:hover{border-color:var(--gold);color:var(--gold)}
+.data-mode-caption{font-size:11px;color:var(--text-muted);margin:0 0 12px}
