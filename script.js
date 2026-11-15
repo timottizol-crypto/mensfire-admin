@@ -3649,26 +3649,29 @@ function saveClientProfile() {
     if (!selectedClientProfileKey) return;
 
     const previousProfile = clientProfiles[selectedClientProfileKey] || {};
+    const clientName = previousProfile.clientName || '';
+    const barberId = previousProfile.barberId || '';
+    const legacyKey = JSON.stringify([clientName, barberId]);
     const phone = document.getElementById('clientDetailsPhone').value.trim();
-    const canonicalKey = getClientProfileKey(
-        previousProfile.clientName || '',
-        previousProfile.barberId || '',
-        phone
-    );
+    const canonicalKey = getClientProfileKey(clientName, barberId, phone);
     const updatedProfile = {
         ...previousProfile,
         ...(clientProfiles[canonicalKey] || {}),
+        clientName,
+        barberId,
         phone,
         birthday: document.getElementById('clientDetailsBirthday')?.value || '',
         tag: document.getElementById('clientDetailsTag')?.value || 'regular',
         notes: document.getElementById('clientDetailsNotes').value.trim(),
         preferences: document.getElementById('clientDetailsPreferences')?.value.trim() || ''
     };
+
+    // Legacy-ключ связывает конкретную карточку с общим телефонным профилем.
+    // Не удаляем общий phone:-ключ при смене номера: им могут пользоваться
+    // карточки этого же клиента у других мастеров.
+    clientProfiles[legacyKey] = updatedProfile;
     clientProfiles[canonicalKey] = updatedProfile;
-    if (canonicalKey !== selectedClientProfileKey) {
-        delete clientProfiles[selectedClientProfileKey];
-        selectedClientProfileKey = canonicalKey;
-    }
+    selectedClientProfileKey = canonicalKey;
 
     localStorage.setItem(
         appStorageKey('mensfire_client_profiles'),
