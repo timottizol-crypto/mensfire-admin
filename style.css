@@ -5048,3 +5048,9 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .team-trend-track i { display:block; width:100%; min-height:2px; border-radius:8px; background:linear-gradient(180deg,var(--gold),rgba(212,175,55,.38)); }
 .team-trend-column span { color:var(--text-muted); font-size:9px; text-transform:capitalize; }
 @media(max-width:700px) { .team-trend-bars { gap:5px; } .team-trend-column strong { font-size:8px; } }
+
+/* CRM client segmentation */
+.client-segment-tabs { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 14px; }
+.client-segment-btn { min-height:34px; padding:7px 13px; border:1px solid rgba(255,255,255,.08); border-radius:999px; color:var(--text-muted); background:rgba(255,255,255,.025); font:inherit; font-size:10px; font-weight:700; cursor:pointer; transition:all .2s ease; }
+.client-segment-btn.active { color:var(--gold); border-color:rgba(212,175,55,.38); background:rgba(212,175,55,.09); }
+@media(max-width:600px) { .client-segment-tabs { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; } .client-segment-btn { flex:0 0 auto; } }
