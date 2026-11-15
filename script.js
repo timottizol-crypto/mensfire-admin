@@ -2216,151 +2216,137 @@ function renderFinanceDateSelector() {
 function renderFinance() {
     if (!requireAdminAction('Просматривать финансы может только Али')) return;
     renderFinanceDateSelector();
-    
-    const targetDate = selectedFinanceDate;
-    const parseFinanceDate = value => {
-        const [day, month, year] = String(value || '').split('.').map(Number);
-        return day && month && year ? new Date(year, month - 1, day) : null;
+
+    const parseDate = value => {
+        const parts = String(value || '').split('.').map(Number);
+        return parts.length === 3 && parts.every(Number.isFinite) ? new Date(parts[2], parts[1] - 1, parts[0]) : null;
     };
-    const selectedDate = parseFinanceDate(targetDate) || new Date();
-    const weekStart = new Date(selectedDate);
-    weekStart.setDate(selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
-    weekStart.setHours(0, 0, 0, 0);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 7);
+    const fmt = value => `${Math.round(Number(value) || 0).toLocaleString('ru-RU')} ₽`;
+    const selectedDate = parseDate(selectedFinanceDate) || new Date();
+    selectedDate.setHours(0, 0, 0, 0);
+    const dateKey = date => date.toLocaleDateString('ru-RU');
+    const shift = (date, days) => { const next = new Date(date); next.setDate(next.getDate() + days); return next; };
+    const startOfWeek = date => { const next = new Date(date); next.setDate(next.getDate() - ((next.getDay() + 6) % 7)); return next; };
     const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-    const inRange = (value, start, end) => {
-        const date = parseFinanceDate(value);
-        return date && date >= start && date < end;
-    };
-    // Учитываем фактически полученные платежи даже по отменённым записям.
-    // Возвраты не вычитаются: отдельной операции возврата в приложении пока нет.
-    const revenueForRange = (start, end) => bookings
-        .filter(b => inRange(b.date, start, end))
-        .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
-    const expensesForRange = (start, end) => expenses
-        .filter(e => inRange(e.date, start, end))
-        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
-    // --- 1. ВЫРУЧКА И ПРИБЫЛЬ ---
-    const revenueForDay = revenueForRange(selectedDate, new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1));
-    const revenueForWeek = revenueForRange(weekStart, weekEnd);
-    const revenueForMonth = revenueForRange(monthStart, monthEnd);
-    const expensesForDay = expenses.filter(e => e.date === targetDate);
-    const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const totalExpensesWeek = expensesForRange(weekStart, weekEnd);
-    const totalExpensesMonth = expensesForRange(monthStart, monthEnd);
-
-    document.getElementById('financeToday').innerText = `${revenueForDay.toLocaleString('ru-RU')} ₽`;
-    document.getElementById('financeWeek').innerText = `${revenueForWeek.toLocaleString('ru-RU')} ₽`;
-    document.getElementById('financeMonth').innerText = `${revenueForMonth.toLocaleString('ru-RU')} ₽`;
-
-    const profitDay = revenueForDay - totalExpensesDay;
-    const profitWeek = revenueForWeek - totalExpensesWeek;
-    const profitMonth = revenueForMonth - totalExpensesMonth;
-    
-    const profitEl = document.getElementById('financeProfit');
-    profitEl.innerText = `${profitDay} ₽`;
-    profitEl.style.color = profitDay >= 0 ? '#4CAF50' : '#ff4d4d';
-
-    document.getElementById('profitWeek').innerText = `${profitWeek.toLocaleString('ru-RU')} ₽`;
-    document.getElementById('profitMonth').innerText = `${profitMonth.toLocaleString('ru-RU')} ₽`;
-
-    // --- 2. РАСХОДЫ ---
-    const expensesList = document.getElementById('expensesList');
-    if (expensesForDay.length === 0) {
-        expensesList.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">Нет расходов за этот день</p>';
-    } else {
-        expensesList.innerHTML = expensesForDay.map(e => `
-            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
-                <span>${escapeBookingHtml(e.title || 'Расход')}</span>
-                <span style="color: #ff4d4d; font-weight: 600;">-${e.amount} ₽</span>
-            </div>
-        `).join('');
-    }
-    document.getElementById('financeMonthExpenses').innerText = `${totalExpensesMonth} ₽`;
-
-    // --- 3. АНАЛИТИКА ЗА ДЕНЬ ---
-    const dayBookings = bookings.filter(b => b.date === targetDate && b.status === 'completed');
-    const clientsCount = dayBookings.length;
-
-    const serviceCountsForDay = {};
-    dayBookings.forEach(b => {
-        (Array.isArray(b.services) ? b.services : []).forEach(service => {
-            const title = String(service?.title || 'Услуга');
-            serviceCountsForDay[title] = (serviceCountsForDay[title] || 0) + 1;
+    const nextMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+    const inRange = (value, start, end) => { const date = parseDate(value); return date && date >= start && date < end; };
+    const dayEnd = shift(selectedDate, 1);
+    const weekStart = startOfWeek(selectedDate);
+    const weekEnd = shift(weekStart, 7);
+    const dayBookings = bookings.filter(item => item.date === selectedFinanceDate && item.status !== 'cancelled');
+    const dayCompleted = dayBookings.filter(item => item.status === 'completed');
+    const revenue = (start, end) => bookings.filter(item => inRange(item.date, start, end))
+        .reduce((sum, item) => sum + getBookingCollectedAmount(item), 0);
+    const expensesTotal = (start, end) => expenses.filter(item => inRange(item.date, start, end))
+        .reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+    const dayRevenue = revenue(selectedDate, dayEnd);
+    const weekRevenue = revenue(weekStart, weekEnd);
+    const monthRevenue = revenue(monthStart, nextMonth);
+    const dayExpenses = expenses.filter(item => item.date === selectedFinanceDate);
+    const dayExpenseTotal = dayExpenses.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+    const weekExpenseTotal = expensesTotal(weekStart, weekEnd);
+    const monthExpenseTotal = expensesTotal(monthStart, nextMonth);
+    const dayProfit = dayRevenue - dayExpenseTotal;
+    const monthProfit = monthRevenue - monthExpenseTotal;
+    const activeBookings = bookings.filter(item => item.status !== 'cancelled');
+    const unpaidBalance = activeBookings.reduce((sum, item) => {
+        const total = (Array.isArray(item.services) ? item.services : []).reduce((n, service) => n + Math.max(0, Number(service.price || 0)), 0);
+        return sum + Math.max(0, total - getBookingPaymentState(item, total).paid);
+    }, 0);
+    const paymentTotals = { cash: 0, card: 0, transfer: 0, online: 0, other: 0 };
+    bookings.filter(item => inRange(item.date, monthStart, nextMonth)).forEach(item => {
+        const payments = Array.isArray(item.payments) && item.payments.length
+            ? item.payments
+            : (getBookingCollectedAmount(item) > 0 ? [{ amount: getBookingCollectedAmount(item), method: item.paymentMethod || 'other' }] : []);
+        payments.forEach(payment => {
+            const method = Object.prototype.hasOwnProperty.call(paymentTotals, payment.method) ? payment.method : 'other';
+            paymentTotals[method] += Math.max(0, Number(payment.amount || 0));
         });
     });
 
-    const sortedServicesDay = Object.entries(serviceCountsForDay).sort((a, b) => b[1] - a[1]);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
+    setText('financeToday', fmt(dayRevenue));
+    setText('financeWeek', fmt(weekRevenue));
+    setText('financeMonth', fmt(monthRevenue));
+    setText('financeProfit', fmt(dayProfit));
+    setText('profitWeek', fmt(weekRevenue - weekExpenseTotal));
+    setText('profitMonth', fmt(monthProfit));
+    setText('financeMonthExpenses', fmt(monthExpenseTotal));
+
+    const expensesList = document.getElementById('expensesList');
+    if (expensesList) expensesList.innerHTML = dayExpenses.length ? dayExpenses.map(item => `
+        <div class="finance-operation">
+            <div class="finance-operation-icon">↗</div>
+            <div class="finance-operation-copy"><strong>${escapeBookingHtml(item.title || 'Расход')}</strong><span>${escapeBookingHtml(item.category || 'Операционные расходы')}</span></div>
+            <strong class="finance-negative">−${fmt(item.amount)}</strong>
+        </div>`).join('') : '<div class="finance-empty">Расходов за выбранный день нет</div>';
+
+    const summary = document.getElementById('financeExecutiveSummary');
+    if (summary) summary.innerHTML = `
+        <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">Получено за день</span><strong>${fmt(dayRevenue)}</strong><small>${dayCompleted.length} завершённых визитов</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Чистый результат дня</span><strong class="${dayProfit < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(dayProfit)}</strong><small>После расходов за день</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Ожидает оплаты</span><strong>${fmt(unpaidBalance)}</strong><small>Баланс по активным записям</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt(dayCompleted.length ? dayCompleted.reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / dayCompleted.length : 0)}</strong><small>По завершённым визитам</small></div>`;
+
+    const chart = document.getElementById('financeRevenueChart');
+    if (chart) {
+        const days = Array.from({length: 7}, (_, index) => shift(selectedDate, index - 6));
+        const values = days.map(date => revenue(date, shift(date, 1)));
+        const max = Math.max(1, ...values);
+        chart.innerHTML = `<div class="finance-chart-bars">${days.map((date,index) => {
+            const height = Math.max(values[index] > 0 ? 5 : 2, values[index] / max * 100);
+            return `<div class="finance-chart-column"><strong>${values[index] ? fmt(values[index]) : '—'}</strong><div class="finance-chart-track"><i style="height:${height}%"></i></div><span>${date.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')}</span></div>`;
+        }).join('')}</div>`;
+    }
+
+    const methods = document.getElementById('financePaymentMethods');
+    if (methods) {
+        const labels = {cash:'Наличные',card:'Банковская карта',transfer:'Перевод',online:'Онлайн',other:'Не указан'};
+        const total = Object.values(paymentTotals).reduce((sum,value) => sum + value, 0);
+        methods.innerHTML = Object.entries(paymentTotals).filter(([,value]) => value > 0).sort((a,b) => b[1]-a[1]).map(([key,value]) => `
+            <div class="finance-method-row"><div><span>${labels[key]}</span><strong>${fmt(value)}</strong></div><div class="finance-method-track"><i style="width:${total ? value/total*100 : 0}%"></i></div></div>`
+        ).join('') || '<div class="finance-empty">Платежей за этот месяц пока нет</div>';
+    }
+
+    const teamStats = document.getElementById('financeTeamStats');
+    if (teamStats) {
+        const staff = Array.isArray(mockStaff) ? mockStaff : [];
+        const rows = staff.map(person => {
+            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, monthStart, nextMonth));
+            const paid = own.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+            const visits = own.filter(item => item.status === 'completed').length;
+            return {name:person.name,paid,visits};
+        }).sort((a,b) => b.paid-a.paid);
+        teamStats.innerHTML = rows.length ? rows.map(person => `
+            <div class="finance-team-row"><div class="finance-team-avatar">${escapeBookingHtml(String(person.name || '?').slice(0,1).toUpperCase())}</div><div class="finance-team-copy"><strong>${escapeBookingHtml(person.name)}</strong><span>${person.visits} визитов за месяц</span></div><strong>${fmt(person.paid)}</strong></div>`
+        ).join('') : '<div class="finance-empty">Добавьте мастеров, чтобы увидеть статистику</div>';
+    }
 
     const analyticsHeader = document.getElementById('analyticsHeaderBlock');
+    if (analyticsHeader) analyticsHeader.innerHTML = `<div><strong>${selectedFinanceDate}</strong><span class="finance-muted">Сводка по записям</span></div><strong>${dayBookings.length} записей</strong>`;
     const analyticsList = document.getElementById('analyticsHistoryList');
-    
-    if (analyticsHeader) {
-        analyticsHeader.innerHTML = `
-            <div style="font-size: 15px; font-weight: 800; color: var(--gold);">${targetDate}</div>
-            <div style="text-align: right; display: flex; align-items: baseline; gap: 5px;">
-                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1;">${clientsCount}</div>
-                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">клиентов</div>
-            </div>
-        `;
-    }
+    if (analyticsList) analyticsList.innerHTML = dayBookings.length ? dayBookings.map(item => {
+        const total = (item.services || []).reduce((sum,service) => sum + Number(service.price || 0),0);
+        const state = getBookingPaymentState(item,total);
+        return `<div class="finance-operation"><div class="finance-operation-copy"><strong>${escapeBookingHtml(item.clientName || 'Клиент')}</strong><span>${escapeBookingHtml(item.time || '')} · ${state.label}</span></div><strong>${fmt(state.paid)} / ${fmt(total)}</strong></div>`;
+    }).join('') : '<div class="finance-empty">На эту дату записей нет</div>';
 
-    if (analyticsList) {
-        if (sortedServicesDay.length > 0) {
-            analyticsList.innerHTML = sortedServicesDay.map(([title, count]) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <span style="color: var(--text-main); font-weight: 600;">${escapeBookingHtml(title)}</span>
-                    <span style="font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></span>
-                </div>
-            `).join('');
-        } else {
-            analyticsList.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 5px 0;">Нет данных за этот день</div>';
-        }
-    }
-
-    // --- 4. ПОПУЛЯРНЫЕ УСЛУГИ (30 ДНЕЙ) ---
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const recentBookings = bookings.filter(b => {
-        if (b.status !== 'completed') return false;
-        const parts = b.date.split('.');
-        const bDate = new Date(parts[2], parts[1] - 1, parts[0]);
-        return bDate >= thirtyDaysAgo;
-    });
-
-    const allServicesCount = {};
-    recentBookings.forEach(b => {
-        (Array.isArray(b.services) ? b.services : []).forEach(service => {
-            const title = String(service?.title || 'Услуга');
-            allServicesCount[title] = (allServicesCount[title] || 0) + 1;
+    const thirtyDaysStart = shift(new Date(), -29);
+    const serviceCounts = {};
+    bookings.filter(item => item.status === 'completed' && inRange(item.date, thirtyDaysStart, shift(new Date(),1))).forEach(item => {
+        (Array.isArray(item.services) ? item.services : []).forEach(service => {
+            const name = String(service.title || 'Услуга');
+            serviceCounts[name] = (serviceCounts[name] || 0) + 1;
         });
     });
-
-    const topServicesAll = Object.entries(allServicesCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-    const topServicesList = document.getElementById('analyticsTopServicesList');
-
-        if (topServicesList) {
-        if (topServicesAll.length === 0) {
-            topServicesList.innerHTML = `<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 10px 0;">Нет данных за последние 30 дней</div>`;
-        } else {
-            topServicesList.innerHTML = topServicesAll.map(([title, count]) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${escapeBookingHtml(title)}</div>
-                    <div style="font-size: 14px; font-weight: 800; color: var(--gold); flex-shrink: 0; margin-left: 10px;">${count} <span style="font-size: 10px; color: var(--text-muted);">раз</span></div>
-                </div>
-            `).join('');
-        }
+    const topServices = document.getElementById('analyticsTopServicesList');
+    if (topServices) {
+        const sorted = Object.entries(serviceCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+        topServices.innerHTML = sorted.length ? sorted.map(([name,count],index) => `
+            <div class="finance-service-row"><span class="finance-service-rank">${index+1}</span><strong>${escapeBookingHtml(name)}</strong><span>${count} раз</span></div>`
+        ).join('') : '<div class="finance-empty">Статистика появится после завершённых визитов</div>';
     }
 }
-
-
 function openExpenseModal() {
     if (!requireAdminAction('Управлять финансами может только Али')) return;
     document.getElementById('expenseTitle').value = '';
