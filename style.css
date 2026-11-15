@@ -5604,3 +5604,14 @@ html.light-theme .dashboard-bar-track{background:#e9edf2}
 html.light-theme .dashboard-team-row,html.light-theme .dashboard-upcoming-row{border-bottom-color:rgba(48,60,78,.12)}
 @media(max-width:760px){.dashboard-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dashboard-kpi-card{padding:13px;border-radius:15px}.dashboard-content-grid{grid-template-columns:1fr;gap:10px}.dashboard-main-panel{grid-column:auto}.dashboard-panel{padding:15px;border-radius:17px}.dashboard-bars{gap:5px}.dashboard-bar-col strong{font-size:8px}}
 @media(max-width:390px){.dashboard-demo-tag{font-size:8px;padding:6px 8px}.dashboard-upcoming-status{display:none}}
+
+/* CRM client profile actions and preferences */
+.client-profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:2px 0 14px}
+.client-profile-actions .action-modal-btn{margin:0;min-height:43px}
+.client-profile-save{border:1px solid rgba(212,175,55,.28)!important;background:rgba(212,175,55,.09)!important;color:var(--gold)!important}
+.client-preferences-preview{color:var(--gold)!important;font-size:10px!important;line-height:1.4;margin-top:5px}
+#clientDetailsMetrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}
+#clientDetailsMetrics span{padding:9px 10px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:rgba(255,255,255,.025);font-size:10px}
+#clientDetailsMetrics b{display:block;color:var(--text-main);font-size:12px;margin-top:3px}
+html.light-theme #clientDetailsMetrics span{border-color:rgba(48,60,78,.12);background:rgba(48,60,78,.035)}
+@media(max-width:420px){.client-profile-actions{grid-template-columns:1fr}#clientDetailsMetrics{grid-template-columns:1fr 1fr!important}}
