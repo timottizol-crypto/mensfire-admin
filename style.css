@@ -5018,3 +5018,16 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 #barberRevenueCard { border:1px solid rgba(212,175,55,.22); background:linear-gradient(145deg,rgba(212,175,55,.12),rgba(255,255,255,.02)); }
 #profileBackupCard { border:1px solid rgba(255,255,255,.08); }
 @media(max-width:700px) { .profile-overview-grid { gap:8px; } .profile-overview-card { padding:11px; } }
+
+/* Final responsive tuning for the expanded six-section workspace */
+@media(max-width:767px) {
+    #viewTeam .workspace-heading .home-cta-btn,
+    #viewServices .workspace-heading .home-cta-btn,
+    #viewSchedule .workspace-heading .home-cta-btn {
+        width:auto!important; min-width:0!important; height:auto!important; min-height:42px!important; max-height:none!important; margin:0!important; padding:9px 10px!important;
+    }
+    #viewSchedule.active { height:100dvh!important; overflow-y:auto!important; display:block!important; padding-bottom:104px!important; }
+    #viewSchedule .schedule-main-card { display:block!important; height:auto!important; min-height:0!important; overflow:visible!important; }
+    #viewSchedule #scheduleList { height:auto!important; max-height:none!important; overflow:visible!important; }
+    #viewSchedule .schedule-overview-grid { margin-bottom:12px; }
+}
