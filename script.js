@@ -2352,11 +2352,59 @@ function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDa
 
     timeInput.value = time || '10:00';
     clientInput.value = '';
+    const phoneInput = document.getElementById('newBookingClientPhone');
+    if (phoneInput) phoneInput.value = '';
+    const lookup = document.getElementById('bookingClientLookup');
+    if (lookup) lookup.innerHTML = '';
 
     updateNewBookingServices();
     openModal('newBookingModal');
 }
 
+
+function lookupBookingClientByPhone() {
+    const phoneInput=document.getElementById('newBookingClientPhone');
+    const host=document.getElementById('bookingClientLookup');
+    if(!phoneInput||!host)return;
+    const phone=normalizeClientPhone(phoneInput.value);
+    if(phone.length<7){host.innerHTML='';return}
+    const matches=[];
+    const seen=new Set();
+    Object.entries(clientProfiles).forEach(([key,profile])=>{
+        if(normalizeClientPhone(profile?.phone)!==phone)return;
+        const identity=String(profile.clientName||profile.name||key);
+        if(seen.has(identity))return;
+        seen.add(identity);
+        matches.push({key,profile});
+    });
+    if(!matches.length){
+        host.innerHTML='<div class="booking-client-lookup-new">Новый номер — клиент будет добавлен в CRM после создания записи</div>';
+        return;
+    }
+    const match=matches[0];
+    const clientName=String(match.profile.clientName||match.profile.name||'').trim();
+    const visitBookings=bookings.filter(booking=>{
+        const profile=findClientProfile(booking.clientName||'',booking.barberId||'').profile;
+        return normalizeClientPhone(profile.phone)===phone;
+    });
+    const completed=visitBookings.filter(booking=>booking.status==='completed').length;
+    const last=visitBookings.slice().sort((a,b)=>{
+        const pa=parseReportDate(a.date),pb=parseReportDate(b.date);
+        return (pb?.getTime()||0)-(pa?.getTime()||0);
+    })[0];
+    if(clientName)document.getElementById('newBookingClient').value=clientName;
+    host.innerHTML='<button type="button" class="booking-client-match" onclick="applyBookingClientMatch(\''+String(match.key).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')"><span class="booking-client-match-icon">✓</span><span class="booking-client-match-copy"><strong>'+escapeBookingHtml(clientName||'Клиент найден')+'</strong><small>В CRM · '+completed+' завершённых визитов'+(last?' · последний '+escapeBookingHtml(last.date):'')+'</small></span><span class="booking-client-match-tag">'+(completed?'Повторный':'Есть профиль')+'</span></button>';
+}
+function applyBookingClientMatch(key) {
+    const profile=clientProfiles[key];
+    if(!profile)return;
+    const name=String(profile.clientName||profile.name||'').trim();
+    if(name)document.getElementById('newBookingClient').value=name;
+    const phone=document.getElementById('newBookingClientPhone');
+    if(phone)phone.value=profile.phone||phone.value;
+    const host=document.getElementById('bookingClientLookup');
+    if(host)host.innerHTML='<div class="booking-client-lookup-new">Профиль клиента выбран</div>';
+}
 
 function updateNewBookingServices() {
     const barberId = document.getElementById('newBookingBarber')?.value;
@@ -2583,9 +2631,11 @@ function saveNewBooking() {
         }
     }
 
+    const clientPhone = document.getElementById('newBookingClientPhone')?.value.trim() || '';
     const bookingData = {
         barberId,
         clientName,
+        clientPhone,
         time,
         date,
         services: selectedServices.map(s => ({ ...s }))
@@ -2603,6 +2653,19 @@ function saveNewBooking() {
             paymentMethod: '',
             bookingSource: 'admin_panel'
         });
+    }
+
+    const normalizedClientPhone = normalizeClientPhone(clientPhone);
+    if (normalizedClientPhone.length >= 7) {
+        const profileKey = 'phone:' + normalizedClientPhone;
+        const previousProfile = clientProfiles[profileKey] || {};
+        clientProfiles[profileKey] = {
+            ...previousProfile,
+            clientName,
+            barberId,
+            phone: clientPhone
+        };
+        localStorage.setItem(appStorageKey('mensfire_client_profiles'), JSON.stringify(clientProfiles));
     }
 
     editingBookingId = null;
