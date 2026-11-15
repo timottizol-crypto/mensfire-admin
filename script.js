@@ -2607,6 +2607,7 @@ function renderFinance() {
     const weekEnd = shift(weekStart, 7);
     const dayBookings = bookings.filter(item => item.date === selectedFinanceDate && item.status !== 'cancelled');
     const dayCompleted = dayBookings.filter(item => item.status === 'completed');
+    const periodCompleted = bookings.filter(item => inRange(item.date, periodStart, periodEnd) && item.status === 'completed');
     const revenue = (start, end) => bookings.filter(item => inRange(item.date, start, end))
         .reduce((sum, item) => sum + getBookingCollectedAmount(item), 0);
     const expensesTotal = (start, end) => expenses.filter(item => inRange(item.date, start, end))
@@ -2621,7 +2622,7 @@ function renderFinance() {
     const dayProfit = dayRevenue - dayExpenseTotal;
     const monthProfit = monthRevenue - monthExpenseTotal;
     const activeBookings = bookings.filter(item => item.status !== 'cancelled');
-    const unpaidBalance = activeBookings.reduce((sum, item) => {
+    const unpaidBalance = activeBookings.filter(item => inRange(item.date, periodStart, periodEnd)).reduce((sum, item) => {
         const total = (Array.isArray(item.services) ? item.services : []).reduce((n, service) => n + Math.max(0, Number(service.price || 0)), 0);
         return sum + Math.max(0, total - getBookingPaymentState(item, total).paid);
     }, 0);
@@ -2666,7 +2667,7 @@ function renderFinance() {
         <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Получено за день' : 'Получено за период'}</span><strong>${fmt(financePeriodMode === 'day' ? dayRevenue : monthRevenue)}</strong><small>${financePeriodMode === 'day' ? dayCompleted.length + ' завершённых визитов' : periodLabel}</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Чистый результат дня' : 'Чистый результат периода'}</span><strong class="${(financePeriodMode === 'day' ? dayProfit : monthProfit) < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(financePeriodMode === 'day' ? dayProfit : monthProfit)}</strong><small>После расходов</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Ожидает оплаты</span><strong>${fmt(unpaidBalance)}</strong><small>Баланс по активным записям</small></div>
-        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt(dayCompleted.length ? dayCompleted.reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / dayCompleted.length : 0)}</strong><small>По завершённым визитам</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt((financePeriodMode === 'day' ? dayCompleted : periodCompleted).length ? (financePeriodMode === 'day' ? dayCompleted : periodCompleted).reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / (financePeriodMode === 'day' ? dayCompleted : periodCompleted).length : 0)}</strong><small>По завершённым визитам</small></div>
         <div class="finance-kpi-card finance-kpi-comparison"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'К прошлому дню' : 'Выбранный период'}</span><strong>${periodLabel}</strong><small>${financePeriodMode === 'day' ? 'Сравнение с предыдущим днём' : 'Интервал для всех расчётов ниже'}</small></div>`;
 
     const chart = document.getElementById('financeRevenueChart');
