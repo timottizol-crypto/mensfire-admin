@@ -4052,8 +4052,14 @@ function renderClientLoyaltyPanel(sourceBookings) {
 function parseClientDateTime(booking) {
     const [day, month, year] = String(booking?.date || '').split('.').map(Number);
     const [hour, minute] = String(booking?.time || '00:00').split(':').map(Number);
-    if (!day || !month || !year || !Number.isInteger(hour) || !Number.isInteger(minute)) return 0;
-    const timestamp = new Date(year, month - 1, day, hour, minute).getTime();
+    if (!Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year) ||
+        !Number.isInteger(hour) || !Number.isInteger(minute) ||
+        day < 1 || month < 1 || month > 12 || year < 1000 ||
+        hour < 0 || hour > 23 || minute < 0 || minute > 59) return 0;
+    const date = new Date(year, month - 1, day, hour, minute);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 ||
+        date.getDate() !== day) return 0;
+    const timestamp = date.getTime();
     return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
@@ -4080,13 +4086,7 @@ function showClientDetails(name, barberId) {
     });
     
     // Правильная сортировка: от старых к новым
-    const parseClientVisitTimestamp = booking => {
-        const [day, month, year] = String(booking.date || '').split('.').map(Number);
-        const [hour, minute] = String(booking.time || '').split(':').map(Number);
-        if (!day || !month || !year || !Number.isInteger(hour) || !Number.isInteger(minute)) return 0;
-        const timestamp = new Date(year, month - 1, day, hour, minute).getTime();
-        return Number.isFinite(timestamp) ? timestamp : 0;
-    };
+    const parseClientVisitTimestamp = booking => parseClientDateTime(booking);
     myBookings.sort((a, b) => parseClientVisitTimestamp(b) - parseClientVisitTimestamp(a));
     
     let total = 0;
@@ -4094,7 +4094,10 @@ function showClientDetails(name, barberId) {
     let completedCount = 0;
     
     const historyHTML = myBookings.map(b => {
-        const serviceTotal = (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
+        const serviceTotal = (Array.isArray(b.services) ? b.services : []).reduce((sum, service) => {
+            const amount = Number(service?.price);
+            return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
+        }, 0);
         const paymentState = getBookingPaymentState(b, serviceTotal);
         const paymentMethodKey = ['cash', 'card', 'transfer', 'online', 'mixed'].includes(paymentState.method)
             ? paymentState.method : 'other';
