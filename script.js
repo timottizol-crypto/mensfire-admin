@@ -3059,6 +3059,10 @@ function renderFinance() {
 
     const parseDate = value => parseReportDate(value);
     const fmt = value => `${Math.round(Number(value) || 0).toLocaleString('ru-RU')} ₽`;
+    const getSafeServiceAmount = service => {
+        const amount = Number(service?.price);
+        return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+    };
     const selectedDate = parseDate(selectedFinanceDate) || new Date();
     selectedDate.setHours(0, 0, 0, 0);
     const dateKey = date => date.toLocaleDateString('ru-RU');
@@ -3104,13 +3108,13 @@ function renderFinance() {
     const monthProfit = monthRevenue - monthExpenseTotal;
     const activeBookings = bookings.filter(item => item.status !== 'cancelled');
     const unpaidBalance = activeBookings.filter(item => inRange(item.date, periodStart, periodEnd)).reduce((sum, item) => {
-        const total = (Array.isArray(item.services) ? item.services : []).reduce((n, service) => n + Math.max(0, Number(service.price || 0)), 0);
+        const total = (Array.isArray(item.services) ? item.services : []).reduce((n, service) => n + getSafeServiceAmount(service), 0);
         return sum + Math.max(0, total - getBookingPaymentState(item, total).paid);
     }, 0);
     const paymentTotals = { cash: 0, card: 0, transfer: 0, online: 0, other: 0 };
     bookings.filter(item => inRange(item.date, aggregationStart, aggregationEnd)).forEach(item => {
         const serviceTotal = (Array.isArray(item.services) ? item.services : [])
-            .reduce((sum, service) => sum + Math.max(0, Number(service.price) || 0), 0);
+            .reduce((sum, service) => sum + getSafeServiceAmount(service), 0);
         const transactions = Array.isArray(item.payments) ? item.payments : [];
         let remaining = getBookingCollectedAmount(item);
         if (transactions.length) {
@@ -3248,7 +3252,7 @@ function renderFinance() {
             const name = String(service.title || 'Услуга');
             if (!serviceCounts[name]) serviceCounts[name] = {count:0,revenue:0};
             serviceCounts[name].count += 1;
-            serviceCounts[name].revenue += Math.max(0,Number(service.price || 0));
+            serviceCounts[name].revenue += getSafeServiceAmount(service);
         });
     });
     const topServices = document.getElementById('analyticsTopServicesList');
@@ -3265,7 +3269,7 @@ function renderFinance() {
         const groups = {};
         dayExpenses.forEach(item => {
             const label = String(item.category || item.title || 'Прочие расходы');
-            groups[label] = (groups[label] || 0) + Math.max(0,Number(item.amount || 0));
+            groups[label] = (groups[label] || 0) + getSafeExpenseAmount(item);
         });
         const rows = Object.entries(groups).sort((a,b) => b[1]-a[1]);
         const maxExpense = Math.max(1,...rows.map(([,amount]) => amount));
