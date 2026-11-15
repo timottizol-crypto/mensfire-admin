@@ -4986,3 +4986,25 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
  .schedule-heading .home-cta-btn { min-width:0; padding:9px 10px; }
  .schedule-heading .home-cta-btn span { font-size:11px; }
 }
+
+/* Service catalogue management */
+.services-overview-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:18px; }
+.service-overview-card { padding:14px; border:1px solid rgba(255,255,255,.075); border-radius:15px; background:rgba(255,255,255,.03); display:flex; flex-direction:column; gap:6px; }
+.service-overview-card span { color:var(--text-muted); font-size:10px; }
+.service-overview-card strong { font-size:22px; }
+.service-group { margin:0 0 22px; }
+.service-group-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.service-group-heading h3 { font-size:15px; }
+.service-group-heading p { color:var(--text-muted); font-size:10px; margin-top:4px; }
+.service-card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr)); gap:11px; }
+.service-card { padding:15px; border:1px solid rgba(255,255,255,.08); border-radius:16px; background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.015)); }
+.service-card.is-inactive { opacity:.58; }
+.service-card-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.service-status { color:#55c78a; font-size:9px; font-weight:750; text-transform:uppercase; letter-spacing:.5px; }
+.service-card.is-inactive .service-status { color:var(--text-muted); }
+.service-duration { color:var(--text-muted); font-size:10px; }
+.service-card h4 { font-size:13px; margin:14px 0 8px; min-height:34px; }
+.service-price { display:block; color:var(--gold); font-size:22px; }
+.service-card-actions { display:flex; gap:8px; margin-top:14px; }
+.service-card-actions button { flex:1; min-height:36px; border:1px solid rgba(212,175,55,.2); border-radius:9px; background:rgba(212,175,55,.06); color:var(--text-main); font:inherit; font-size:10px; font-weight:700; cursor:pointer; }
+@media(max-width:700px) { .services-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
