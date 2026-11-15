@@ -1192,6 +1192,35 @@ function escapeBookingHtml(value) {
     })[char]);
 }
 
+
+const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
+function getBookingPaymentState(booking, total) {
+    const paid = Math.max(0, Math.min(total, Number(booking.paidAmount || 0)));
+    const status = paid <= 0 ? 'unpaid' : paid >= total ? 'paid' : 'partial';
+    return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
+        methodLabel: PAYMENT_METHOD_LABELS[booking.paymentMethod] || 'Не указан' };
+}
+function openBookingPaymentEditor(id) {
+    if (!requireAdminAction('Изменять оплату может только Али')) return;
+    const booking = bookings.find(item => String(item.id) === String(id));
+    if (!booking) return;
+    const total = (booking.services || []).reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const rawAmount = prompt('Сколько клиент внёс? Полная стоимость: ' + total + ' ₽', String(Number(booking.paidAmount || 0)));
+    if (rawAmount === null) return;
+    const paid = Number(String(rawAmount).replace(',', '.'));
+    if (!Number.isFinite(paid) || paid < 0 || paid > total) return showToast('Введите сумму от 0 до ' + total + ' ₽', 'error');
+    const methods = Object.keys(PAYMENT_METHOD_LABELS);
+    const method = prompt('Способ оплаты: cash — наличные, card — карта, transfer — перевод, online — онлайн, mixed — смешанная', booking.paymentMethod || 'cash');
+    if (method === null) return;
+    if (!methods.includes(method.trim())) return showToast('Неизвестный способ оплаты', 'error');
+    booking.paidAmount = paid;
+    booking.paymentMethod = method.trim();
+    booking.paymentUpdatedAt = new Date().toISOString();
+    localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    openActionModal(booking.id);
+    showToast('Оплата сохранена', 'success');
+}
+
 function openActionModal(id) {
     const booking = bookings.find(b => String(b.id) === String(id));
     if (!booking) {
@@ -1226,6 +1255,7 @@ function openActionModal(id) {
     };
     const statusKey = booking.status || 'active';
     const status = statusLabels[statusKey] || statusKey;
+    const payment = getBookingPaymentState(booking, total);
     const canManage = isAdminUser();
     const canChangeStatus = isBookingBlockingSchedule(booking);
 
@@ -1252,6 +1282,12 @@ function openActionModal(id) {
         </div>
         <div class="booking-detail-row booking-detail-total">
             <span>Стоимость</span><strong>${total.toLocaleString('ru-RU')} ₽</strong>
+        </div>
+        <div class="booking-payment-panel">
+            <div class="booking-payment-heading"><span>Оплата</span><strong class="payment-state payment-${payment.status}">${payment.label}</strong></div>
+            <div class="booking-payment-meta">Внесено: ${payment.paid.toLocaleString('ru-RU')} ₽ · Остаток: ${Math.max(0, total-payment.paid).toLocaleString('ru-RU')} ₽</div>
+            <div class="booking-payment-meta">Способ: ${escapeBookingHtml(payment.methodLabel)}</div>
+            ${canManage ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Изменить оплату</button>' : ''}
         </div>
         <div class="booking-detail-row">
             <span>Длительность</span><strong>${duration} мин.</strong>
