@@ -2079,7 +2079,7 @@ function addStaff() {
     const name = document.getElementById('staffName').value;
     const pin = document.getElementById('staffPin').value;
 
-    if (!name || !pin || pin.length !== 4) return showToast('Введите имя и 4-значный PIN', 'error');
+    if (!name || !/^\d{4}$/.test(pin)) return showToast('Введите имя и PIN из 4 цифр', 'error');
     if (mockStaff.some(s => s.pin === pin)) return showToast('Этот PIN уже занят', 'error');
 
     const newStaff = {
@@ -2107,7 +2107,7 @@ function resetStaffPin(id) {
 function submitAdminResetPin() {
     if (!requireAdminAction('Изменять PIN мастеров может только Али')) return;
     const newPin = document.getElementById('adminNewPinInput').value;
-    if (!newPin || newPin.length !== 4) {
+    if (!/^\d{4}$/.test(newPin)) {
         return showToast('PIN должен состоять из 4 цифр', 'error');
     }
     
@@ -2637,7 +2637,7 @@ function openChangePasswordModal() {
 
 function changePassword() {
     const newPin = document.getElementById('newPin').value;
-    if (!newPin || newPin.length !== 4) return showToast('PIN должен состоять из 4 цифр', 'error');
+    if (!/^\d{4}$/.test(newPin)) return showToast('PIN должен состоять из 4 цифр', 'error');
     
     // Проверка, что PIN не занят другим мастером
     if (mockStaff.some(s => s.pin === newPin && s.id !== currentUser.id)) {
