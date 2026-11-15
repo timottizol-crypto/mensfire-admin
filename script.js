@@ -1488,7 +1488,7 @@ function renderDesktopSchedule() {
             // Раскладываем пересекающиеся записи по соседним дорожкам,
             // чтобы старые/импортированные конфликты не скрывали карточки.
             const layoutItems = barberBookings.map(booking => {
-                const match = /^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(String(booking.time || ''));
+                const match = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(booking.time || ''));
                 if (!match) return null;
                 const startMinutes = toMinutes(booking.time);
                 const duration = getBookingDurationMinutes(booking);
@@ -2550,7 +2550,7 @@ function selectAvailableBookingSlot(value) {
 }
 
 function parseScheduleTimeMinutes(value) {
-    if (typeof value !== 'string' || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value)) return null;
+    if (typeof value !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return null;
     const [hours, minutes] = value.split(':').map(Number);
     return hours * 60 + minutes;
 }
