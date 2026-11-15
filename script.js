@@ -3994,8 +3994,11 @@ function renderClientLoyaltyPanel(sourceBookings) {
             ${history.length ? history.map(item => {
                 const booking = item.booking;
                 const date = escapeBookingHtml(booking.date || 'Дата не указана');
+                const time = escapeBookingHtml(booking.time || '');
                 const serviceNames = (booking.services || []).map(service => escapeBookingHtml(service.title || 'Услуга')).join(', ');
-                return '<div class="client-loyalty-row"><span><b>' + date + '</b><small>' + (serviceNames || 'Визит') + ' · ' + Math.round(item.rate * 100) + '%</small></span><strong>+' + item.earned.toLocaleString('ru-RU') + ' б.</strong></div>';
+                const barberName = mockStaff.find(staff => String(staff.id) === String(booking.barberId))?.name || 'Мастер';
+                const visitMeta = [barberName, serviceNames, item.total.toLocaleString('ru-RU') + ' ₽ × ' + Math.round(item.rate * 100) + '%'].filter(Boolean).join(' · ');
+                return '<div class="client-loyalty-row"><span><b>' + date + (time ? ' · ' + time : '') + '</b><small>' + escapeBookingHtml(visitMeta) + '</small></span><strong>+' + item.earned.toLocaleString('ru-RU') + ' б.</strong></div>';
             }).join('') : '<div class="client-loyalty-empty">Пока нет визитов, подходящих для начисления баллов</div>'}
         </section>`;
 }
