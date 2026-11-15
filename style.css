@@ -5480,3 +5480,55 @@ html.light-theme .clients-chart-gridline { stroke:rgba(0,0,0,.10); }
         min-width: 54px !important;
     }
 }
+
+
+/* MENSFIRE contrast pass */
+html:not(.light-theme) { --text-muted:#b4bdc9; }
+html.light-theme { --text-main:#202631; --text-muted:#626d7b; --gold:#8b6816; --gold-hover:#73530e; }
+html:not(.light-theme) .status-badge.completed { color:#d0d8e3; background:rgba(148,163,184,.15); border-color:rgba(180,195,214,.28); }
+html:not(.light-theme) .status-badge.active { color:#f3d77e; background:rgba(212,175,55,.17); border-color:rgba(243,215,126,.38); }
+html:not(.light-theme) .status-badge.cancelled { color:#ff9999; background:rgba(239,83,80,.16); border-color:rgba(255,130,130,.34); }
+html.light-theme .status-badge.completed { color:#475569; background:#e8edf3; border:1px solid #cbd5e1; }
+html.light-theme .status-badge.active { color:#72520b; background:#fff2c9; border:1px solid #e8c96f; }
+html.light-theme .status-badge.cancelled { color:#a32626; background:#ffeded; border:1px solid #f2b8b8; }
+
+html:not(.light-theme) .booking-origin { color:#d7e4f4; background:rgba(107,139,179,.19); border-color:rgba(151,183,222,.34); }
+html:not(.light-theme) .booking-origin.origin-web,html:not(.light-theme) .booking-origin.origin-pwa { color:#a9eee2; background:rgba(36,153,135,.19); border-color:rgba(92,211,190,.34); }
+html:not(.light-theme) .booking-origin.origin-app,html:not(.light-theme) .booking-origin.origin-barber { color:#d8ccff; background:rgba(126,98,203,.22); border-color:rgba(176,151,255,.38); }
+html:not(.light-theme) .booking-origin.origin-phone { color:#ffdda0; background:rgba(178,123,39,.2); border-color:rgba(240,190,105,.38); }
+html:not(.light-theme) .booking-client-type.type-new { color:#b8f2cf; background:rgba(39,150,91,.2); border-color:rgba(105,220,151,.36); }
+html:not(.light-theme) .booking-client-type.type-returning { color:#f4d98e; background:rgba(174,132,32,.2); border-color:rgba(236,197,93,.38); }
+html.light-theme .booking-origin { color:#34445a; background:#e9eff7; border-color:#c4d2e4; }
+html.light-theme .booking-origin.origin-web,html.light-theme .booking-origin.origin-pwa { color:#075e55; background:#e0f5f0; border-color:#9ed9cb; }
+html.light-theme .booking-origin.origin-app,html.light-theme .booking-origin.origin-barber { color:#513b91; background:#eee9fb; border-color:#c9b9f0; }
+html.light-theme .booking-origin.origin-phone { color:#80500b; background:#fff1d8; border-color:#e9c98c; }
+html.light-theme .booking-client-type.type-new { color:#17623c; background:#e4f5e9; border-color:#a8d9b7; }
+html.light-theme .booking-client-type.type-returning { color:#76540b; background:#fff4d8; border-color:#e8d18e; }
+
+html:not(.light-theme) .finance-payment-method--cash { color:#9ce9bd; background:rgba(45,160,99,.17); border-color:rgba(105,220,151,.34); }
+html:not(.light-theme) .finance-payment-method--card { color:#acd4ff; background:rgba(64,133,211,.18); border-color:rgba(128,183,246,.36); }
+html:not(.light-theme) .finance-payment-method--transfer { color:#ddc5ff; background:rgba(133,91,195,.2); border-color:rgba(190,153,255,.36); }
+html:not(.light-theme) .finance-payment-method--online { color:#f3d77e; background:rgba(174,132,32,.18); border-color:rgba(236,197,93,.36); }
+html:not(.light-theme) .finance-payment-method--mixed { color:#d5deea; background:rgba(125,143,166,.18); border-color:rgba(176,190,210,.32); }
+html:not(.light-theme) .finance-payment-status.is-paid { color:#8fe2b2; }
+html:not(.light-theme) .finance-payment-status.is-partial { color:#f4d274; }
+html:not(.light-theme) .finance-payment-status.is-unpaid { color:#ff9b9b; }
+html.light-theme .finance-payment-method--cash { color:#17623c; background:#e4f5e9; border-color:#a8d9b7; }
+html.light-theme .finance-payment-method--card { color:#174f89; background:#e8f2ff; border-color:#b5d1f2; }
+html.light-theme .finance-payment-method--transfer { color:#57358b; background:#f0eafd; border-color:#cfbdf1; }
+html.light-theme .finance-payment-method--online { color:#76540b; background:#fff4d8; border-color:#e8d18e; }
+html.light-theme .finance-payment-method--mixed { color:#455468; background:#edf1f5; border-color:#cbd5e1; }
+html.light-theme .finance-payment-status.is-paid { color:#17623c; }
+html.light-theme .finance-payment-status.is-partial { color:#805a08; }
+html.light-theme .finance-payment-status.is-unpaid { color:#a32626; }
+
+html.light-theme .tab-btn,html.light-theme .client-segment-btn { color:#536071; background:rgba(255,255,255,.82); border-color:rgba(58,70,88,.18); }
+html.light-theme .tab-btn.active { color:#72520b; background:linear-gradient(135deg,#fff3cf,#f8e6b0); border-color:#d8b85d; }
+html.light-theme .date-selector-item { color:#344052; background:#fff; border-color:#d5dce5; }
+html.light-theme .date-selector-item.selected { color:#fff; background:linear-gradient(145deg,#9a741b,#77570e); border-color:#6e500e; }
+html.light-theme .date-selector-item.selected .day-name,html.light-theme .date-selector-item.selected .date-booking-count { color:#fff; }
+html.light-theme .finance-panel,html.light-theme .finance-kpi-card,html.light-theme .clients-chart-card { color:#202631; border-color:rgba(48,60,78,.14); background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(244,247,250,.96)); }
+html.light-theme .finance-kpi-card small,html.light-theme .finance-page-heading p,html.light-theme .finance-panel-heading p,html.light-theme .finance-period-heading span,html.light-theme .finance-muted,html.light-theme .clients-chart-title span,html.light-theme .clients-chart-footer { color:#626d7b; }
+html.light-theme .finance-payment-method { backdrop-filter:none; -webkit-backdrop-filter:none; }
+html.light-theme .finance-total-row { border-top-color:rgba(48,60,78,.14); }
+html.light-theme .finance-operation,html.light-theme .finance-team-row,html.light-theme .finance-service-row { border-bottom-color:rgba(48,60,78,.12); }
