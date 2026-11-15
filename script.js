@@ -646,7 +646,21 @@ function renderSchedule() {
 
         const isPC = window.innerWidth >= 768;
         if (isPC) {
-            renderDesktopSchedule();
+            try {
+                renderDesktopSchedule();
+            } catch (error) {
+                console.error('Mensfire desktop calendar render error:', error);
+                const view = document.getElementById('viewSchedule');
+                let calendar = document.getElementById('desktopSchedule');
+                if (!calendar && view) {
+                    calendar = document.createElement('div');
+                    calendar.id = 'desktopSchedule';
+                    view.appendChild(calendar);
+                }
+                if (calendar) {
+                    calendar.innerHTML = '<div class="calendar-render-error">Не удалось загрузить календарь. Обнови страницу; подробности доступны в консоли браузера.</div>';
+                }
+            }
             list.style.opacity = '1';
             return;
         }
@@ -804,7 +818,12 @@ function renderDesktopSchedule() {
     if (!calendar) {
         calendar = document.createElement('div');
         calendar.id = 'desktopSchedule';
-        view.insertBefore(calendar, view.querySelector('.home-cta-btn'));
+        const blockButton = view.querySelector(':scope > .home-cta-btn');
+        if (blockButton && blockButton.parentElement === view) {
+            view.insertBefore(calendar, blockButton);
+        } else {
+            view.appendChild(calendar);
+        }
     }
 
     const [day, month, year] = selectedScheduleDate.split('.').map(Number);
