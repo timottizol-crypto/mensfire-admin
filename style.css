@@ -2697,6 +2697,275 @@ html.light-theme .calendar-day:hover:not(.empty) {
 }
 
 
+/* MENSFIRE — DESKTOP CALENDAR POLISH */
+@media (min-width: 768px) {
+    #viewSchedule.active {
+        gap: 14px;
+        padding: 30px 28px 24px !important;
+    }
+
+    #viewSchedule > #desktopSchedule {
+        display: flex !important;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        margin: 0 !important;
+        padding: 20px 22px 18px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(24,24,24,.96), rgba(9,9,9,.98));
+        box-shadow: 0 12px 36px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08);
+        overflow: hidden;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-toolbar {
+        flex: 0 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 20px;
+        margin: 0 0 18px;
+        padding: 0 0 16px;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-date-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-date-controls strong {
+        min-width: 170px;
+        text-align: center;
+        color: #f4f4f4;
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: .01em;
+    }
+
+    #viewSchedule > #desktopSchedule .calendar-date-arrow,
+    #viewSchedule > #desktopSchedule .calendar-today-btn {
+        min-width: 38px;
+        height: 36px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 10px;
+        background: rgba(255,255,255,.045);
+        color: #e9e9e9;
+        cursor: pointer;
+        transition: .18s ease;
+    }
+
+    #viewSchedule > #desktopSchedule .calendar-today-btn {
+        padding: 0 14px;
+        border-color: rgba(212,175,55,.38);
+        background: rgba(212,175,55,.13);
+        color: var(--gold);
+        font-weight: 700;
+    }
+
+    #viewSchedule > #desktopSchedule .calendar-date-arrow:hover,
+    #viewSchedule > #desktopSchedule .calendar-today-btn:hover {
+        border-color: var(--gold);
+        background: rgba(212,175,55,.2);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding: 4px;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 13px;
+        background: rgba(0,0,0,.28);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-tabs button {
+        min-width: 82px;
+        padding: 9px 14px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        background: transparent;
+        color: #aaa;
+        font-size: 12px;
+        font-weight: 650;
+        transition: .18s ease;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-tabs button.active {
+        border-color: rgba(212,175,55,.55);
+        background: rgba(212,175,55,.16);
+        color: var(--gold);
+        box-shadow: 0 3px 14px rgba(212,175,55,.08);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-scroll {
+        flex: 1 1 auto;
+        min-height: 260px;
+        max-height: none;
+        overflow: auto;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 16px;
+        background: rgba(0,0,0,.22);
+        scrollbar-color: rgba(212,175,55,.35) transparent;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-grid {
+        min-width: 100%;
+        grid-template-columns: 72px repeat(var(--calendar-column-count), minmax(190px, 1fr));
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-staff-column {
+        min-width: 190px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-staff-heading {
+        height: 66px;
+        gap: 5px;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+        background: #171717;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-staff-heading strong {
+        color: #f3f3f3;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-staff-heading span {
+        color: #a5a5a5;
+        font-size: 10px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-time-column {
+        background: rgba(255,255,255,.018);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-time-column .desktop-staff-heading {
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-time-label {
+        right: 9px;
+        color: #929292;
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-time-line {
+        background: rgba(255,255,255,.09);
+        opacity: .65;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-time-line.hour {
+        background: rgba(255,255,255,.17);
+        opacity: 1;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-staff-track {
+        background-image: linear-gradient(to bottom, rgba(255,255,255,.012), rgba(255,255,255,0));
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card,
+    #viewSchedule > #desktopSchedule .desktop-break-card {
+        left: 6px;
+        right: 6px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        gap: 5px;
+        font-size: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,.16);
+        transition: filter .15s ease, transform .15s ease;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card:hover,
+    #viewSchedule > #desktopSchedule .desktop-break-card:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card {
+        border: 1px solid rgba(212,175,55,.68);
+        border-left: 3px solid var(--gold);
+        background: linear-gradient(110deg, rgba(212,175,55,.23), rgba(212,175,55,.09));
+        color: #f6e7b4;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card strong {
+        color: #ffe08a;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card span {
+        color: #e8e0cc;
+        font-size: 11px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-booking-card small {
+        color: #b9aa7b;
+        font-size: 10px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-break-card {
+        border: 1px dashed rgba(170,170,170,.48);
+        background: repeating-linear-gradient(135deg, rgba(130,130,130,.16), rgba(130,130,130,.16) 7px, rgba(130,130,130,.08) 7px, rgba(130,130,130,.08) 14px);
+        color: #d0d0d0;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        gap: 7px;
+        padding: 3px;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-day {
+        min-height: 105px;
+        padding: 10px;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 12px;
+        background: rgba(255,255,255,.025);
+        color: #eee;
+        text-align: left;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-day.selected {
+        border-color: rgba(212,175,55,.75);
+        background: rgba(212,175,55,.13);
+        box-shadow: inset 0 0 0 1px rgba(212,175,55,.12);
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-day.outside-month {
+        opacity: .38;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-count {
+        display: inline-block;
+        margin: 8px 0 4px;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-preview {
+        display: block;
+        color: #aaa;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+}
+
+@media (max-width: 767px) {
+    #viewSchedule > #desktopSchedule { display: none !important; }
+}
+
+
 /* MENSFIRE — BOOKING DETAILS */
 
 .booking-detail-modal {
