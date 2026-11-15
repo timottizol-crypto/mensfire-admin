@@ -695,6 +695,23 @@ let timeBlocks = (() => {
         return [];
     }
 })();
+
+function ensureDemoSampleData() {
+ if (mensfireDataMode !== 'demo' || bookings.length) return;
+ const today = new Date();
+ const dateFor = offset => { const d = new Date(today); d.setDate(d.getDate()+offset); return d.toLocaleDateString('ru-RU'); };
+ const cut = { title: 'Мужская стрижка', price: 1300 };
+ const beard = { title: 'Оформление бороды', price: 1000 };
+ bookings = [
+  { id:'demo-1',clientName:'Александр',barberId:'b_ben',date:dateFor(0),time:'10:00',services:[cut],status:'confirmed',paidAmount:1300,paymentMethod:'card' },
+  { id:'demo-2',clientName:'Михаил',barberId:'b_ism',date:dateFor(0),time:'11:00',services:[cut,beard],status:'confirmed',paidAmount:1000,paymentMethod:'cash' },
+  { id:'demo-3',clientName:'Даниил',barberId:'b_al',date:dateFor(0),time:'13:00',services:[cut],status:'pending',paidAmount:0,paymentMethod:'' },
+  { id:'demo-4',clientName:'Илья',barberId:'b_ben',date:dateFor(1),time:'12:00',services:[beard],status:'completed',paidAmount:1000,paymentMethod:'transfer' },
+  { id:'demo-5',clientName:'Максим',barberId:'b_ism',date:dateFor(1),time:'15:00',services:[cut],status:'confirmed',paidAmount:0,paymentMethod:'' }
+ ];
+ localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+}
+ensureDemoSampleData();
 // Выбранная дата в расписании (по умолчанию — сегодня)
 let selectedScheduleDate = new Date().toLocaleDateString('ru-RU');
 let currentScheduleTab = 'bookings'; // 'bookings' или 'breaks'
@@ -1072,8 +1089,10 @@ function renderDesktopSchedule() {
                 const duration = Math.max(45, (booking.services || []).length * 45);
                 const height = Math.min(duration / 15 * SLOT_HEIGHT, totalHeight - top);
                 const serviceNames = (booking.services || []).map(s => s.title).join(', ');
+                const bookingTotal = (booking.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
+                const payState = getBookingPaymentState(booking, bookingTotal);
                 html += `
-                    <button type="button" class="desktop-booking-card ${booking.status || 'active'}"
+                    <button type="button" class="desktop-booking-card ${booking.status || 'active'} payment-border-${payState.status}"
                         style="top:${top}px;height:${height}px"
                         onclick="event.stopPropagation(); openActionModal('${booking.id}')">
                         <strong class="booking-card-client">${booking.clientName || 'Клиент'}</strong>
