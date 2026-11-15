@@ -807,7 +807,7 @@ let timeBlocks = (() => {
 })();
 
 function ensureDemoSampleData() {
- if (mensfireDataMode !== 'demo' || localStorage.getItem('mensfire_demo_seeded') === '1') return;
+ if (mensfireDataMode !== 'demo') return;
  const today = new Date();
  const dateFor = offset => { const d = new Date(today); d.setDate(d.getDate()+offset); return d.toLocaleDateString('ru-RU'); };
  const cut = { title: 'Мужская стрижка', price: 1300 };
@@ -822,6 +822,40 @@ function ensureDemoSampleData() {
   ];
   localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
  }
+ // Расширенная витрина CRM: клиенты с разными каналами записи и историей визитов.
+ const extraDemoBookings = [
+  { id:'demo-extra-1',clientName:'Артём',barberId:'b_ben',date:dateFor(-34),time:'12:00',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'card',bookingSource:'website' },
+  { id:'demo-extra-2',clientName:'Артём',barberId:'b_ben',date:dateFor(-5),time:'12:30',services:[cut,beard],status:'completed',paidAmount:2300,paymentMethod:'card',bookingSource:'client_app' },
+  { id:'demo-extra-3',clientName:'Роман',barberId:'b_ism',date:dateFor(-22),time:'14:00',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'cash',bookingSource:'pwa' },
+  { id:'demo-extra-4',clientName:'Егор',barberId:'b_al',date:dateFor(-12),time:'16:00',services:[cut,beard],status:'completed',paidAmount:2300,paymentMethod:'transfer',bookingSource:'barber_app' },
+  { id:'demo-extra-5',clientName:'Никита',barberId:'b_ben',date:dateFor(-2),time:'11:00',services:[beard],status:'confirmed',paidAmount:0,paymentMethod:'',bookingSource:'phone' },
+  { id:'demo-extra-6',clientName:'Владислав',barberId:'b_ism',date:dateFor(-48),time:'13:00',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'cash',bookingSource:'website' },
+  { id:'demo-extra-7',clientName:'Владислав',barberId:'b_ism',date:dateFor(-18),time:'13:30',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'cash',bookingSource:'mobile_app' },
+  { id:'demo-extra-8',clientName:'Тимур',barberId:'b_ben',date:dateFor(-9),time:'17:00',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'card',bookingSource:'barber_phone' },
+  { id:'demo-extra-9',clientName:'Глеб',barberId:'b_al',date:dateFor(-1),time:'18:00',services:[cut],status:'confirmed',paidAmount:0,paymentMethod:'',bookingSource:'website' },
+  { id:'demo-extra-10',clientName:'Кирилл',barberId:'b_ism',date:dateFor(-65),time:'10:30',services:[cut,beard],status:'completed',paidAmount:2300,paymentMethod:'transfer',bookingSource:'pwa' },
+  { id:'demo-extra-11',clientName:'Кирилл',barberId:'b_ism',date:dateFor(-20),time:'10:30',services:[cut],status:'completed',paidAmount:1300,paymentMethod:'card',bookingSource:'client_app' },
+  { id:'demo-extra-12',clientName:'Матвей',barberId:'b_al',date:dateFor(3),time:'15:30',services:[cut],status:'confirmed',paidAmount:0,paymentMethod:'',bookingSource:'barber_app' }
+ ];
+ const extraIds = new Set(bookings.map(item => String(item.id)));
+ extraDemoBookings.forEach(item => { if (!extraIds.has(String(item.id))) bookings.push(item); });
+ localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+ const demoProfiles = [
+  ['Артём','b_ben','+7 900 111-22-33','regular'],
+  ['Роман','b_ism','+7 900 222-33-44','new'],
+  ['Егор','b_al','+7 900 333-44-55','new'],
+  ['Никита','b_ben','+7 900 444-55-66','new'],
+  ['Владислав','b_ism','+7 900 555-66-77','regular'],
+  ['Тимур','b_ben','+7 900 666-77-88','new'],
+  ['Глеб','b_al','+7 900 777-88-99','new'],
+  ['Кирилл','b_ism','+7 900 888-99-00','regular'],
+  ['Матвей','b_al','+7 900 999-00-11','new']
+ ];
+ demoProfiles.forEach(([name,barberId,phone,tag]) => {
+  const key = JSON.stringify([name,barberId]);
+  if (!clientProfiles[key]) clientProfiles[key] = { clientName:name, barberId, phone, tag, notes:'Демо-профиль клиента' };
+ });
+ localStorage.setItem(appStorageKey('mensfire_client_profiles'), JSON.stringify(clientProfiles));
  if (!expenses.length) {
   expenses = [
    { id:'demo-exp-1', title:'Расходные материалы', amount:850, date:dateFor(0) },
@@ -954,6 +988,7 @@ function renderSchedule() {
                         <div class="hb-info" style="flex: 1; min-width: 0;">
                             <div class="mobile-booking-time"><strong>${escapeBookingHtml(b.time || '—')}</strong><span>${endLabel ? 'до ' + endLabel : ''} · ${bookingDuration} мин.</span></div>
                             <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? escapeBookingHtml((mockStaff.find(s=>s.id === b.barberId)?.name || 'Мастер') + ' · ') : ''}${escapeBookingHtml(b.clientName || 'Клиент')}</div>
+                            <div class="booking-card-badges"><i class="booking-origin origin-${getBookingSourceMeta(b).className}">${getBookingSourceMeta(b).label}</i><i class="booking-client-type type-${getBookingClientTypeMeta(b).className}">${getBookingClientTypeMeta(b).label}</i></div>
                             <div class="hb-services" style="font-size: 11px; white-space: normal;">${servicesText}</div>
                             <div class="mobile-booking-finance"><strong>${bookingTotal.toLocaleString('ru-RU')} ₽</strong><span>${payState.paid.toLocaleString('ru-RU')} ₽ получено</span><span>${remaining.toLocaleString('ru-RU')} ₽ остаток</span></div>
                             <span class="calendar-payment-label payment-${payState.status}">${payState.label}</span>
@@ -1279,6 +1314,7 @@ function renderDesktopSchedule() {
                             style="top:${item.top}px;height:${height}px;left:calc(${left}% + 3px);width:calc(${laneWidth}% - 6px);right:auto"
                             onclick="event.stopPropagation(); openActionModal('${escapeBookingHtml(String(booking.id))}')">
                             <strong class="booking-card-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</strong>
+                            <span class="booking-card-badges"><i class="booking-origin origin-${getBookingSourceMeta(booking).className}">${getBookingSourceMeta(booking).label}</i><i class="booking-client-type type-${getBookingClientTypeMeta(booking).className}">${getBookingClientTypeMeta(booking).label}</i></span>
                             <span class="booking-card-service">${serviceNames || 'Услуга не указана'}</span>
                             <small class="booking-card-meta"><b>${escapeBookingHtml(booking.time || '—')}</b> · ${item.duration} мин. · ${bookingStatusLabel}</small><span class="calendar-payment-label payment-${payState.status}">${payState.label} · ${payState.paid.toLocaleString('ru-RU')} ₽</span>
                         </button>`;
@@ -1417,6 +1453,44 @@ function escapeBookingHtml(value) {
 
 
 const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
+function getBookingSourceMeta(booking) {
+    const source = String(booking?.bookingSource || booking?.source || 'admin_panel').toLowerCase();
+    const map = {
+        admin_panel: { label: 'Панель', className: 'admin' },
+        barber_app: { label: 'Приложение барбера', className: 'barber' },
+        barber_phone: { label: 'Телефон барбера', className: 'phone' },
+        website: { label: 'Сайт', className: 'web' },
+        pwa: { label: 'PWA', className: 'pwa' },
+        client_app: { label: 'Приложение клиента', className: 'app' },
+        mobile_app: { label: 'Мобильное приложение', className: 'app' },
+        phone: { label: 'Телефон', className: 'phone' }
+    };
+    return map[source] || { label: 'Другой канал', className: 'other' };
+}
+function getBookingClientType(booking) {
+    const currentTime = parseClientDateTime(booking);
+    const profile = findClientProfile(booking?.clientName || '', booking?.barberId || '').profile;
+    const phone = normalizeClientPhone(profile.phone);
+    const name = String(booking?.clientName || '').trim().toLocaleLowerCase('ru-RU');
+    const hadEarlierVisit = bookings.some(previous => {
+        if (String(previous.id) === String(booking?.id) || previous.status !== 'completed') return false;
+        const previousTime = parseClientDateTime(previous);
+        if (!previousTime || (currentTime && previousTime >= currentTime)) return false;
+        if (phone.length >= 7) {
+            const previousProfile = findClientProfile(previous.clientName || '', previous.barberId || '').profile;
+            return normalizeClientPhone(previousProfile.phone) === phone;
+        }
+        return String(previous.clientName || '').trim().toLocaleLowerCase('ru-RU') === name &&
+            String(previous.barberId) === String(booking?.barberId);
+    });
+    return hadEarlierVisit ? 'regular' : 'new';
+}
+function getBookingClientTypeMeta(booking) {
+    return getBookingClientType(booking) === 'new'
+        ? { label: 'Новый клиент', className: 'new' }
+        : { label: 'Повторный клиент', className: 'returning' };
+}
+
 function getBookingCollectedAmount(booking) {
     const serviceTotal = (booking.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
     if (Array.isArray(booking.payments) && booking.payments.length) {
@@ -2187,7 +2261,8 @@ function saveNewBooking() {
             status: 'active',
             paidAmount: 0,
             payments: [],
-            paymentMethod: ''
+            paymentMethod: '',
+            bookingSource: 'admin_panel'
         });
     }
 
@@ -3232,6 +3307,7 @@ function renderClients(tab = 'all') {
                 <div class="client-info">
                     <div class="client-name">${safeNames} <span class="client-tag-badge tag-${safeTag}">${clientTag}</span></div>
                     <div class="client-meta">Визитов: <span class="gold-text">${c.completedCount}</span> · Отмен: <span class="gold-text">${c.cancelledCount}</span></div>
+                    <div class="booking-card-badges"><i class="booking-client-type type-${c.completedCount > 0 ? 'returning' : 'new'}">${c.completedCount > 0 ? 'Повторный клиент' : 'Новый клиент'}</i><i class="booking-origin origin-other">${[...new Set(c.visits.map(visit => getBookingSourceMeta(visit).label))].slice(0,2).map(escapeBookingHtml).join(' · ') || 'Канал не указан'}</i></div>
                     <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span> · Средний чек: <span class="gold-text">${completedAverageCheck.toLocaleString('ru-RU')} ₽</span></div>
                     <div class="client-meta">${completedVisits.length ? 'Последний визит:' : 'Последняя запись:'} ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
                     <div class="client-meta client-next-visit">${upcomingVisit ? 'Следующая запись: ' + escapeBookingHtml(upcomingVisit.date) + ' в ' + escapeBookingHtml(upcomingVisit.time) : 'Будущих записей нет'}</div>
