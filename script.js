@@ -2964,6 +2964,93 @@ function setClientsSegmentFilter(filter) {
     renderClients(currentClientsTab);
 }
 
+function renderClientsAnalytics(sourceBookings, clientGroups) {
+    const root = document.getElementById('clientsAnalytics');
+    if (!root) return;
+
+    const now = new Date();
+    const monthKeys = [];
+    for (let offset = 5; offset >= 0; offset--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+        monthKeys.push({
+            key: date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0'),
+            label: date.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '')
+        });
+    }
+    const monthStats = monthKeys.map(month => ({ ...month, revenue: 0, visits: 0 }));
+    const monthIndex = new Map(monthStats.map((item, index) => [item.key, index]));
+    (sourceBookings || []).forEach(booking => {
+        if (booking.status !== 'completed') return;
+        const parts = String(booking.date || '').split('.').map(Number);
+        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return;
+        const key = parts[2] + '-' + String(parts[1]).padStart(2, '0');
+        const index = monthIndex.get(key);
+        if (index === undefined) return;
+        monthStats[index].visits++;
+        monthStats[index].revenue += getBookingCollectedAmount(booking);
+    });
+
+    const maxRevenue = Math.max(1, ...monthStats.map(item => item.revenue));
+    const chartWidth = 520, chartHeight = 154, left = 12, right = 12, top = 12, bottom = 28;
+    const plotWidth = chartWidth - left - right;
+    const plotHeight = chartHeight - top - bottom;
+    const points = monthStats.map((item, index) => {
+        const x = left + (monthStats.length === 1 ? plotWidth / 2 : index * plotWidth / (monthStats.length - 1));
+        const y = top + plotHeight - (item.revenue / maxRevenue) * plotHeight;
+        return { x, y, ...item };
+    });
+    const linePath = points.map((point, index) => (index ? 'L' : 'M') + point.x.toFixed(1) + ' ' + point.y.toFixed(1)).join(' ');
+    const areaPath = linePath + ' L ' + points[points.length - 1].x.toFixed(1) + ' ' + (top + plotHeight) + ' L ' + points[0].x.toFixed(1) + ' ' + (top + plotHeight) + ' Z';
+    const maxVisits = Math.max(0, ...monthStats.map(item => item.visits));
+    const totalVisits = clientGroups.reduce((sum, client) => sum + client.completedCount, 0);
+    const segmentCounts = { new: 0, regular: 0, vip: 0 };
+    clientGroups.forEach(client => {
+        const tag = client.profileSummary.tag || (client.completedCount <= 1 ? 'new' : (client.completedCount >= 8 ? 'vip' : 'regular'));
+        segmentCounts[segmentCounts[tag] === undefined ? 'regular' : tag]++;
+    });
+    const totalClients = clientGroups.length;
+    const newPercent = totalClients ? Math.round(segmentCounts.new / totalClients * 100) : 0;
+    const regularPercent = totalClients ? Math.round(segmentCounts.regular / totalClients * 100) : 0;
+    const vipPercent = totalClients ? 100 - newPercent - regularPercent : 0;
+    const vipStart = newPercent + regularPercent;
+
+    root.innerHTML = `
+        <div class="clients-analytics-heading">
+            <div><span class="finance-eyebrow">CLIENT INSIGHTS</span><h3>Аналитика клиентов</h3><p>Динамика визитов и структура аудитории</p></div>
+            <span class="clients-analytics-period">6 месяцев</span>
+        </div>
+        <div class="clients-analytics-grid">
+            <article class="clients-chart-card clients-revenue-chart">
+                <div class="clients-chart-title"><div><span>Выручка от визитов</span><strong>${Math.round(monthStats.reduce((sum, item) => sum + item.revenue, 0)).toLocaleString('ru-RU')} ₽</strong></div><span class="clients-chart-icon">↗</span></div>
+                <svg class="clients-line-chart" viewBox="0 0 520 154" role="img" aria-label="Динамика выручки за последние шесть месяцев">
+                    <defs><linearGradient id="clientsChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#d4af37" stop-opacity=".30"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0"/></linearGradient></defs>
+                    <path d="M ${left} ${top + plotHeight / 2} H ${chartWidth-right}" class="clients-chart-gridline"/>
+                    <path d="M ${left} ${top + plotHeight} H ${chartWidth-right}" class="clients-chart-gridline"/>
+                    <path d="${areaPath}" class="clients-chart-area"/>
+                    <path d="${linePath}" class="clients-chart-line"/>
+                    ${points.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4" class="clients-chart-point"><title>${point.label}: ${Math.round(point.revenue).toLocaleString('ru-RU')} ₽</title></circle>`).join('')}
+                    ${points.map(point => `<text x="${point.x}" y="150" text-anchor="middle" class="clients-chart-label">${point.label}</text>`).join('')}
+                </svg>
+                <div class="clients-chart-footer"><span>${totalVisits} завершённых визитов за всё время</span><span>Только демо-данные</span></div>
+            </article>
+            <article class="clients-chart-card clients-loyalty-chart">
+                <div class="clients-chart-title"><div><span>Сегменты аудитории</span><strong>${totalClients} клиентов</strong></div><span class="clients-chart-icon">◎</span></div>
+                <div class="clients-donut-layout">
+                    <div class="clients-donut" style="--new-share:${newPercent}%;--regular-share:${vipStart}%;--vip-share:100%"><div><strong>${totalClients}</strong><small>всего</small></div></div>
+                    <div class="clients-donut-legend">
+                        <div><i class="new"></i><span>Новые</span><strong>${segmentCounts.new}</strong></div>
+                        <div><i class="regular"></i><span>Постоянные</span><strong>${segmentCounts.regular}</strong></div>
+                        <div><i class="vip"></i><span>VIP</span><strong>${segmentCounts.vip}</strong></div>
+                    </div>
+                </div>
+                <div class="clients-chart-footer"><span>По количеству завершённых визитов</span><span>Демо</span></div>
+            </article>
+        </div>
+        <div class="clients-monthly-strip">
+            ${monthStats.map(item => `<div class="clients-month-stat"><span>${item.label}</span><strong>${item.visits}</strong><small>визитов</small><div><i style="width:${maxVisits ? Math.max(4, item.visits / maxVisits * 100) : 0}%"></i></div></div>`).join('')}
+        </div>`;
+}
+
 function renderClients(tab = 'all') {
     currentClientsTab = tab;
     const list = document.getElementById('clientsList');
@@ -3069,6 +3156,7 @@ function renderClients(tab = 'all') {
     });
 
     const allClientGroups = Object.values(groupedClients);
+    renderClientsAnalytics(filteredBookings, allClientGroups);
     const clientsOverview = document.getElementById('clientsOverview');
     if (clientsOverview) {
         const loyalClients = allClientGroups.filter(client => client.completedCount >= 3).length;
