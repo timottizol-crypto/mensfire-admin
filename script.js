@@ -3725,7 +3725,7 @@ function renderClientsAnalytics(sourceBookings, clientGroups) {
     const totalClients=periodGroups.length,totalVisits=completed.length,totalRevenue=completed.reduce((sum,booking)=>sum+getBookingCollectedAmount(booking),0);
     const segmentCounts={new:0,regular:0,vip:0};
     // Сегмент клиента — характеристика всей истории, а не только выбранного отчётного периода.
-    periodGroups.forEach(client=>{const tag=client.profileSummary.tag||(client.lifetimeCompletedCount<=1?'new':client.lifetimeCompletedCount>=8?'vip':'regular');segmentCounts[segmentCounts[tag]===undefined?'regular':tag]++;});
+    periodGroups.forEach(client=>{const tag=client.profileSummary.tag||(client.lifetimeCompletedCount<=1?'new':'regular');segmentCounts[segmentCounts[tag]===undefined?'regular':tag]++;});
     const newPercent=totalClients?Math.round(segmentCounts.new/totalClients*100):0,regularPercent=totalClients?Math.round(segmentCounts.regular/totalClients*100):0,vipStart=newPercent+regularPercent;
     const maxVisits=Math.max(0,...monthStats.map(item=>item.visits));
     const periodLabel=formatReportDate(rangeStart)+' — '+formatReportDate(rangeEnd);
@@ -3911,7 +3911,7 @@ function renderClients(tab = 'all') {
     .filter(c => {
         if (clientsSegmentFilter !== 'all') {
             const explicitTag = c.profileSummary.tag;
-            const inferredTag = explicitTag || (c.completedCount <= 1 ? 'new' : (c.completedCount >= 8 ? 'vip' : 'regular'));
+            const inferredTag = explicitTag || (c.completedCount <= 1 ? 'new' : 'regular');
             if (inferredTag !== clientsSegmentFilter) return false;
         }
         const phone = normalizeClientPhone(c.profileSummary.phone);
