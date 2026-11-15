@@ -3087,13 +3087,17 @@ function renderFinance() {
     const periodCompleted = bookings.filter(item => inRange(item.date, periodStart, periodEnd) && item.status === 'completed');
     const revenue = (start, end) => bookings.filter(item => inRange(item.date, start, end))
         .reduce((sum, item) => sum + getBookingCollectedAmount(item), 0);
+    const getSafeExpenseAmount = item => {
+        const amount = Number(item?.amount);
+        return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+    };
     const expensesTotal = (start, end) => expenses.filter(item => inRange(item.date, start, end))
-        .reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+        .reduce((sum, item) => sum + getSafeExpenseAmount(item), 0);
     const dayRevenue = revenue(selectedDate, dayEnd);
     const weekRevenue = revenue(weekStart, weekEnd);
     const monthRevenue = revenue(aggregationStart, aggregationEnd);
     const dayExpenses = financePeriodMode === 'day' ? expenses.filter(item => item.date === selectedFinanceDate) : expenses.filter(item => inRange(item.date, periodStart, periodEnd));
-    const dayExpenseTotal = dayExpenses.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
+    const dayExpenseTotal = dayExpenses.reduce((sum, item) => sum + getSafeExpenseAmount(item), 0);
     const weekExpenseTotal = expensesTotal(weekStart, weekEnd);
     const monthExpenseTotal = expensesTotal(aggregationStart, aggregationEnd);
     const dayProfit = dayRevenue - dayExpenseTotal;
@@ -3279,16 +3283,22 @@ function openExpenseModal() {
 
 function addExpense() {
     if (!requireAdminAction('Добавлять расходы может только Али')) return;
-    const title = document.getElementById('expenseTitle').value;
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const titleInput = document.getElementById('expenseTitle');
+    const amountInput = document.getElementById('expenseAmount');
+    const title = String(titleInput?.value || '').trim();
+    const rawAmount = String(amountInput?.value || '').trim().replace(',', '.');
+    const amount = rawAmount && /^\d+(?:\.\d{1,2})?$/.test(rawAmount) ? Number(rawAmount) : NaN;
+    const expenseDate = parseReportDate(selectedFinanceDate);
 
-    if (!title || isNaN(amount) || amount <= 0) return showToast('Заполните все поля', 'error');
+    if (!title || !Number.isFinite(amount) || amount <= 0 || !expenseDate) {
+        return showToast('Укажите название, корректную сумму и дату расхода', 'error');
+    }
 
     const newExpense = {
         id: Date.now(),
         title: title,
-        amount: amount,
-        date: selectedFinanceDate // <--- Берем выбранную дату!
+        amount: Math.round(amount * 100) / 100,
+        date: selectedFinanceDate
     };
 
     expenses.push(newExpense);
