@@ -119,7 +119,10 @@
                 <div class="date-selector" id="scheduleDateSelector"></div>
                 <div id="scheduleList" class="home-scroll-area" style="transition:opacity .3s ease;"><!-- Карточки записей генерируются через JS --></div>
             </div>
-            <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
+            <div class="schedule-management-actions">
+                <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
+                <button class="home-cta-btn schedule-hours-btn" onclick="openWorkScheduleModal()"><div class="cta-text"><span>Рабочий график</span><small>Дни недели и часы каждого мастера</small></div></button>
+            </div>
             <section class="glass-card schedule-waitlist" id="scheduleWaitlist">
                 <div class="schedule-waitlist-heading"><div><span class="workspace-eyebrow">CLIENT QUEUE</span><h3>Лист ожидания</h3><p>Клиенты, которым нужно предложить свободное окно</p></div><span class="waitlist-count" id="waitlistCount">0</span></div>
                 <div class="waitlist-form">
@@ -470,6 +473,17 @@
             </div>
             <button class="checkout-btn" onclick="addTimeBlock()">Заблокировать</button>
             <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('blockTimeModal')">Отмена</button>
+        </div>
+    </div>
+
+    <div class="modal" id="workScheduleModal">
+        <div class="modal-content work-schedule-modal-content">
+            <h2>Рабочий график мастера</h2>
+            <div class="form-group"><label for="workScheduleBarber">Мастер</label><select id="workScheduleBarber" onchange="renderWorkScheduleEditor()"></select></div>
+            <p class="work-schedule-hint">Настрой дни и часы работы. Эти ограничения будут учитываться при создании и переносе записей.</p>
+            <div id="workScheduleDays" class="work-schedule-days"></div>
+            <button class="checkout-btn" onclick="saveWorkSchedule()">Сохранить график</button>
+            <button class="btn-cancel" style="margin-top:10px" onclick="closeModal('workScheduleModal')">Отмена</button>
         </div>
     </div>
 
