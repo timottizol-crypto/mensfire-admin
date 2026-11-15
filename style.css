@@ -3772,3 +3772,15 @@ html.light-theme .calendar-day:hover:not(.empty) {
 .data-mode-switch button{flex:1;padding:11px 8px;border:1px solid var(--border-color,rgba(255,255,255,.18));border-radius:12px;background:rgba(255,255,255,.04);color:var(--text-color,#fff);font-weight:700;cursor:pointer}
 .data-mode-switch button:hover{border-color:var(--gold);color:var(--gold)}
 .data-mode-caption{font-size:11px;color:var(--text-muted);margin:0 0 12px}
+
+.booking-payment-panel{margin:14px 0;padding:13px;border:1px solid var(--border-color,rgba(255,255,255,.15));border-radius:13px;background:rgba(255,255,255,.035)}
+.booking-payment-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700}
+.payment-state,.calendar-payment-label{font-size:11px;font-weight:800;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.payment-paid{color:#38c77b;background:rgba(56,199,123,.13)}
+.payment-partial{color:#e9b949;background:rgba(233,185,73,.15)}
+.payment-unpaid{color:#f16c6c;background:rgba(241,108,108,.14)}
+.booking-payment-meta{font-size:12px;color:var(--text-muted);margin-top:7px}
+.booking-payment-edit{margin-top:10px;padding:8px 11px;border-radius:9px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-weight:700;cursor:pointer}
+.desktop-booking-card.payment-border-paid{border-left:4px solid #38c77b}
+.desktop-booking-card.payment-border-partial{border-left:4px solid #e9b949}
+.desktop-booking-card.payment-border-unpaid{border-left:4px solid #f16c6c}
