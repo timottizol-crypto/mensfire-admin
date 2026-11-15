@@ -1113,6 +1113,12 @@ function switchScheduleTab(tab) {
 }
 
 
+function escapeBookingHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+
 function openActionModal(id) {
     const booking = bookings.find(b => String(b.id) === String(id));
     if (!booking) {
@@ -1123,64 +1129,64 @@ function openActionModal(id) {
     selectedBookingId = booking.id;
 
     const details = document.getElementById('actionBookingDetails');
+    const editBtn = document.getElementById('editBookingBtn');
     const completeBtn = document.getElementById('completeBookingBtn');
     const cancelBtn = document.getElementById('cancelBookingBtn');
 
     const barber = mockStaff.find(s => s.id === booking.barberId);
-    const services = booking.services || [];
+    const services = Array.isArray(booking.services) ? booking.services : [];
     const total = services.reduce((sum, service) =>
         sum + (Number(service.price) || 0), 0);
+    const duration = services.length * 45;
+    const [startHour = 0, startMinute = 0] = String(booking.time || '00:00').split(':').map(Number);
+    const endMinutes = startHour * 60 + startMinute + duration;
+    const endTime = duration
+        ? `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`
+        : booking.time || '—';
 
     const statusLabels = {
         active: 'Активная',
+        pending: 'Ожидает подтверждения',
+        confirmed: 'Подтверждена',
         completed: 'Завершена',
         cancelled: 'Отменена'
     };
-
-    const status = statusLabels[booking.status] || booking.status || 'Не указан';
+    const statusKey = booking.status || 'active';
+    const status = statusLabels[statusKey] || statusKey;
+    const canManage = isAdminUser();
+    const canChangeStatus = isBookingBlockingSchedule(booking);
 
     details.innerHTML = `
-        <div class="booking-detail-status ${booking.status || 'active'}">
-            ${status}
+        <div class="booking-detail-status ${escapeBookingHtml(statusKey)}">
+            ${escapeBookingHtml(status)}
         </div>
-
         <div class="booking-detail-main">
-            <div class="booking-detail-client">${booking.clientName || 'Клиент'}</div>
-            <div class="booking-detail-date">${booking.date} · ${booking.time}</div>
+            <div class="booking-detail-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</div>
+            <div class="booking-detail-date">${escapeBookingHtml(booking.date || 'Дата не указана')} · ${escapeBookingHtml(booking.time || '—')}–${escapeBookingHtml(endTime)}</div>
         </div>
-
         <div class="booking-detail-row">
             <span>Мастер</span>
-            <strong id="bookingDetailMaster"></strong>
+            <strong>${escapeBookingHtml(barber?.name || '—')}</strong>
         </div>
-
+        <div class="booking-detail-services">
+            <span class="booking-detail-section-label">Состав записи</span>
+            ${services.length
+                ? services.map(service => `<div class="booking-detail-service"><span>${escapeBookingHtml(service.title || 'Услуга')}</span><strong>${(Number(service.price) || 0).toLocaleString('ru-RU')} ₽</strong></div>`).join('')
+                : '<div class="booking-detail-service"><span>Услуги не указаны</span></div>'}
+        </div>
         <div class="booking-detail-row">
-            <span>Услуги</span>
-            <strong>${services.map(s => s.title).join(', ') || 'Не указаны'}</strong>
+            <span>Количество услуг</span><strong>${services.length}</strong>
         </div>
-
-        <div class="booking-detail-row">
-            <span>Количество услуг</span>
-            <strong>${services.length}</strong>
-        </div>
-
-        <div class="booking-detail-row">
-            <span>Стоимость</span>
-            <strong>${total.toLocaleString('ru-RU')} ₽</strong>
-        </div>
-
         <div class="booking-detail-row booking-detail-total">
-            <span>Длительность</span>
-            <strong>${services.length ? services.length * 45 : 0} мин.</strong>
+            <span>Стоимость</span><strong>${total.toLocaleString('ru-RU')} ₽</strong>
         </div>
-
+        <div class="booking-detail-row">
+            <span>Длительность</span><strong>${duration} мин.</strong>
+        </div>
         <button type="button" class="booking-client-link" id="bookingClientLink">
             Открыть историю клиента →
         </button>
     `;
-
-    const masterEl = document.getElementById('bookingDetailMaster');
-    if (masterEl) masterEl.textContent = barber?.name || '—';
 
     const clientBtn = document.getElementById('bookingClientLink');
     if (clientBtn) {
@@ -1190,9 +1196,9 @@ function openActionModal(id) {
         };
     }
 
-    const isActive = booking.status === 'active';
-    completeBtn.style.display = isActive ? 'flex' : 'none';
-    cancelBtn.style.display = isActive ? 'flex' : 'none';
+    if (editBtn) editBtn.style.display = canManage && canChangeStatus ? 'flex' : 'none';
+    completeBtn.style.display = canManage && canChangeStatus ? 'flex' : 'none';
+    cancelBtn.style.display = canManage && canChangeStatus ? 'flex' : 'none';
 
     openModal('actionModal');
 }
@@ -1207,8 +1213,8 @@ function openEditBooking() {
         return showToast('Запись не найдена', 'error');
     }
 
-    if (booking.status !== 'active') {
-        return showToast('Можно редактировать только активные записи', 'error');
+    if (!isBookingBlockingSchedule(booking)) {
+        return showToast('Завершённую или отменённую запись нельзя редактировать', 'error');
     }
 
     const availableStaff = mockStaff;
