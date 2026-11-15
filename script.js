@@ -77,6 +77,7 @@ let pickerMonth = new Date().getMonth(); // 0-11
 let editingBlockId = null;
 let confirmCallback = null;
 let staffToResetPin = null;
+let staffToEditId = null;
 
 let currentUser = (() => {
     try {
@@ -2529,10 +2530,11 @@ function renderTeam() {
                     <h3 class="team-name">${name}</h3>
                     <span class="team-role">${roleLabel}</span>
                     <div class="team-performance"><span><strong>${staffCompleted}</strong> визитов</span><span><strong>${Math.round(staffRevenue).toLocaleString('ru-RU')} ₽</strong> получено</span></div>
-                    <span class="team-pin">PIN: ${pin}</span>
+                    <span class="team-pin">Доступ защищён · PIN скрыт</span>
                 </div>
                 <div class="team-actions">
-                    <button type="button" class="team-action-btn reset" data-staff-action="reset" data-staff-id="${id}">Сбросить PIN</button>
+                    <button type="button" class="team-action-btn reset" data-staff-action="edit" data-staff-id="${id}">Изменить имя</button>
+                    <button type="button" class="team-action-btn reset" data-staff-action="reset" data-staff-id="${id}">Сменить PIN</button>
                     ${!isAdmin ? `<button type="button" class="team-action-btn delete" data-staff-action="delete" data-staff-id="${id}">Удалить</button>` : ''}
                 </div>
             </article>
@@ -2559,6 +2561,7 @@ function renderTeam() {
             button.addEventListener('click', event => {
                 event.stopPropagation();
                 const id = button.getAttribute('data-staff-id');
+                if (button.getAttribute('data-staff-action') === 'edit') openStaffEditModal(id);
                 if (button.getAttribute('data-staff-action') === 'reset') resetStaffPin(id);
                 if (button.getAttribute('data-staff-action') === 'delete') deleteStaff(id);
             });
@@ -2571,6 +2574,30 @@ function openStaffModal() {
     document.getElementById('staffName').value = '';
     document.getElementById('staffPin').value = '';
     openModal('staffModal');
+}
+
+function openStaffEditModal(id) {
+    if (!requireAdminAction('Редактировать мастеров может только Али')) return;
+    const staff = mockStaff.find(item => String(item.id) === String(id));
+    if (!staff || staff.role === 'admin') return;
+    staffToEditId = String(id);
+    document.getElementById('staffEditName').value = staff.name || '';
+    openModal('staffEditModal');
+}
+function saveStaffEdit() {
+    if (!requireAdminAction('Редактировать мастеров может только Али')) return;
+    const staff = mockStaff.find(item => String(item.id) === String(staffToEditId));
+    const name = document.getElementById('staffEditName').value.trim();
+    if (!staff || !name) return showToast('Введите имя мастера', 'error');
+    if (mockStaff.some(item => String(item.id) !== String(staffToEditId) && item.name.trim().toLowerCase() === name.toLowerCase())) {
+        return showToast('Мастер с таким именем уже есть', 'error');
+    }
+    staff.name = name;
+    localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
+    closeModal('staffEditModal');
+    staffToEditId = null;
+    renderTeam();
+    showToast('Профиль мастера обновлён', 'success');
 }
 
 function addStaff() {
@@ -2632,22 +2659,26 @@ function submitAdminResetPin() {
 
 function deleteStaff(id) {
     if (!requireAdminAction('Удалять мастеров может только Али')) return;
-    showConfirm(
-        'Удалить мастера?', 
-        'Мастер и его доступ будут удалены.', 
-        'Да, удалить', 
-        () => {
-            const index = mockStaff.findIndex(s => s.id === id);
-            if (index !== -1) {
-                mockStaff.splice(index, 1);
-                localStorage.setItem(appStorageKey('mensfire_admin_staff'), JSON.stringify(mockStaff));
-                showToast('Мастер удален', 'success');
-                renderTeam();
-            }
-        }
-    );
+    const staff = mockStaff.find(item => String(item.id) === String(id));
+    if (!staff || staff.role === 'admin') return showToast('Главного мастера удалить нельзя', 'error');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const hasUpcoming = bookings.some(item => String(item.barberId) === String(id) && item.status !== 'cancelled' && (() => {
+        const parts = String(item.date || '').split('.').map(Number);
+        if (parts.length !== 3 || !parts.every(Number.isFinite)) return false;
+        const date = new Date(parts[2],parts[1]-1,parts[0]);
+        return date >= today;
+    })());
+    if (hasUpcoming) return showToast('Нельзя удалить мастера с будущими активными записями. Сначала перенесите их.', 'error');
+    showConfirm('Удалить мастера?', 'История визитов сохранится, но мастер исчезнет из списка сотрудников.', 'Да, удалить', () => {
+        const index = mockStaff.findIndex(item => String(item.id) === String(id));
+        if (index < 0) return;
+        mockStaff.splice(index,1);
+        localStorage.setItem(appStorageKey('mensfire_admin_staff'),JSON.stringify(mockStaff));
+        showToast('Мастер удалён из команды','success');
+        renderTeam();
+    });
 }
-
 
 // --- АНАЛИТИКА БАРБЕРА ---
 function showBarberStats(id) {
