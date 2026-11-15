@@ -765,7 +765,7 @@ function renderSchedule() {
                     </div>
                 `;
             } else {
-                const servicesText = (b.services || []).map(s => s.title).join(', ');
+                const servicesText = (b.services || []).map(s => escapeBookingHtml(s.title || 'Услуга')).join(', ');
                 let itemClass = b.status === 'completed' ? 'completed' : (b.status === 'cancelled' ? 'cancelled' : '');
                 let statusBadge = '';
                 if (b.status === 'completed') statusBadge = `<div class="status-badge completed" style="margin:0;">Завершена</div>`;
@@ -1932,7 +1932,7 @@ function renderFinance() {
     // --- 1. ВЫРУЧКА И ПРИБЫЛЬ ---
     const revenueForDay = bookings
         .filter(b => b.date === targetDate && b.status === 'completed')
-        .reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+        .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
     
     const expensesForDay = expenses.filter(e => e.date === targetDate);
     const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + e.amount, 0);
@@ -2308,6 +2308,7 @@ function saveClientProfile() {
     );
     const updatedProfile = {
         ...previousProfile,
+        ...(clientProfiles[canonicalKey] || {}),
         phone,
         birthday: document.getElementById('clientDetailsBirthday')?.value || '',
         tag: document.getElementById('clientDetailsTag')?.value || 'regular',
@@ -2428,17 +2429,20 @@ function renderClients(tab = 'all') {
         const masterBadge = currentUser.role === 'admin' && currentClientsTab === 'all'
             ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${masterNames.join(', ')}</div>`
             : '';
-        const safeName = String(c.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const safeBarberId = String(c.barberId).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeNameArg = escapeBookingHtml(JSON.stringify(String(c.name || '')));
+        const safeBarberArg = escapeBookingHtml(JSON.stringify(String(c.barberId || '')));
+        const safeTag = ['new', 'regular', 'vip'].includes(profile.tag) ? profile.tag : 'regular';
+        const safeNames = c.names.map(escapeBookingHtml).join(' / ');
+        const safeMasters = masterNames.map(escapeBookingHtml).join(', ');
 
         return `
-            <div class="client-card" onclick="showClientDetails('${safeName}', '${safeBarberId}')">
-                <div class="client-avatar">${String(c.name || '?').charAt(0).toUpperCase()}</div>
+            <div class="client-card" onclick="showClientDetails(${safeNameArg}, ${safeBarberArg})">
+                <div class="client-avatar">${escapeBookingHtml(String(c.name || '?').charAt(0).toUpperCase())}</div>
                 <div class="client-info">
-                    <div class="client-name">${c.names.join(' / ')} <span class="client-tag-badge tag-${profile.tag || 'regular'}">${clientTag}</span></div>
-                    <div class="client-meta">Визитов: <span class="gold-text">${c.visits.length}</span> · Потрачено: <span class="gold-text">${c.totalSpent} ₽</span></div>
-                    <div class="client-meta">Последний: ${lastVisit.date} в ${lastVisit.time}</div>
-                    ${masterBadge}
+                    <div class="client-name">${safeNames} <span class="client-tag-badge tag-${safeTag}">${clientTag}</span></div>
+                    <div class="client-meta">Визитов: <span class="gold-text">${c.visits.length}</span> · Потрачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span></div>
+                    <div class="client-meta">Последний: ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
+                    ${masterBadge ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${safeMasters}</div>` : ''}
                 </div>
             </div>
         `;
@@ -2473,7 +2477,7 @@ function showClientDetails(name, barberId) {
     
     const historyHTML = myBookings.map(b => {
         if (b.status === 'completed') {
-            total += b.services.reduce((s, serv) => s + serv.price, 0);
+            total += (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
             completedCount++;
         }
         
@@ -2489,9 +2493,9 @@ function showClientDetails(name, barberId) {
             <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border-left: 3px solid ${statusColor}; flex-shrink: 0;">
                 <div style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">${statusIcon}</div>
                 <div style="flex-grow: 1;">
-                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${b.date} в ${b.time}</div>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-main);">${${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
                     <div style="font-size: 12px; color: var(--gold); margin-top: 4px;">${servicesText}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${masterName}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Мастер: ${escapeBookingHtml(masterName)}</div>
                 </div>
             </div>
         `;
