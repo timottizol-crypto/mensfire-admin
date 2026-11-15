@@ -5136,3 +5136,37 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
     .finance-analytics-operation { align-items:flex-start; gap:8px; }
     .finance-analytics-operation > strong { white-space:nowrap; font-size:11px; }
 }
+
+
+/* MENSFIRE custom controls: time selection and payment method. */
+.mensfire-picker-trigger {
+    cursor:pointer;
+    color:var(--text-main)!important;
+    border-color:rgba(212,175,55,.22)!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025))!important;
+    padding-right:42px!important;
+}
+.mensfire-picker-trigger::placeholder { color:var(--text-muted); }
+.mensfire-picker-trigger:focus { border-color:var(--gold)!important; box-shadow:0 0 0 3px rgba(212,175,55,.1)!important; }
+.mensfire-picker-trigger[readonly] { -webkit-text-fill-color:var(--text-main); }
+.mensfire-time-picker { max-width:420px; }
+.time-picker-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-height:min(48vh,390px); overflow:auto; padding:3px 2px 12px; }
+.time-picker-option {
+    min-height:44px; border:1px solid rgba(255,255,255,.09); border-radius:12px;
+    color:var(--text-main); background:rgba(255,255,255,.035); font:inherit; font-size:13px; font-weight:700; cursor:pointer;
+    transition:background .18s,border-color .18s,transform .18s;
+}
+.time-picker-option:hover { border-color:rgba(212,175,55,.5); background:rgba(212,175,55,.08); }
+.time-picker-option.is-selected { color:var(--gold); border-color:var(--gold); background:rgba(212,175,55,.13); }
+.visually-hidden-select { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+.payment-method-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:9px; }
+.payment-choice {
+    display:flex; align-items:center; gap:10px; min-height:52px; padding:10px 12px;
+    border:1px solid rgba(255,255,255,.09); border-radius:13px; color:var(--text-main);
+    background:rgba(255,255,255,.035); font:inherit; font-size:12px; font-weight:700; text-align:left; cursor:pointer;
+    transition:all .18s ease;
+}
+.payment-choice:hover { border-color:rgba(212,175,55,.45); background:rgba(212,175,55,.06); }
+.payment-choice.is-selected { border-color:rgba(212,175,55,.7); background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.055)); color:var(--gold); box-shadow:inset 0 0 0 1px rgba(212,175,55,.08); }
+.payment-choice-icon { display:grid; place-items:center; width:30px; height:30px; flex:0 0 30px; border-radius:9px; background:rgba(212,175,55,.1); color:var(--gold); font-size:16px; }
+@media(max-width:380px) { .time-picker-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
