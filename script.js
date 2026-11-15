@@ -2141,7 +2141,7 @@ let clientProfiles = JSON.parse(
 let selectedClientProfileKey = null;
 
 function normalizeClientPhone(phone) {
-    return String(phone || '').replace(/\\D/g, '');
+    return String(phone || '').replace(/\D/g, '');
 }
 
 function getClientProfileKey(name, barberId, phone = '') {
@@ -2235,14 +2235,39 @@ function renderClients(tab = 'all') {
         }
     });
 
-    const clientArray = Object.values(clients)
-    .filter(c => {
-        const { profile } = findClientProfile(c.name, c.barberId);
-        const phone = profile.phone || '';
+    // Объединяем карточки только при наличии совпадающего подтверждённого телефона.
+    // Без номера клиенты остаются раздельными по имени и мастеру.
+    const groupedClients = {};
+    Object.values(clients).forEach(client => {
+        const { profile } = findClientProfile(client.name, client.barberId);
+        const phoneKey = normalizeClientPhone(profile.phone);
+        const groupKey = phoneKey.length >= 7
+            ? 'phone:' + phoneKey
+            : JSON.stringify([client.name, client.barberId]);
 
+        if (!groupedClients[groupKey]) {
+            groupedClients[groupKey] = {
+                ...client,
+                names: [client.name],
+                barberIds: [client.barberId],
+                profiles: [profile]
+            };
+        } else {
+            const group = groupedClients[groupKey];
+            if (!group.names.includes(client.name)) group.names.push(client.name);
+            if (!group.barberIds.includes(client.barberId)) group.barberIds.push(client.barberId);
+            group.visits.push(...client.visits);
+            group.totalSpent += client.totalSpent;
+            group.profiles.push(profile);
+        }
+    });
+
+    const clientArray = Object.values(groupedClients)
+    .filter(c => {
+        const phone = normalizeClientPhone(c.profiles.find(p => p.phone)?.phone || '');
         return (
-            c.name.toLowerCase().includes(clientsSearchQuery) ||
-            phone.toLowerCase().includes(clientsSearchQuery)
+            c.names.some(name => name.toLowerCase().includes(clientsSearchQuery)) ||
+            phone.includes(normalizeClientPhone(clientsSearchQuery))
         );
     })
     .sort((a, b) => b.visits.length - a.visits.length);
@@ -2254,24 +2279,29 @@ function renderClients(tab = 'all') {
 
     // Выводим список
     list.innerHTML = clientArray.map(c => {
-        const sortedVisits = c.visits.sort((a, b) => b.date.localeCompare(a.date));
+        const sortedVisits = c.visits.sort((a, b) => {
+            const parseDate = value => {
+                const [day, month, year] = String(value || '').split('.');
+                return new Date(Number(year), Number(month) - 1, Number(day)).getTime() || 0;
+            };
+            return parseDate(b.date) - parseDate(a.date);
+        });
         const lastVisit = sortedVisits[0];
-        const { profile } = findClientProfile(c.name, c.barberId);
+        const profile = c.profiles[0] || {};
         const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
         const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
-
-        // Если это Админ на вкладке "Все", показываем мастера
-        let masterBadge = '';
-        if (currentUser.role === 'admin' && currentClientsTab === 'all') {
-            const masterName = mockStaff.find(s => s.id === c.barberId)?.name || 'Мастер';
-            masterBadge = `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастер: ${masterName}</div>`;
-        }
+        const masterNames = c.barberIds.map(id => mockStaff.find(staff => staff.id === id)?.name || 'Мастер');
+        const masterBadge = currentUser.role === 'admin' && currentClientsTab === 'all'
+            ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${masterNames.join(', ')}</div>`
+            : '';
+        const safeName = String(c.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeBarberId = String(c.barberId).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
         return `
-            <div class="client-card" onclick="showClientDetails('${c.name}', '${c.barberId}')">
-                <div class="client-avatar">${c.name.charAt(0).toUpperCase()}</div>
+            <div class="client-card" onclick="showClientDetails('${safeName}', '${safeBarberId}')">
+                <div class="client-avatar">${String(c.name || '?').charAt(0).toUpperCase()}</div>
                 <div class="client-info">
-                    <div class="client-name">${c.name} <span class="client-tag-badge tag-${profile.tag || 'regular'}">${clientTag}</span></div>
+                    <div class="client-name">${c.names.join(' / ')} <span class="client-tag-badge tag-${profile.tag || 'regular'}">${clientTag}</span></div>
                     <div class="client-meta">Визитов: <span class="gold-text">${c.visits.length}</span> · Потрачено: <span class="gold-text">${c.totalSpent} ₽</span></div>
                     <div class="client-meta">Последний: ${lastVisit.date} в ${lastVisit.time}</div>
                     ${masterBadge}
