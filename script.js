@@ -36,14 +36,14 @@ let mockStaff = [
 
 const servicesData = {
     top: [
-        { id: 't1', title: 'Мужская стрижка', price: 1500, type: 'top' },
-        { id: 't4', title: 'Стрижка + борода', price: 2500, type: 'top' },
-        { id: 't3', title: 'Оформление бороды', price: 1200, type: 'top' }
+        { id: 't1', title: 'Мужская стрижка', price: 1500, duration: 45, type: 'top' },
+        { id: 't4', title: 'Стрижка + борода', price: 2500, duration: 45, type: 'top' },
+        { id: 't3', title: 'Оформление бороды', price: 1200, duration: 45, type: 'top' }
     ],
     barber: [
-        { id: 'b1', title: 'Мужская стрижка', price: 1300, type: 'barber' },
-        { id: 'b2', title: 'Стрижка + борода', price: 2300, type: 'barber' },
-        { id: 'b6', title: 'Оформление бороды', price: 1000, type: 'barber' }
+        { id: 'b1', title: 'Мужская стрижка', price: 1300, duration: 45, type: 'barber' },
+        { id: 'b2', title: 'Стрижка + борода', price: 2300, duration: 45, type: 'barber' },
+        { id: 'b6', title: 'Оформление бороды', price: 1000, duration: 45, type: 'barber' }
     ]
 };
 
@@ -1786,10 +1786,10 @@ function updateNewBookingServices() {
     container.innerHTML = catalog.map(service => `
         <label class="new-booking-service-option">
             <input type="checkbox"
-                value="${service.id}"
+                value="${escapeBookingHtml(String(service.id))}"
                 onchange="updateNewBookingSummary()">
-            <span>${service.title}</span>
-            <strong>${service.price.toLocaleString('ru-RU')} ₽</strong>
+            <span>${escapeBookingHtml(service.title)}</span>
+            <strong>${(Number(service.price) || 0).toLocaleString('ru-RU')} ₽ · ${getServiceDurationMinutes(service)} мин.</strong>
         </label>
     `).join('');
 
@@ -1808,8 +1808,8 @@ function updateNewBookingSummary() {
     const selectedIds = [...container.querySelectorAll('input:checked')]
         .map(input => input.value);
 
-    const selected = catalog.filter(s => selectedIds.includes(s.id));
-    const duration = selected.length * 45;
+    const selected = catalog.filter(s => selectedIds.includes(String(s.id)));
+    const duration = selected.reduce((sum, service) => sum + getServiceDurationMinutes(service), 0);
     const price = selected.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
     document.getElementById('newBookingDuration').textContent =
@@ -1842,9 +1842,16 @@ function parseScheduleTimeMinutes(value) {
     return hours * 60 + minutes;
 }
 
+function getServiceDurationMinutes(service) {
+    const duration = Number(service?.duration);
+    return Number.isFinite(duration) && Number.isInteger(duration) && duration > 0
+        ? duration
+        : 45;
+}
+
 function getBookingDurationMinutes(booking) {
     const services = Array.isArray(booking?.services) ? booking.services : [];
-    return Math.max(45, services.length * 45);
+    return services.reduce((sum, service) => sum + getServiceDurationMinutes(service), 0) || 45;
 }
 
 function isBookingBlockingSchedule(booking) {
@@ -1868,7 +1875,7 @@ function saveNewBooking() {
     const selectedIds = [...container.querySelectorAll('input:checked')]
         .map(input => input.value);
 
-    const selectedServices = catalog.filter(s => selectedIds.includes(s.id));
+    const selectedServices = catalog.filter(s => selectedIds.includes(String(s.id)));
 
     if (!clientName || !barberId || !dateValue || !time || !selectedServices.length) {
         return showToast('Укажите клиента, мастера, услуги, дату и время', 'error');
@@ -1889,7 +1896,7 @@ function saveNewBooking() {
 
     const [hours, minutes] = time.split(':').map(Number);
     const start = hours * 60 + minutes;
-    const duration = selectedServices.length * 45;
+    const duration = selectedServices.reduce((sum, service) => sum + getServiceDurationMinutes(service), 0);
     const end = start + duration;
 
     if (start < 8 * 60 || end > 22 * 60) {
