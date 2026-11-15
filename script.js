@@ -1501,7 +1501,7 @@ function openEditBooking() {
         return showToast('Мастер не найден', 'error');
     }
 
-    const dateMatch = /^(\\d{2})\\.(\\d{2})\\.(\\d{4})$/.exec(String(booking.date || ''));
+    const dateMatch = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(booking.date || ''));
     const bookingTime = parseScheduleTimeMinutes(booking.time);
     if (!dateMatch || bookingTime === null) {
         return showToast('У записи некорректные дата или время. Исправьте данные перед редактированием', 'error');
