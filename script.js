@@ -1438,7 +1438,7 @@ function getBookingPaymentState(booking, total) {
     const methods = [...new Set(transactions.map(item => item.method).filter(Boolean))];
     const method = methods.length > 1 ? 'mixed' : (methods[0] || booking.paymentMethod);
     return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
-        methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан', transactions };
+        method, methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан', transactions };
 }
 let selectedPaymentBookingId = null;
 
@@ -2439,7 +2439,16 @@ function renderFinance() {
     if (analyticsList) analyticsList.innerHTML = dayBookings.length ? dayBookings.map(item => {
         const total = (item.services || []).reduce((sum,service) => sum + Number(service.price || 0),0);
         const state = getBookingPaymentState(item,total);
-        return `<div class="finance-operation"><div class="finance-operation-copy"><strong>${escapeBookingHtml(item.clientName || 'Клиент')}</strong><span>${escapeBookingHtml(item.time || '')} · ${state.label}</span></div><strong>${fmt(state.paid)} / ${fmt(total)}</strong></div>`;
+        const methodKey = ['cash','card','transfer','online','mixed'].includes(state.method) ? state.method : 'other';
+        const paymentStatusClass = state.status === 'paid' ? 'is-paid' : state.status === 'partial' ? 'is-partial' : 'is-unpaid';
+        return `<div class="finance-operation finance-analytics-operation">
+            <div class="finance-operation-copy">
+                <strong>${escapeBookingHtml(item.clientName || 'Клиент')}</strong>
+                <span>${escapeBookingHtml(item.time || '')} · <span class="finance-payment-status ${paymentStatusClass}">${state.label}</span></span>
+                <span class="finance-payment-method finance-payment-method--${methodKey}"><i></i>${escapeBookingHtml(state.methodLabel)}</span>
+            </div>
+            <strong>${fmt(state.paid)} / ${fmt(total)}</strong>
+        </div>`;
     }).join('') : '<div class="finance-empty">На эту дату записей нет</div>';
 
     const thirtyDaysStart = shift(new Date(), -29);
