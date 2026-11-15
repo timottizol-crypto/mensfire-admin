@@ -1216,6 +1216,18 @@ function escapeBookingHtml(value) {
 
 
 const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
+function getBookingCollectedAmount(booking) {
+    const serviceTotal = (booking.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
+    if (Array.isArray(booking.payments)) {
+        return booking.payments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount || 0)), 0);
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, 'paidAmount')) {
+        return Math.max(0, Number(booking.paidAmount || 0));
+    }
+    // Старые записи без полей оплаты считаем исторически оплаченными,
+    // чтобы при обновлении не обнулить прошлую выручку.
+    return serviceTotal;
+}
 function getBookingPaymentState(booking, total) {
     const transactions = Array.isArray(booking.payments) ? booking.payments : [];
     const transactionTotal = transactions.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
@@ -1782,7 +1794,10 @@ function saveNewBooking() {
         bookings.push({
             id: Date.now(),
             ...bookingData,
-            status: 'active'
+            status: 'active',
+            paidAmount: 0,
+            payments: [],
+            paymentMethod: ''
         });
     }
 
@@ -2026,14 +2041,14 @@ function renderFinance() {
     // --- 1. ВЫРУЧКА И ПРИБЫЛЬ ---
     const revenueForDay = bookings
         .filter(b => b.date === targetDate && b.status === 'completed')
-        .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+        .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
     
     const expensesForDay = expenses.filter(e => e.date === targetDate);
     const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
     const revenueForMonth = bookings
         .filter(b => b.status === 'completed')
-        .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+        .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
     const totalExpensesMonth = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
     document.getElementById('financeToday').innerText = `${revenueForDay} ₽`;
@@ -2311,8 +2326,8 @@ function showBarberStats(id) {
     const todayBookings = allCompleted.filter(b => b.date === todayStr);
 
     // Считаем суммы
-    const monthRevenue = monthBookings.reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
-    const todayRevenue = todayBookings.reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+    const monthRevenue = monthBookings.reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
+    const todayRevenue = todayBookings.reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
     
     const monthSalary = Math.round(monthRevenue * 0.4);
     const todaySalary = Math.round(todayRevenue * 0.4);
@@ -2648,7 +2663,7 @@ function renderBarberRevenue() {
         // АДМИН: Считаем общую прибыль (Вся выручка за сегодня - Все расходы за сегодня)
         const totalRevenue = bookings
             .filter(b => b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+            .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
         
         const totalExpenses = expenses
             .filter(e => e.date === today)
@@ -2662,7 +2677,7 @@ function renderBarberRevenue() {
         // БАРБЕР: Считаем его личную выручку (40%)
         const todayRevenue = bookings
             .filter(b => b.barberId === currentUser.id && b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+            .reduce((sum, b) => sum + getBookingCollectedAmount(b), 0);
         
         const barberShare = Math.round(todayRevenue * 0.4);
         revenueEl.innerText = `${barberShare} ₽`;
