@@ -1003,9 +1003,9 @@ function renderDesktopSchedule() {
                     <button type="button" class="desktop-booking-card ${booking.status || 'active'}"
                         style="top:${top}px;height:${height}px"
                         onclick="event.stopPropagation(); openActionModal('${booking.id}')">
-                        <strong>${booking.time} · ${booking.clientName}</strong>
-                        <span>${serviceNames}</span>
-                        <small>${duration} мин. · ${booking.status === 'completed' ? 'Завершена' : booking.status === 'cancelled' ? 'Отменена' : 'Активная'}</small>
+                        <strong class="booking-card-client">${booking.clientName || 'Клиент'}</strong>
+                        <span class="booking-card-service">${serviceNames || 'Услуга не указана'}</span>
+                        <small class="booking-card-meta"><b>${booking.time}</b> · ${duration} мин. · ${booking.status === 'completed' ? 'Завершена' : booking.status === 'cancelled' ? 'Отменена' : booking.status === 'confirmed' ? 'Подтверждена' : booking.status === 'pending' ? 'Ожидает' : 'Активная'}</small>
                     </button>`;
             });
         } else {
