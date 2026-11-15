@@ -2994,3 +2994,51 @@ html.light-theme .calendar-day:hover:not(.empty) {
         max-width: 100%;
     }
 }
+
+/* MENSFIRE — DESKTOP HOME SUBNAV */
+@media (min-width: 768px) {
+    #bottomNav .desktop-schedule-subnav {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin: -3px 0 10px 31px;
+        padding: 5px 0 7px 12px;
+        border-left: 1px solid rgba(212,175,55,.28);
+    }
+
+    #bottomNav .desktop-schedule-subnav button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 34px;
+        padding: 6px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-muted);
+        text-align: left;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background .2s ease, color .2s ease;
+    }
+
+    #bottomNav .desktop-schedule-subnav button:hover,
+    #bottomNav .desktop-schedule-subnav button.active {
+        color: var(--gold);
+        background: rgba(212,175,55,.08);
+    }
+
+    #bottomNav .schedule-subnav-dot {
+        width: 6px;
+        height: 6px;
+        flex: 0 0 6px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: .75;
+    }
+
+    #bottomNav.desktop-collapsed .desktop-schedule-subnav {
+        display: none;
+    }
+}
