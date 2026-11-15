@@ -3335,7 +3335,8 @@ function saveClientProfile() {
         phone,
         birthday: document.getElementById('clientDetailsBirthday')?.value || '',
         tag: document.getElementById('clientDetailsTag')?.value || 'regular',
-        notes: document.getElementById('clientDetailsNotes').value.trim()
+        notes: document.getElementById('clientDetailsNotes').value.trim(),
+        preferences: document.getElementById('clientDetailsPreferences')?.value.trim() || ''
     };
     clientProfiles[canonicalKey] = updatedProfile;
     if (canonicalKey !== selectedClientProfileKey) {
@@ -3637,6 +3638,7 @@ function renderClients(tab = 'all') {
                     <div class="booking-card-badges"><i class="booking-client-type type-${c.completedCount > 0 ? 'returning' : 'new'}">${c.completedCount > 0 ? 'Повторный клиент' : 'Новый клиент'}</i><i class="booking-origin origin-other">${[...new Set(c.visits.map(visit => getBookingSourceMeta(visit).label))].slice(0,2).map(escapeBookingHtml).join(' · ') || 'Канал не указан'}</i></div>
                     <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span> · Средний чек: <span class="gold-text">${completedAverageCheck.toLocaleString('ru-RU')} ₽</span></div>
                     <div class="client-meta">${completedVisits.length ? 'Последний визит:' : 'Последняя запись:'} ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
+                    ${profile.preferences ? '<div class="client-meta client-preferences-preview">✦ ' + escapeBookingHtml(profile.preferences) + '</div>' : ''}
                     <div class="client-meta client-next-visit">${upcomingVisit ? 'Следующая запись: ' + escapeBookingHtml(upcomingVisit.date) + ' в ' + escapeBookingHtml(upcomingVisit.time) : 'Будущих записей нет'}</div>
                     ${masterBadge ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${safeMasters}</div>` : ''}
                 </div>
@@ -3661,7 +3663,7 @@ function showClientDetails(name, barberId) {
         Object.values(clientProfiles)
             .filter(profile => normalizeClientPhone(profile.phone) === selectedPhone)
             .forEach(profile => {
-                ['phone', 'birthday', 'tag', 'notes'].forEach(field => {
+                ['phone', 'birthday', 'tag', 'notes', 'preferences'].forEach(field => {
                     if (!mergedClientProfile[field] && profile[field]) {
                         mergedClientProfile[field] = profile[field];
                     }
@@ -3741,11 +3743,15 @@ function showClientDetails(name, barberId) {
     const tagInput = document.getElementById('clientDetailsTag');
     if (tagInput) tagInput.value = profile.tag || 'regular';
     document.getElementById('clientDetailsNotes').value = profile.notes || '';
+    const preferencesInput = document.getElementById('clientDetailsPreferences');
+    if (preferencesInput) preferencesInput.value = profile.preferences || '';
     document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => String(s.id) === String(barberId))?.name || 'Мастер';
     document.getElementById('clientDetailsVisits').innerText = completedCount;
     document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
     
     const cancelledCount = myBookings.filter(b => b.status === 'cancelled').length;
+    const noShowCount = myBookings.filter(b => ['no_show', 'missed'].includes(String(b.status || '').toLowerCase())).length;
+    const firstCompleted = [...myBookings].reverse().find(booking => booking.status === 'completed');
     const averageCheck = completedCount ? Math.round(completedRevenue / completedCount) : 0;
     const metrics = document.getElementById('clientDetailsMetrics');
     if (metrics) {
@@ -3754,7 +3760,9 @@ function showClientDetails(name, barberId) {
         const lastCompleted = myBookings.find(booking => booking.status === 'completed');
         metrics.innerHTML = `
             <span>Отмен: <b>${cancelledCount}</b></span>
+            <span>Неявки: <b>${noShowCount}</b></span>
             <span>Средний чек: <b>${averageCheck.toLocaleString('ru-RU')} ₽</b></span>
+            <span>Первый визит: <b>${firstCompleted ? escapeBookingHtml(firstCompleted.date) : '—'}</b></span>
             <span>Последний визит: <b>${lastCompleted ? escapeBookingHtml(lastCompleted.date) : '—'}</b></span>
             <span>Следующая запись: <b>${nextVisit ? escapeBookingHtml(nextVisit.date + ' · ' + nextVisit.time) : 'нет'}</b></span>
         `;
@@ -3766,6 +3774,19 @@ function showClientDetails(name, barberId) {
     }
 
     openModal('clientDetailsModal');
+}
+function createBookingForClient() {
+    if (!selectedClientProfileKey) return;
+    const profile = clientProfiles[selectedClientProfileKey] || {};
+    const clientName = profile.clientName || document.getElementById('clientDetailsName')?.textContent || '';
+    const barberId = String(profile.barberId || currentUser?.id || '');
+    closeModal('clientDetailsModal');
+    openNewBookingModal(barberId);
+    const input = document.getElementById('newBookingClient');
+    if (input) {
+        input.value = clientName;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 }
 // --- ПРОФИЛЬ ---
 function renderBarberRevenue() {
