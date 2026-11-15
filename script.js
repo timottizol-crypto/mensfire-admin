@@ -2396,7 +2396,7 @@ function saveClientProfile() {
     }
 
     localStorage.setItem(
-        'mensfire_client_profiles',
+        appStorageKey('mensfire_client_profiles'),
         JSON.stringify(clientProfiles)
     );
 
