@@ -1302,7 +1302,7 @@ function openActionModal(id) {
     const services = Array.isArray(booking.services) ? booking.services : [];
     const total = services.reduce((sum, service) =>
         sum + (Number(service.price) || 0), 0);
-    const duration = services.length * 45;
+    const duration = Math.max(45, services.length * 45);
     const [startHour = 0, startMinute = 0] = String(booking.time || '00:00').split(':').map(Number);
     const endMinutes = startHour * 60 + startMinute + duration;
     const endTime = duration
