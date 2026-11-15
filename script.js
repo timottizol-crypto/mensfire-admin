@@ -2529,6 +2529,101 @@ function renderBarberRevenue() {
     }
 }
 
+
+/* Резервное копирование данных салона (хранение остаётся локальным). */
+const MENSFIRE_BACKUP_KEYS = [
+    'mensfire_admin_bookings',
+    'mensfire_admin_blocks',
+    'mensfire_admin_expenses',
+    'mensfire_admin_staff',
+    'mensfire_client_profiles'
+];
+
+function exportMensfireBackup() {
+    if (!requireAdminAction('Создавать резервные копии может только Али')) return;
+    const data = {};
+    MENSFIRE_BACKUP_KEYS.forEach(key => {
+        const raw = localStorage.getItem(key);
+        if (raw !== null) {
+            try { data[key] = JSON.parse(raw); }
+            catch (error) { throw new Error('Не удалось прочитать данные для копии: ' + key); }
+        } else {
+            data[key] = key === 'mensfire_client_profiles' ? {} : [];
+        }
+    });
+
+    const backup = {
+        app: 'MENSFIRE',
+        version: 1,
+        createdAt: new Date().toISOString(),
+        data
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'mensfire-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('Резервная копия скачана', 'success');
+}
+
+function importMensfireBackup(input) {
+    if (!requireAdminAction('Восстанавливать резервные копии может только Али')) {
+        if (input) input.value = '';
+        return;
+    }
+    const file = input?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        let backup;
+        try {
+            backup = JSON.parse(String(reader.result || ''));
+            if (backup?.app !== 'MENSFIRE' || backup?.version !== 1 || !backup.data) {
+                throw new Error('Неподдерживаемый формат резервной копии');
+            }
+            const expected = {
+                mensfire_admin_bookings: Array.isArray,
+                mensfire_admin_blocks: Array.isArray,
+                mensfire_admin_expenses: Array.isArray,
+                mensfire_admin_staff: Array.isArray,
+                mensfire_client_profiles: value => value && typeof value === 'object' && !Array.isArray(value)
+            };
+            for (const [key, validator] of Object.entries(expected)) {
+                if (!validator(backup.data[key])) {
+                    throw new Error('В копии отсутствуют или повреждены данные: ' + key);
+                }
+            }
+        } catch (error) {
+            showToast(error.message || 'Не удалось прочитать резервную копию', 'error');
+            input.value = '';
+            return;
+        }
+
+        showConfirm(
+            'Восстановить резервную копию?',
+            'Текущие записи, перерывы, расходы, мастера и карточки клиентов будут заменены данными из файла. Перед восстановлением скачай текущую копию.',
+            'Восстановить',
+            () => {
+                MENSFIRE_BACKUP_KEYS.forEach(key => {
+                    localStorage.setItem(key, JSON.stringify(backup.data[key]));
+                });
+                showToast('Данные восстановлены. Перезагружаю приложение…', 'success');
+                setTimeout(() => window.location.reload(), 700);
+            }
+        );
+        input.value = '';
+    };
+    reader.onerror = () => {
+        showToast('Не удалось прочитать выбранный файл', 'error');
+        input.value = '';
+    };
+    reader.readAsText(file);
+}
+
 function openChangePasswordModal() {
     document.getElementById('newPin').value = '';
     openModal('passwordModal');
