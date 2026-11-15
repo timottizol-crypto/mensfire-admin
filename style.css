@@ -5761,3 +5761,102 @@ html.light-theme .booking-client-match{background:#fbf8ef}
  .schedule-new-booking-btn{align-self:flex-end!important}
  .clients-waitlist{margin:12px 0;padding:14px}
 }
+
+
+/* MENSFIRE — DESKTOP SCHEDULE LAYOUT OVERRIDE
+   Keep this block last: older desktop rules above used fixed-height booking lists
+   and conflicting card sizing, which prevented the calendar from filling the workspace. */
+@media (min-width: 768px) {
+    #appContainer #viewSchedule.active {
+        display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+        width: calc(100% - var(--mensfire-content-left, 284px)) !important;
+        max-width: none !important;
+        height: 100dvh !important;
+        min-height: 0 !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+        padding: 22px 22px 18px !important;
+        gap: 12px !important;
+    }
+
+    #appContainer.desktop-nav-collapsed #viewSchedule.active {
+        width: calc(100% - 112px) !important;
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+
+    #viewSchedule > .schedule-top-actions {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        min-height: 38px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin: 0 !important;
+    }
+
+    #viewSchedule .schedule-management-actions {
+        display: flex !important;
+        flex: 0 1 auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+    }
+
+    #viewSchedule .schedule-management-actions .home-cta-btn,
+    #viewSchedule .schedule-new-booking-btn {
+        box-sizing: border-box !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        max-height: 38px !important;
+        padding: 0 14px !important;
+        margin: 0 !important;
+        align-self: center !important;
+        border-radius: 10px !important;
+    }
+
+    #viewSchedule .schedule-new-booking-btn {
+        flex: 0 0 auto !important;
+        margin-left: auto !important;
+    }
+
+    #viewSchedule > .schedule-overview-grid {
+        display: grid !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #viewSchedule > .schedule-main-card {
+        display: none !important;
+    }
+
+    #viewSchedule > #desktopSchedule {
+        display: flex !important;
+        flex: 1 1 0 !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-calendar-scroll {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: auto !important;
+    }
+
+    #viewSchedule > #desktopSchedule .desktop-month-grid {
+        min-height: 0 !important;
+    }
+}
