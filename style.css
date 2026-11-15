@@ -3226,3 +3226,54 @@ html.light-theme .calendar-day:hover:not(.empty) {
         flex-wrap: wrap;
     }
 }
+
+
+/* Mensfire desktop month calendar */
+@media (min-width: 768px) {
+    .desktop-month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--card-bg);
+    }
+    .desktop-month-weekday {
+        padding: 12px 8px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-secondary, rgba(127,127,127,.06));
+    }
+    .desktop-month-day {
+        min-height: 112px;
+        padding: 9px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        text-align: left;
+        color: var(--text-primary);
+        background: var(--card-bg);
+        border: 0;
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        overflow: hidden;
+    }
+    .desktop-month-day:hover { background: rgba(212,175,55,.08); }
+    .desktop-month-day.selected { box-shadow: inset 0 0 0 2px #d4af37; }
+    .desktop-month-day.outside-month { opacity: .42; }
+    .desktop-month-day > strong { font-size: 14px; }
+    .desktop-month-count { font-size: 11px; font-weight: 700; color: #d4af37; }
+    .desktop-month-preview {
+        width: 100%;
+        font-size: 10px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        overflow-wrap: anywhere;
+    }
+    .desktop-month-day small { font-size: 10px; color: #d4af37; }
+}
