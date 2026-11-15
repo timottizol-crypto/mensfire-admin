@@ -202,6 +202,7 @@ function initAppForUser() {
     
     // Инициализируем данные (рендер расписания и т.д. - будет в части 2)
     if (typeof renderSchedule === 'function') renderSchedule();
+    if (typeof renderBarberRevenue === 'function') renderBarberRevenue();
     if (typeof renderProfileOverview === 'function') renderProfileOverview();
 }
 
@@ -454,6 +455,10 @@ function switchView(viewId, navElement) {
         document.body.classList.add('header-hidden');
     }
     if (viewId === 'viewServices' && typeof renderServices === 'function') renderServices();
+    if (viewId === 'viewProfile') {
+        if (typeof renderBarberRevenue === 'function') renderBarberRevenue();
+        if (typeof renderProfileOverview === 'function') renderProfileOverview();
+    }
 }
 
 // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (UI) ---
