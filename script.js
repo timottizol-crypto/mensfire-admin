@@ -1815,9 +1815,15 @@ function saveBookingPayment() {
         return showToast('Выберите корректный способ оплаты', 'error');
     }
 
-    if (!Array.isArray(booking.payments)) {
+    if (!Array.isArray(booking.payments) || booking.payments.length === 0) {
+        // Переносим старую оплаченную сумму в историю транзакций до добавления нового платежа.
+        // Иначе пустой legacy-массив payments мог обнулить уже полученные деньги.
         booking.payments = paymentState.paid > 0
-            ? [{ amount: paymentState.paid, method: booking.paymentMethod || '', createdAt: booking.paymentUpdatedAt || '' }]
+            ? [{
+                amount: paymentState.paid,
+                method: ['cash', 'card', 'transfer', 'online'].includes(booking.paymentMethod) ? booking.paymentMethod : 'other',
+                createdAt: booking.paymentUpdatedAt || ''
+            }]
             : [];
     }
     const paymentTime = new Date().toISOString();
