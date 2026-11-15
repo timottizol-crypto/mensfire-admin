@@ -2286,50 +2286,64 @@ function switchFinanceTab(tab) {
     renderFinance();
 }
 
+function financeDateToInput(value) {
+    const parts = String(value || '').split('.').map(Number);
+    if (parts.length !== 3 || !parts.every(Number.isFinite)) return '';
+    return parts[2] + '-' + String(parts[1]).padStart(2,'0') + '-' + String(parts[0]).padStart(2,'0');
+}
+function selectFinanceDateFromInput(value) {
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(value || ''))) return;
+    const [year,month,day] = value.split('-').map(Number);
+    const date = new Date(year,month-1,day);
+    if (date.getFullYear() !== year || date.getMonth() !== month-1 || date.getDate() !== day) return;
+    selectedFinanceDate = date.toLocaleDateString('ru-RU');
+    renderFinance();
+}
+function shiftFinanceDate(days) {
+    const parts = selectedFinanceDate.split('.').map(Number);
+    const current = parts.length === 3 ? new Date(parts[2],parts[1]-1,parts[0]) : new Date();
+    current.setDate(current.getDate() + Number(days || 0));
+    selectedFinanceDate = current.toLocaleDateString('ru-RU');
+    renderFinance();
+}
+function selectFinanceToday() {
+    selectedFinanceDate = new Date().toLocaleDateString('ru-RU');
+    renderFinance();
+}
 function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
     if (!container) return;
     container.innerHTML = '';
-    
-    const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    
-    // Генерируем от -7 (прошлая неделя) до +22 дней (будущее)
-    for (let i = -7; i < 23; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
+    const selectedParts = selectedFinanceDate.split('.').map(Number);
+    const base = selectedParts.length === 3 ? new Date(selectedParts[2],selectedParts[1]-1,selectedParts[0]) : new Date();
+    base.setHours(0,0,0,0);
+    const input = document.getElementById('financeDateInput');
+    if (input) input.value = financeDateToInput(selectedFinanceDate);
+    const label = document.getElementById('financeSelectedDateLabel');
+    if (label) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const sameDay = base.getTime() === today.getTime();
+        label.textContent = (sameDay ? 'Сегодня · ' : '') + base.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }
+    const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    for (let i = -7; i < 16; i++) {
+        const d = new Date(base);
+        d.setDate(base.getDate() + i);
         const dateStr = d.toLocaleDateString('ru-RU');
-        let dayName = '';
-        if (i === 0) dayName = 'Сегодня';
-        else if (i === 1) dayName = 'Завтра';
-        else if (i === -1) dayName = 'Вчера';
-        else dayName = days[d.getDay()];
-        
-        const div = document.createElement('div');
-        div.className = `date-selector-item ${selectedFinanceDate === dateStr ? 'selected' : ''}`;
-        div.innerHTML = `
-            <div class="day-name">${dayName}</div>
-            <div class="day-num">${d.getDate()}</div>
-        `;
-        div.onclick = () => {
-            selectedFinanceDate = dateStr;
-            renderFinance();
-        };
+        const today = new Date(); today.setHours(0,0,0,0);
+        const isToday = d.getTime() === today.getTime();
+        const div = document.createElement('button');
+        div.type = 'button';
+        div.className = 'date-selector-item' + (selectedFinanceDate === dateStr ? ' selected' : '') + (isToday ? ' is-today' : '');
+        div.setAttribute('aria-pressed',String(selectedFinanceDate === dateStr));
+        div.innerHTML = '<div class="day-name">' + (isToday ? 'Сегодня' : days[d.getDay()]) + '</div><div class="day-num">' + d.getDate() + '</div>';
+        div.onclick = () => { selectedFinanceDate = dateStr; renderFinance(); };
         container.appendChild(div);
     }
-
-       // Скролл к выбранной дате (только внутри контейнера, без дергания страницы)
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         const selected = container.querySelector('.selected');
-        if (selected) {
-            const containerWidth = container.offsetWidth;
-            const selectedLeft = selected.offsetLeft;
-            const selectedWidth = selected.offsetWidth;
-            container.scrollTo({
-                left: selectedLeft - (containerWidth / 2) + (selectedWidth / 2),
-                behavior: 'smooth'
-            });
-        }
-    }, 50);
+        if (selected) selected.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+    });
 }
 
 function renderFinance() {
