@@ -1458,9 +1458,15 @@ function getBookingSourceMeta(booking) {
     const map = {
         admin_panel: { label: 'Панель', className: 'admin' },
         barber_app: { label: 'Приложение барбера', className: 'barber' },
+        barber_mobile: { label: 'Приложение барбера', className: 'barber' },
         barber_phone: { label: 'Телефон барбера', className: 'phone' },
+        phone_call: { label: 'Телефон', className: 'phone' },
         website: { label: 'Сайт', className: 'web' },
+        site: { label: 'Сайт', className: 'web' },
+        web: { label: 'Сайт', className: 'web' },
         pwa: { label: 'PWA', className: 'pwa' },
+        client_pwa: { label: 'PWA клиента', className: 'pwa' },
+        pwa_client: { label: 'PWA клиента', className: 'pwa' },
         client_app: { label: 'Приложение клиента', className: 'app' },
         mobile_app: { label: 'Мобильное приложение', className: 'app' },
         phone: { label: 'Телефон', className: 'phone' }
@@ -3378,12 +3384,15 @@ function showClientDetails(name, barberId) {
 
         const servicesText = (b.services || []).map(s => escapeBookingHtml(s.title || 'Услуга')).join(', ');
         const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
+        const sourceMeta = getBookingSourceMeta(b);
+        const clientTypeMeta = getBookingClientTypeMeta(b);
 
         return `
             <article class="client-history-item status-${escapeBookingHtml(b.status || 'active')}">
                 <div class="client-history-icon" aria-hidden="true">${statusIcon}</div>
                 <div class="client-history-content">
                     <div class="client-history-date">${escapeBookingHtml(b.date)} в ${escapeBookingHtml(b.time)}</div>
+                    <div class="booking-card-badges"><i class="booking-origin origin-${sourceMeta.className}">${sourceMeta.label}</i><i class="booking-client-type type-${clientTypeMeta.className}">${clientTypeMeta.label}</i></div>
                     <div class="client-history-services">${servicesText || 'Услуги не указаны'}</div>
                     <div class="client-history-master">Мастер: ${escapeBookingHtml(masterName)}</div>
                     <div class="client-history-payment">
