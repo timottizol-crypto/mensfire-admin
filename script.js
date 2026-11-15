@@ -2700,11 +2700,20 @@ function renderClients(tab = 'all') {
         const clientKey = b.clientName + '_' + b.barberId; 
         
         if (!clients[clientKey]) {
-            clients[clientKey] = { name: b.clientName, barberId: b.barberId, visits: [], totalSpent: 0 };
+            clients[clientKey] = {
+                name: b.clientName, barberId: b.barberId, visits: [],
+                completedCount: 0, cancelledCount: 0, totalSpent: 0, completedRevenue: 0
+            };
         }
         clients[clientKey].visits.push(b);
+        // Потрачено — все фактически полученные суммы; завершённые визиты
+        // считаются отдельно, чтобы отмены не завышали число посещений.
+        clients[clientKey].totalSpent += getBookingCollectedAmount(b);
         if (b.status === 'completed') {
-            clients[clientKey].totalSpent += getBookingCollectedAmount(b);
+            clients[clientKey].completedCount++;
+            clients[clientKey].completedRevenue += getBookingCollectedAmount(b);
+        } else if (b.status === 'cancelled') {
+            clients[clientKey].cancelledCount++;
         }
     });
 
@@ -2730,7 +2739,10 @@ function renderClients(tab = 'all') {
             if (!group.names.includes(client.name)) group.names.push(client.name);
             if (!group.barberIds.includes(client.barberId)) group.barberIds.push(client.barberId);
             group.visits.push(...client.visits);
+            group.completedCount += client.completedCount;
+            group.cancelledCount += client.cancelledCount;
             group.totalSpent += client.totalSpent;
+            group.completedRevenue += client.completedRevenue;
             group.profiles.push(profile);
         }
     });
@@ -2743,7 +2755,7 @@ function renderClients(tab = 'all') {
             phone.includes(normalizeClientPhone(clientsSearchQuery))
         );
     })
-    .sort((a, b) => b.visits.length - a.visits.length);
+    .sort((a, b) => b.completedCount - a.completedCount || b.totalSpent - a.totalSpent);
     
     if (clientArray.length === 0) {
         list.innerHTML = '<div class="empty-bookings-msg" style="font-size: 16px;">Клиентов пока нет</div>';
@@ -2752,14 +2764,19 @@ function renderClients(tab = 'all') {
 
     // Выводим список
     list.innerHTML = clientArray.map(c => {
-        const sortedVisits = c.visits.sort((a, b) => {
-            const parseDate = value => {
-                const [day, month, year] = String(value || '').split('.');
-                return new Date(Number(year), Number(month) - 1, Number(day)).getTime() || 0;
-            };
-            return parseDate(b.date) - parseDate(a.date);
-        });
-        const lastVisit = sortedVisits[0];
+        const parseVisitDate = value => {
+            const [day, month, year] = String(value || '').split('.').map(Number);
+            if (!day || !month || !year) return 0;
+            const parsed = new Date(year, month - 1, day).getTime();
+            return Number.isFinite(parsed) ? parsed : 0;
+        };
+        const completedVisits = c.visits
+            .filter(visit => visit.status === 'completed')
+            .slice()
+            .sort((a, b) => parseVisitDate(b.date) - parseVisitDate(a.date));
+        const sortedVisits = c.visits.slice()
+            .sort((a, b) => parseVisitDate(b.date) - parseVisitDate(a.date));
+        const lastVisit = completedVisits[0] || sortedVisits[0];
         const profile = c.profiles[0] || {};
         const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
         const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
@@ -2778,8 +2795,9 @@ function renderClients(tab = 'all') {
                 <div class="client-avatar">${escapeBookingHtml(String(c.name || '?').charAt(0).toUpperCase())}</div>
                 <div class="client-info">
                     <div class="client-name">${safeNames} <span class="client-tag-badge tag-${safeTag}">${clientTag}</span></div>
-                    <div class="client-meta">Визитов: <span class="gold-text">${c.visits.length}</span> · Потрачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span></div>
-                    <div class="client-meta">Последний: ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
+                    <div class="client-meta">Визитов: <span class="gold-text">${c.completedCount}</span> · Отмен: <span class="gold-text">${c.cancelledCount}</span></div>
+                    <div class="client-meta">Оплачено: <span class="gold-text">${Number(c.totalSpent || 0).toLocaleString('ru-RU')} ₽</span></div>
+                    <div class="client-meta">${completedVisits.length ? 'Последний визит:' : 'Последняя запись:'} ${escapeBookingHtml(lastVisit.date)} в ${escapeBookingHtml(lastVisit.time)}</div>
                     ${masterBadge ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${safeMasters}</div>` : ''}
                 </div>
             </div>
@@ -2811,13 +2829,15 @@ function showClientDetails(name, barberId) {
     });
     
     let total = 0;
+    let completedRevenue = 0;
     let completedCount = 0;
     
     const historyHTML = myBookings.map(b => {
         const serviceTotal = (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0);
         const paymentState = getBookingPaymentState(b, serviceTotal);
+        total += getBookingCollectedAmount(b);
         if (b.status === 'completed') {
-            total += getBookingCollectedAmount(b);
+            completedRevenue += getBookingCollectedAmount(b);
             completedCount++;
         }
         
@@ -2866,7 +2886,7 @@ function showClientDetails(name, barberId) {
     document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
     
     const cancelledCount = myBookings.filter(b => b.status === 'cancelled').length;
-    const averageCheck = completedCount ? Math.round(total / completedCount) : 0;
+    const averageCheck = completedCount ? Math.round(completedRevenue / completedCount) : 0;
     const metrics = document.getElementById('clientDetailsMetrics');
     if (metrics) {
         metrics.innerHTML = `
