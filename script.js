@@ -1272,33 +1272,76 @@ function getBookingPaymentState(booking, total) {
     return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
         methodLabel: PAYMENT_METHOD_LABELS[method] || 'Не указан', transactions };
 }
+let selectedPaymentBookingId = null;
+
 function openBookingPaymentEditor(id) {
     if (!currentUser) return showToast('Войдите в приложение, чтобы изменить оплату', 'error');
     const booking = bookings.find(item => String(item.id) === String(id));
     if (!booking) return;
-    const total = (booking.services || []).reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const total = (Array.isArray(booking.services) ? booking.services : [])
+        .reduce((sum, item) => sum + (Number(item.price) || 0), 0);
     const paymentState = getBookingPaymentState(booking, total);
     const balance = Math.max(0, total - paymentState.paid);
     if (balance <= 0) return showToast('Запись уже оплачена полностью', 'info');
-    const rawAmount = prompt('Сумма нового платежа. Остаток: ' + balance + ' ₽', String(balance));
-    if (rawAmount === null) return;
-    const amount = Number(String(rawAmount).replace(',', '.'));
-    if (!Number.isFinite(amount) || amount <= 0 || amount > balance) return showToast('Введите сумму больше 0 и не больше остатка ' + balance + ' ₽', 'error');
-    const method = prompt('Способ оплаты: cash — наличные, card — карта, transfer — перевод, online — онлайн', 'cash');
-    if (method === null) return;
-    const normalizedMethod = method.trim();
-    if (!['cash','card','transfer','online'].includes(normalizedMethod)) return showToast('Выберите cash, card, transfer или online', 'error');
+
+    selectedPaymentBookingId = booking.id;
+    const amountInput = document.getElementById('bookingPaymentAmount');
+    const methodInput = document.getElementById('bookingPaymentMethod');
+    const balanceLabel = document.getElementById('bookingPaymentBalance');
+    if (!amountInput || !methodInput || !balanceLabel) {
+        return showToast('Форма оплаты недоступна', 'error');
+    }
+    amountInput.value = balance.toFixed(2).replace(/\\.00$/, '');
+    amountInput.max = String(balance);
+    balanceLabel.textContent = 'К оплате осталось: ' + balance.toLocaleString('ru-RU') + ' ₽';
+    methodInput.value = 'cash';
+    openModal('bookingPaymentModal');
+}
+
+function saveBookingPayment() {
+    if (!currentUser) return showToast('Войдите в приложение, чтобы изменить оплату', 'error');
+    const booking = bookings.find(item => String(item.id) === String(selectedPaymentBookingId));
+    if (!booking) {
+        closeModal('bookingPaymentModal');
+        return showToast('Запись не найдена', 'error');
+    }
+
+    const total = (Array.isArray(booking.services) ? booking.services : [])
+        .reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const paymentState = getBookingPaymentState(booking, total);
+    const balance = Math.max(0, total - paymentState.paid);
+    const amountInput = document.getElementById('bookingPaymentAmount');
+    const methodInput = document.getElementById('bookingPaymentMethod');
+    const amount = Number(String(amountInput?.value || '').replace(',', '.'));
+    const method = methodInput?.value || '';
+
+    if (!Number.isFinite(amount) || amount <= 0 || amount > balance) {
+        return showToast('Введите сумму больше 0 и не больше остатка ' + balance + ' ₽', 'error');
+    }
+    if (!['cash', 'card', 'transfer', 'online'].includes(method)) {
+        return showToast('Выберите корректный способ оплаты', 'error');
+    }
+
     if (!Array.isArray(booking.payments)) {
         booking.payments = paymentState.paid > 0
             ? [{ amount: paymentState.paid, method: booking.paymentMethod || '', createdAt: booking.paymentUpdatedAt || '' }]
             : [];
     }
-    booking.payments.push({ amount, method: normalizedMethod, createdAt: new Date().toISOString(), by: currentUser.name || '' });
-    booking.paidAmount = booking.payments.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const paymentTime = new Date().toISOString();
+    booking.payments.push({
+        amount,
+        method,
+        createdAt: paymentTime,
+        by: currentUser.name || ''
+    });
+    booking.paidAmount = booking.payments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     const methods = [...new Set(booking.payments.map(item => item.method).filter(Boolean))];
-    booking.paymentMethod = methods.length > 1 ? 'mixed' : (methods[0] || normalizedMethod);
-    booking.paymentUpdatedAt = new Date().toISOString();
+    booking.paymentMethod = methods.length > 1 ? 'mixed' : (methods[0] || method);
+    booking.paymentUpdatedAt = paymentTime;
+
     localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    selectedPaymentBookingId = null;
+    closeModal('bookingPaymentModal');
     openActionModal(booking.id);
     showToast('Платёж добавлен', 'success');
 }
