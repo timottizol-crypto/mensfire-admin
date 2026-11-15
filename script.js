@@ -1120,7 +1120,7 @@ function renderDesktopSchedule() {
             barberBookings.forEach(booking => {
                 const top = (toMinutes(booking.time) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
                 if (top < 0 || top >= totalHeight) return;
-                const duration = Math.max(45, (booking.services || []).length * 45);
+                const duration = getBookingDurationMinutes(booking);
                 const height = Math.min(duration / 15 * SLOT_HEIGHT, totalHeight - top);
                 const serviceNames = (Array.isArray(booking.services) ? booking.services : []).map(service => escapeBookingHtml(service?.title || 'Услуга')).join(', ');
                 const bookingTotal = (Array.isArray(booking.services) ? booking.services : []).reduce((sum, service) => sum + Number(service?.price || 0), 0);
@@ -1321,7 +1321,7 @@ function openActionModal(id) {
     const services = Array.isArray(booking.services) ? booking.services : [];
     const total = services.reduce((sum, service) =>
         sum + (Number(service.price) || 0), 0);
-    const duration = Math.max(45, services.length * 45);
+    const duration = getBookingDurationMinutes(booking);
     const [startHour = 0, startMinute = 0] = String(booking.time || '00:00').split(':').map(Number);
     const endMinutes = startHour * 60 + startMinute + duration;
     const endTime = duration
@@ -1724,6 +1724,11 @@ function updateNewBookingSummary() {
 
 
 
+function getBookingDurationMinutes(booking) {
+    const services = Array.isArray(booking?.services) ? booking.services : [];
+    return Math.max(45, services.length * 45);
+}
+
 function isBookingBlockingSchedule(booking) {
     // Старые записи используют статус active; новые статусы также должны
     // занимать время мастера до завершения или отмены.
@@ -1781,7 +1786,7 @@ function saveNewBooking() {
 
         const [h, m] = b.time.split(':').map(Number);
         const bStart = h * 60 + m;
-        const bDuration = Math.max(45, (b.services || []).length * 45);
+        const bDuration = getBookingDurationMinutes(b);
 
         return overlaps(start, end, bStart, bStart + bDuration);
     });
