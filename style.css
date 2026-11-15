@@ -5672,3 +5672,16 @@ html.light-theme .block-mode-choice{background:#fbf8ef;border-color:rgba(172,132
 .work-schedule-times span{color:var(--text-muted);font-size:11px}
 html.light-theme .work-schedule-day{background:rgba(255,255,255,.65)}
 @media(max-width:520px){.schedule-management-actions{grid-template-columns:1fr}.work-schedule-day{align-items:flex-start;flex-direction:column}.work-schedule-times{width:100%}.work-schedule-times input{flex:1}}
+
+/* Available appointment slots */
+.available-slots-panel{margin:2px 0 16px;padding:13px;border:1px solid rgba(212,175,55,.16);border-radius:15px;background:rgba(212,175,55,.035)}
+.available-slots-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:11px}
+.available-slots-heading strong{font-size:12px;color:var(--text-main)}
+.available-slots-heading span{font-size:9px;color:var(--text-muted)}
+.available-slots-list{display:flex;flex-wrap:wrap;gap:7px;max-height:150px;overflow:auto}
+.available-slot{min-width:61px;padding:9px 10px;border:1px solid var(--glass-border);border-radius:10px;background:rgba(255,255,255,.045);color:var(--text-main);font-size:11px;font-weight:650;cursor:pointer;transition:all .18s ease}
+.available-slot:hover,.available-slot.is-selected{border-color:var(--gold);background:rgba(212,175,55,.14);color:var(--gold)}
+.available-slots-empty{width:100%;padding:9px 2px;color:var(--text-muted);font-size:10px;line-height:1.5}
+html.light-theme .available-slots-panel{background:#fbf8ef;border-color:rgba(172,132,40,.2)}
+html.light-theme .available-slot{background:#fff;color:#433b2b}
+@media(max-width:420px){.available-slots-heading{align-items:flex-start;flex-direction:column;gap:3px}.available-slot{flex:1 0 58px}}
