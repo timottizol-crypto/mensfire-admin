@@ -5532,3 +5532,18 @@ html.light-theme .finance-kpi-card small,html.light-theme .finance-page-heading 
 html.light-theme .finance-payment-method { backdrop-filter:none; -webkit-backdrop-filter:none; }
 html.light-theme .finance-total-row { border-top-color:rgba(48,60,78,.14); }
 html.light-theme .finance-operation,html.light-theme .finance-team-row,html.light-theme .finance-service-row { border-bottom-color:rgba(48,60,78,.12); }
+
+/* Period controls — compact, touch-friendly and consistent with MensFire glass UI. */
+.finance-range-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 8px; }
+.finance-range-presets { display:inline-flex; gap:4px; padding:4px; border:1px solid rgba(255,255,255,.09); border-radius:13px; background:rgba(255,255,255,.035); }
+.finance-range-btn { min-height:34px; padding:7px 13px; border:1px solid transparent; border-radius:9px; color:var(--text-muted); background:transparent; font:700 11px var(--font-main); cursor:pointer; transition:.2s ease; }
+.finance-range-btn.active { color:#f4d77e; border-color:rgba(212,175,55,.34); background:rgba(212,175,55,.14); box-shadow:0 3px 12px rgba(0,0,0,.12); }
+.finance-range-fields { display:flex; align-items:center; gap:8px; }
+.finance-range-fields[hidden] { display:none!important; }
+.finance-range-fields>span { color:var(--text-muted); font-size:12px; }
+.finance-range-date { min-height:36px; padding:8px 12px; border:1px solid rgba(212,175,55,.28); border-radius:11px; color:var(--text-main); background:rgba(212,175,55,.08); font:700 11px var(--font-main); cursor:pointer; }
+html.light-theme .finance-range-presets { background:#edf1f5; border-color:#d5dce5; }
+html.light-theme .finance-range-btn { color:#596577; }
+html.light-theme .finance-range-btn.active { color:#674b0d; background:#fff0c6; border-color:#ddbf6b; }
+html.light-theme .finance-range-date { color:#344052; background:#fff8e7; border-color:#dfc77f; }
+@media(max-width:520px) { .finance-range-toolbar { align-items:stretch; flex-direction:column; } .finance-range-presets { display:grid; grid-template-columns:repeat(3,1fr); width:100%; } .finance-range-btn { padding-inline:8px; } .finance-range-fields { width:100%; } .finance-range-date { flex:1; min-width:0; } }
