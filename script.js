@@ -937,6 +937,11 @@ function renderSchedule() {
                 const servicesText = (b.services || []).map(s => escapeBookingHtml(s.title || 'Услуга')).join(', ');
                 const bookingTotal = (b.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
                 const payState = getBookingPaymentState(b, bookingTotal);
+                const bookingDuration = getBookingDurationMinutes(b);
+                const startMinutes = parseScheduleTimeMinutes(b.time);
+                const endMinutes = startMinutes === null ? null : startMinutes + bookingDuration;
+                const endLabel = endMinutes === null ? '' : String(Math.floor(endMinutes / 60)).padStart(2, '0') + ':' + String(endMinutes % 60).padStart(2, '0');
+                const remaining = Math.max(0, bookingTotal - payState.paid);
                 const safeStatus = ['active', 'pending', 'confirmed', 'completed', 'cancelled'].includes(b.status) ? b.status : 'active';
                 let itemClass = safeStatus === 'completed' ? 'completed' : (safeStatus === 'cancelled' ? 'cancelled' : '');
                 let statusBadge = '';
@@ -947,9 +952,10 @@ function renderSchedule() {
                 return `
                     <div class="home-booking-item ${itemClass}" onclick="openActionModal('${escapeBookingHtml(String(b.id))}')" style="cursor: pointer; margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%; box-sizing: border-box;">
                         <div class="hb-info" style="flex: 1; min-width: 0;">
-                            <div class="hb-date" style="font-size: 14px;">${escapeBookingHtml(b.time || '—')}</div>
+                            <div class="mobile-booking-time"><strong>${escapeBookingHtml(b.time || '—')}</strong><span>${endLabel ? 'до ' + endLabel : ''} · ${bookingDuration} мин.</span></div>
                             <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? escapeBookingHtml((mockStaff.find(s=>s.id === b.barberId)?.name || 'Мастер') + ' · ') : ''}${escapeBookingHtml(b.clientName || 'Клиент')}</div>
                             <div class="hb-services" style="font-size: 11px; white-space: normal;">${servicesText}</div>
+                            <div class="mobile-booking-finance"><strong>${bookingTotal.toLocaleString('ru-RU')} ₽</strong><span>${payState.paid.toLocaleString('ru-RU')} ₽ получено</span><span>${remaining.toLocaleString('ru-RU')} ₽ остаток</span></div>
                             <span class="calendar-payment-label payment-${payState.status}">${payState.label}</span>
                         </div>
                         <div style="flex-shrink: 0; margin-left: 10px;">
@@ -1354,9 +1360,16 @@ function renderDateSelector() {
         
         const div = document.createElement('div');
         div.className = `date-selector-item ${selectedScheduleDate === dateStr ? 'selected' : ''}`;
+        const canSeeAllStaff = currentUser && currentUser.role === 'admin';
+        const dayBookings = bookings.filter(item => item.date === dateStr && item.status !== 'cancelled' && (canSeeAllStaff || String(item.barberId) === String(currentUser?.id)));
+        const dayBlocks = timeBlocks.filter(item => item.date === dateStr && (canSeeAllStaff || String(item.barberId) === String(currentUser?.id)));
         div.innerHTML = `
             <div class="day-name">${dayName}</div>
             <div class="day-num">${d.getDate()}</div>
+            <div class="date-selector-meta">
+                <span class="date-booking-count">${dayBookings.length ? dayBookings.length + ' запис.' : '—'}</span>
+                ${dayBlocks.length ? '<i class="date-block-indicator" title="Есть перерывы"></i>' : ''}
+            </div>
         `;
         div.onclick = () => {
             selectedScheduleDate = dateStr;
