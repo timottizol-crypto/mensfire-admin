@@ -1306,6 +1306,8 @@ function renderDesktopSchedule() {
                 </button>
                 <div class="desktop-staff-track"
                     style="height:${totalHeight}px"
+                    ondragover="if(event.dataTransfer.types.includes('text/plain')){event.preventDefault();event.dataTransfer.dropEffect='move'}"
+                    ondrop="event.preventDefault(); event.stopPropagation(); moveBookingToSlot(event, '${escapeBookingHtml(String(barber.id))}', '${escapeBookingHtml(dateKey)}')"
                     onclick="openNewBookingFromSlot(event, '${escapeBookingHtml(String(barber.id))}', '${escapeBookingHtml(dateKey)}')">
         `;
 
@@ -1363,8 +1365,9 @@ function renderDesktopSchedule() {
                     const laneWidth = 100 / laneCount;
                     const left = item.lane * laneWidth;
                     html += `
-                        <button type="button" class="desktop-booking-card ${bookingStatus} payment-border-${payState.status}"
+                        <button type="button" draggable="true" class="desktop-booking-card ${bookingStatus} payment-border-${payState.status}"
                             style="top:${item.top}px;height:${height}px;left:calc(${left}% + 3px);width:calc(${laneWidth}% - 6px);right:auto"
+                            ondragstart="event.stopPropagation(); event.dataTransfer.setData('text/plain','${escapeBookingHtml(String(booking.id))}'); event.dataTransfer.effectAllowed='move'"
                             onclick="event.stopPropagation(); openActionModal('${escapeBookingHtml(String(booking.id))}')">
                             <strong class="booking-card-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</strong>
                             <span class="booking-card-badges"><i class="booking-origin origin-${getBookingSourceMeta(booking).className}">${getBookingSourceMeta(booking).label}</i><i class="booking-client-type type-${getBookingClientTypeMeta(booking).className}">${getBookingClientTypeMeta(booking).label}</i></span>
@@ -2019,6 +2022,45 @@ function changeMonth(delta) {
 }
 
 
+
+
+function moveBookingToSlot(event, barberId, date) {
+    if (!requireAdminAction('Перемещать записи может только Али')) return;
+    const bookingId = event.dataTransfer?.getData('text/plain');
+    const booking = bookings.find(item => String(item.id) === String(bookingId));
+    if (!booking || !isBookingBlockingSchedule(booking)) return;
+    const staffAllowed = currentUser?.role === 'admin' || String(currentUser?.id) === String(barberId);
+    if (!staffAllowed || !mockStaff.some(person => String(person.id) === String(barberId))) return;
+    const track = event.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const slotIndex = Math.max(0, Math.floor((event.clientY - rect.top) / 24));
+    const start = 8 * 60 + slotIndex * 15;
+    const duration = getBookingDurationMinutes(booking);
+    const end = start + duration;
+    if (start < 8 * 60 || end > 22 * 60) return showToast('Запись должна завершаться не позже 22:00', 'error');
+    const time = `${String(Math.floor(start / 60)).padStart(2,'0')}:${String(start % 60).padStart(2,'0')}`;
+    const overlaps = (a,b,c,d) => a < d && b > c;
+    const conflict = bookings.find(other => {
+        if (String(other.id) === String(booking.id) || other.date !== date || String(other.barberId) !== String(barberId) || !isBookingBlockingSchedule(other)) return false;
+        const otherStart = parseScheduleTimeMinutes(other.time);
+        return otherStart !== null && overlaps(start,end,otherStart,otherStart+getBookingDurationMinutes(other));
+    });
+    if (conflict) return showToast(`У мастера уже есть запись в ${conflict.time}`, 'error');
+    const block = timeBlocks.find(item => {
+        if (item.date !== date || String(item.barberId) !== String(barberId)) return false;
+        const blockStart = parseScheduleTimeMinutes(item.startTime);
+        const blockEnd = parseScheduleTimeMinutes(item.endTime);
+        return blockStart !== null && blockEnd !== null && overlaps(start,end,blockStart,blockEnd);
+    });
+    if (block) return showToast('Это время занято перерывом', 'error');
+    booking.date = date;
+    booking.barberId = String(barberId);
+    booking.time = time;
+    localStorage.setItem(appStorageKey('mensfire_admin_bookings'), JSON.stringify(bookings));
+    selectedScheduleDate = date;
+    renderSchedule();
+    showToast('Запись перенесена', 'success');
+}
 
 function openNewBookingFromSlot(event, barberId, date) {
     if (!requireAdminAction('Создавать записи может только Али')) return;
