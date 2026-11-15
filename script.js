@@ -1393,6 +1393,12 @@ function updateNewBookingSummary() {
 
 
 
+function isBookingBlockingSchedule(booking) {
+    // Старые записи используют статус active; новые статусы также должны
+    // занимать время мастера до завершения или отмены.
+    return ['active', 'pending', 'confirmed'].includes(booking?.status || 'active');
+}
+
 function saveNewBooking() {
     if (!requireAdminAction('Создавать и изменять записи может только Али')) return;
     const clientName = document.getElementById('newBookingClient').value.trim();
@@ -1432,7 +1438,7 @@ function saveNewBooking() {
     const bookingConflict = bookings.some(b => {
         if (String(b.id) === String(editingBookingId)) return false;
 
-        if (b.date !== date || b.barberId !== barberId || b.status !== 'active') {
+        if (b.date !== date || b.barberId !== barberId || !isBookingBlockingSchedule(b)) {
             return false;
         }
 
@@ -1540,7 +1546,7 @@ function addTimeBlock() {
     const activeBookings = bookings.filter(b =>
         b.date === date &&
         b.barberId === barberId &&
-        b.status === 'active'
+        isBookingBlockingSchedule(b)
     );
 
     const conflict = activeBookings.find(b => {
