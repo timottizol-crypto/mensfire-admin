@@ -5072,3 +5072,17 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
     #scheduleList .hb-info { display:flex; flex-direction:column; gap:4px; }
     #scheduleList .hb-services { line-height:1.4; }
 }
+
+/* Finance management detail */
+.finance-kpi-comparison { grid-column: span 2; }
+.finance-team-row-detailed { align-items:center; }
+.finance-team-share-track,.finance-service-track,.finance-expense-track { height:5px; border-radius:99px; overflow:hidden; background:rgba(255,255,255,.07); margin-top:7px; width:100%; }
+.finance-team-share-track i,.finance-service-track i,.finance-expense-track i { display:block; height:100%; border-radius:inherit; background:var(--gold); }
+.finance-service-row-detailed { display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.finance-service-copy { min-width:0; display:flex; flex-direction:column; gap:3px; }
+.finance-service-copy span,.finance-expense-breakdown-row span { color:var(--text-muted); font-size:11px; }
+.finance-breakdown-heading { margin:16px 0 10px; font-size:12px; font-weight:700; color:var(--text-muted); }
+.finance-expense-breakdown-row { padding:7px 0; }
+.finance-expense-breakdown-row>div:first-child { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; }
+.finance-expense-track i { background:linear-gradient(90deg,#b68d3b,var(--gold)); }
+@media(max-width:600px) { .finance-kpi-comparison { grid-column:span 1; } }
