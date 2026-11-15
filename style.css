@@ -5031,3 +5031,10 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
     #viewSchedule #scheduleList { height:auto!important; max-height:none!important; overflow:visible!important; }
     #viewSchedule .schedule-overview-grid { margin-bottom:12px; }
 }
+
+/* Team management refinements */
+.team-pin { letter-spacing:.15px; opacity:.72; }
+.team-member-card .team-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.team-member-card .team-action-btn { min-height:34px; padding:7px 10px; }
+.team-member-card .team-action-btn.delete { border-color:rgba(255,90,90,.2); }
+#staffEditModal .modal-content { max-width:420px; }
