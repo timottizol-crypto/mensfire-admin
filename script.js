@@ -961,7 +961,7 @@ function renderDesktopSchedule() {
                             onclick="selectCalendarDate('${dateKey}')">
                             <strong>${date.getDate()}</strong>
                             <span class="desktop-month-count">${count ? (currentScheduleTab === 'bookings' ? count + ' запис.' : count + ' пер.') : '—'}</span>
-                            <span class="desktop-month-preview">${preview.map(item => currentScheduleTab === 'bookings' ? `${item.time} · ${item.clientName}` : `${item.startTime}–${item.endTime} · перерыв`).join('<br>')}</span>
+                            <span class="desktop-month-preview">${preview.map(item => currentScheduleTab === 'bookings' ? `${escapeBookingHtml(item.time)} · ${escapeBookingHtml(item.clientName)}` : `${escapeBookingHtml(item.startTime)}–${escapeBookingHtml(item.endTime)} · перерыв`).join('<br>')}</span>
                             ${count > 3 ? `<small>ещё ${count - 3}</small>` : ''}
                         </button>`;
                 }).join('')}
