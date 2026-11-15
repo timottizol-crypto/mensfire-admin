@@ -2659,11 +2659,11 @@ function saveNewBooking() {
     if (normalizedClientPhone.length >= 7) {
         const profileKey = 'phone:' + normalizedClientPhone;
         const previousProfile = clientProfiles[profileKey] || {};
-        clientProfiles[profileKey] = {
-            ...previousProfile,
-            clientName,
-            barberId,
-            phone: clientPhone
+        const updatedProfile = { ...previousProfile, clientName, barberId, phone: clientPhone };
+        clientProfiles[profileKey] = updatedProfile;
+        clientProfiles[JSON.stringify([clientName, barberId])] = {
+            ...(clientProfiles[JSON.stringify([clientName, barberId])] || {}),
+            ...updatedProfile
         };
         localStorage.setItem(appStorageKey('mensfire_client_profiles'), JSON.stringify(clientProfiles));
     }
