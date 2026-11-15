@@ -5441,3 +5441,42 @@ html.light-theme .clients-chart-gridline { stroke:rgba(0,0,0,.10); }
 .desktop-booking-card .booking-card-badges{gap:3px;margin:3px 0}
 .desktop-booking-card .booking-card-badges i{font-size:8px;padding:2px 5px}
 @media(max-width:520px){.booking-card-badges i{font-size:8px}.home-booking-item .booking-card-badges{margin:5px 0 6px}}
+
+
+/* Keep finance date navigation above every report block on all breakpoints. */
+#viewFinance .finance-date-navigation {
+    display: block !important;
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    clear: both;
+    margin: 0 0 16px;
+}
+#viewFinance .finance-date-navigation .finance-period-heading {
+    margin: 0 0 8px;
+}
+#viewFinance #financeDateSelector {
+    display: flex !important;
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    min-height: 76px;
+    margin: 0 !important;
+    padding: 5px 2px 11px !important;
+    overflow-x: auto !important;
+    overflow-y: visible;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+}
+#viewFinance #financeDateSelector .date-selector-item {
+    flex: 0 0 62px !important;
+    min-width: 62px !important;
+}
+@media (max-width: 767px) {
+    #viewFinance .finance-date-navigation { margin-bottom: 14px; }
+    #viewFinance #financeDateSelector .date-selector-item {
+        flex: 0 0 54px !important;
+        min-width: 54px !important;
+    }
+}
