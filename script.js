@@ -30,7 +30,21 @@ let editingBlockId = null;
 let confirmCallback = null;
 let staffToResetPin = null;
 
-let currentUser = JSON.parse(localStorage.getItem('mensfire_admin_user')) || null;
+let currentUser = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mensfire_admin_user') || 'null');
+        return saved && typeof saved === 'object' ? {
+            id: saved.id,
+            name: saved.name,
+            role: saved.role,
+            type: saved.type
+        } : null;
+    } catch (error) {
+        console.error('Не удалось прочитать текущую сессию:', error);
+        localStorage.removeItem('mensfire_admin_user');
+        return null;
+    }
+})();
 
 function isAdminUser() {
     return Boolean(currentUser && currentUser.role === 'admin');
@@ -93,7 +107,8 @@ function handleLogin() {
     const user = mockStaff.find(s => s.pin === pin);
 
     if (user) {
-        currentUser = user;
+        // Не сохраняем PIN в браузерной сессии.
+        currentUser = { id: user.id, name: user.name, role: user.role, type: user.type };
         localStorage.setItem('mensfire_admin_user', JSON.stringify(currentUser));
         document.getElementById('loginPin').value = '';
         
@@ -598,7 +613,29 @@ function handleSwipe(startX, startY, endX, endY) {
    ========================================= */
 
 // Подгружаем обновленный список мастеров из localStorage (если добавляли новых)
-mockStaff = JSON.parse(localStorage.getItem('mensfire_admin_staff')) || mockStaff;
+try {
+    const savedStaff = JSON.parse(localStorage.getItem('mensfire_admin_staff') || 'null');
+    if (Array.isArray(savedStaff)) mockStaff = savedStaff;
+} catch (error) {
+    console.error('Не удалось прочитать список мастеров:', error);
+}
+
+// Проверяем сохранённую сессию по актуальному списку мастеров и не храним PIN.
+if (currentUser) {
+    const sessionStaff = mockStaff.find(staff => staff.id === currentUser.id);
+    if (sessionStaff) {
+        currentUser = {
+            id: sessionStaff.id,
+            name: sessionStaff.name,
+            role: sessionStaff.role,
+            type: sessionStaff.type
+        };
+        localStorage.setItem('mensfire_admin_user', JSON.stringify(currentUser));
+    } else {
+        currentUser = null;
+        localStorage.removeItem('mensfire_admin_user');
+    }
+}
 
 // Основные данные расписания. Без этой инициализации календарь обращается
 // к неопределённой переменной bookings и полностью прекращает отрисовку.
@@ -2509,8 +2546,7 @@ function changePassword() {
     const staff = mockStaff.find(s => s.id === currentUser.id);
     if (staff) {
         staff.pin = newPin;
-        currentUser.pin = newPin;
-        localStorage.setItem('mensfire_admin_user', JSON.stringify(currentUser));
+        // Сессия не содержит PIN; сохраняем только обновлённые данные мастеров.
         localStorage.setItem('mensfire_admin_staff', JSON.stringify(mockStaff));
         closeModal('passwordModal');
         showToast('Пароль успешно изменен', 'success');
