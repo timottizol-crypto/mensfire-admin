@@ -509,6 +509,10 @@
             <div id="clientDetailsMetrics" style="display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--text-muted); margin:0 0 12px;"></div>
 
             <div class="form-group">
+                <label for="clientDetailsPreferences">Предпочтения клиента</label>
+                <input type="text" id="clientDetailsPreferences" placeholder="Например: фейд, горячее полотенце, без укладки">
+            </div>
+            <div class="form-group">
                 <label for="clientDetailsNotes">Заметки о клиенте</label>
                 <textarea
                     id="clientDetailsNotes"
@@ -517,12 +521,10 @@
                     style="width: 100%; resize: vertical;"></textarea>
             </div>
 
-            <button
-                type="button"
-                class="action-modal-btn action-btn-primary"
-                onclick="saveClientProfile()">
-                Сохранить данные клиента
-            </button>
+            <div class="client-profile-actions">
+                <button type="button" class="action-modal-btn action-btn-primary" onclick="createBookingForClient()">＋ Новая запись</button>
+                <button type="button" class="action-modal-btn client-profile-save" onclick="saveClientProfile()">Сохранить профиль</button>
+            </div>
             
             <div style="font-size: 14px; font-weight: 800; color: var(--gold); margin-bottom: 10px; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">История визитов</div>
             
