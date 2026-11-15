@@ -2157,6 +2157,7 @@ function renderCalendar() {
                 const target = document.getElementById(calendarTargetInputId);
                 if (target) target.value = thisDateStr;
                 calendarTargetInputId = null;
+                if (target?.id === 'newBookingDate') renderAvailableBookingSlots();
             } else {
                 const display = document.getElementById('customDateDisplay');
                 if (display) display.innerText = selectedBlockDate;
@@ -2396,6 +2397,8 @@ function updateNewBookingSummary() {
     document.getElementById('newBookingPrice').textContent =
         `${price.toLocaleString('ru-RU')} ₽`;
 
+    renderAvailableBookingSlots();
+
     // Ограничиваем последнее допустимое время начала так, чтобы все услуги
     // завершались до закрытия расписания в 22:00.
     const timeInput = document.getElementById('newBookingTime');
@@ -2413,6 +2416,47 @@ function updateNewBookingSummary() {
 }
 
 
+
+function renderAvailableBookingSlots() {
+    const host=document.getElementById('availableSlotsList');
+    if(!host)return;
+    const barberId=document.getElementById('newBookingBarber')?.value;
+    const dateValue=document.getElementById('newBookingDate')?.value;
+    const container=document.getElementById('newBookingServicesList');
+    const timeInput=document.getElementById('newBookingTime');
+    if(!barberId||!dateValue||!container){host.innerHTML='<div class="available-slots-empty">Выберите мастера и дату</div>';return}
+    const catalog=(barberId==='b_al'?servicesData.top:servicesData.barber).filter(service=>service.active!==false);
+    const selectedIds=[...container.querySelectorAll('input:checked')].map(input=>input.value);
+    const duration=catalog.filter(service=>selectedIds.includes(String(service.id))).reduce((sum,service)=>sum+getServiceDurationMinutes(service),0);
+    if(!duration){host.innerHTML='<div class="available-slots-empty">Сначала выберите услуги</div>';return}
+    if(!parseReportDate(dateValue)){host.innerHTML='<div class="available-slots-empty">Выберите корректную дату</div>';return}
+    const overlaps=(a,b,c,d)=>a<d&&b>c;
+    const workDay=getBarberWorkDay(barberId,dateValue);
+    if(!workDay.enabled){host.innerHTML='<div class="available-slots-empty">У мастера выходной в этот день</div>';return}
+    const workStart=parseScheduleTimeMinutes(workDay.start),workEnd=parseScheduleTimeMinutes(workDay.end);
+    if(workStart===null||workEnd===null||workStart>=workEnd){host.innerHTML='<div class="available-slots-empty">Рабочий график не настроен корректно</div>';return}
+    const busyBookings=bookings.filter(booking=>booking.date===dateValue&&String(booking.barberId)===String(barberId)&&String(booking.id)!==String(editingBookingId)&&isBookingBlockingSchedule(booking)).map(booking=>{const start=parseScheduleTimeMinutes(booking.time);return start===null?null:{start,end:start+getBookingDurationMinutes(booking)}}).filter(Boolean);
+    const busyBlocks=timeBlocks.filter(block=>block.date===dateValue&&String(block.barberId)===String(barberId)).map(block=>({start:parseScheduleTimeMinutes(block.startTime),end:parseScheduleTimeMinutes(block.endTime)})).filter(block=>block.start!==null&&block.end!==null&&block.start<block.end);
+    const slots=[];
+    for(let start=Math.ceil(workStart/15)*15;start+duration<=workEnd;start+=15){
+        const end=start+duration;
+        if(busyBookings.some(item=>overlaps(start,end,item.start,item.end)))continue;
+        if(busyBlocks.some(item=>overlaps(start,end,item.start,item.end)))continue;
+        slots.push(start);
+    }
+    if(!slots.length){host.innerHTML='<div class="available-slots-empty">Свободных окон для выбранной длительности нет</div>';return}
+    host.innerHTML=slots.map(start=>{
+        const value=String(Math.floor(start/60)).padStart(2,'0')+':'+String(start%60).padStart(2,'0');
+        return "<button type='button' class='available-slot "+(timeInput?.value===value?'is-selected':'')+"' onclick='selectAvailableBookingSlot(\""+value+"\")'>"+value+"</button>";
+    }).join('');
+}
+function selectAvailableBookingSlot(value) {
+    const input=document.getElementById('newBookingTime');
+    if(!input)return;
+    input.value=value;
+    input.setCustomValidity('');
+    renderAvailableBookingSlots();
+}
 
 function parseScheduleTimeMinutes(value) {
     if (typeof value !== 'string' || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value)) return null;
