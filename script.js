@@ -34,18 +34,41 @@ let mockStaff = [
     { id: 'b_ism', name: 'Исмаил', role: 'barber', pin: '3333', type: 'barber' }
 ];
 
-const servicesData = {
+const defaultServicesData = {
     top: [
-        { id: 't1', title: 'Мужская стрижка', price: 1500, duration: 45, type: 'top' },
-        { id: 't4', title: 'Стрижка + борода', price: 2500, duration: 45, type: 'top' },
-        { id: 't3', title: 'Оформление бороды', price: 1200, duration: 45, type: 'top' }
+        { id: 't1', title: 'Мужская стрижка', price: 1500, duration: 45, type: 'top', active: true },
+        { id: 't4', title: 'Стрижка + борода', price: 2500, duration: 45, type: 'top', active: true },
+        { id: 't3', title: 'Оформление бороды', price: 1200, duration: 45, type: 'top', active: true }
     ],
     barber: [
-        { id: 'b1', title: 'Мужская стрижка', price: 1300, duration: 45, type: 'barber' },
-        { id: 'b2', title: 'Стрижка + борода', price: 2300, duration: 45, type: 'barber' },
-        { id: 'b6', title: 'Оформление бороды', price: 1000, duration: 45, type: 'barber' }
+        { id: 'b1', title: 'Мужская стрижка', price: 1300, duration: 45, type: 'barber', active: true },
+        { id: 'b2', title: 'Стрижка + борода', price: 2300, duration: 45, type: 'barber', active: true },
+        { id: 'b6', title: 'Оформление бороды', price: 1000, duration: 45, type: 'barber', active: true }
     ]
 };
+let servicesData = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_admin_services')) || 'null');
+        if (!saved || typeof saved !== 'object') return JSON.parse(JSON.stringify(defaultServicesData));
+        const normalize = (items, fallback, type) => (Array.isArray(items) ? items : fallback).map((item,index) => ({
+            id: String(item.id || 'svc_' + type + '_' + index),
+            title: String(item.title || 'Новая услуга'),
+            price: Math.max(0, Number(item.price) || 0),
+            duration: Math.max(5, Number(item.duration) || 45),
+            type,
+            active: item.active !== false
+        }));
+        return {
+            top: normalize(saved.top, defaultServicesData.top, 'top'),
+            barber: normalize(saved.barber, defaultServicesData.barber, 'barber')
+        };
+    } catch (error) {
+        console.error('Не удалось загрузить каталог услуг:', error);
+        return JSON.parse(JSON.stringify(defaultServicesData));
+    }
+})();
+let editingServiceId = null;
+let editingServiceType = 'top';
 
 let currentFinanceTab = 'expenses'; // По умолчанию Расходы
 let selectedBlockDate = "";
@@ -191,6 +214,65 @@ function logout() {
 }
 
 
+
+function persistServicesData() {
+    localStorage.setItem(appStorageKey('mensfire_admin_services'), JSON.stringify(servicesData));
+}
+function renderServices() {
+    if (!requireAdminAction('Управлять услугами может только Али')) return;
+    const container = document.getElementById('servicesCatalog');
+    if (!container) return;
+    const groups = [{type:'top',title:'Услуги Али',note:'Прайс главного мастера'},{type:'barber',title:'Услуги барберов',note:'Прайс команды'}];
+    const all = groups.flatMap(group => servicesData[group.type]);
+    const active = all.filter(item => item.active !== false);
+    const summary = document.getElementById('servicesOverview');
+    if (summary) summary.innerHTML = '<div class="service-overview-card"><span>Всего услуг</span><strong>' + all.length + '</strong></div><div class="service-overview-card"><span>Доступно для записи</span><strong>' + active.length + '</strong></div><div class="service-overview-card"><span>Средняя длительность</span><strong>' + Math.round(active.reduce((sum,item)=>sum+getServiceDurationMinutes(item),0)/Math.max(1,active.length)) + ' мин.</strong></div>';
+    container.innerHTML = groups.map(group => '<section class="service-group"><div class="service-group-heading"><div><h3>' + group.title + '</h3><p>' + group.note + '</p></div><button class="finance-text-action" onclick="openServiceEditor(\'' + group.type + '\')">＋ Добавить</button></div><div class="service-card-grid">' +
+        (servicesData[group.type].map(service => '<article class="service-card ' + (service.active === false ? 'is-inactive' : '') + '"><div class="service-card-top"><span class="service-status">' + (service.active === false ? 'Скрыта' : 'Активна') + '</span><span class="service-duration">' + getServiceDurationMinutes(service) + ' мин.</span></div><h4>' + escapeBookingHtml(service.title) + '</h4><strong class="service-price">' + Math.round(Number(service.price)||0).toLocaleString('ru-RU') + ' ₽</strong><div class="service-card-actions"><button type="button" onclick="openServiceEditor(\'' + group.type + '\',\'' + escapeBookingHtml(service.id) + '\')">Изменить</button><button type="button" onclick="toggleServiceActive(\'' + group.type + '\',\'' + escapeBookingHtml(service.id) + '\')">' + (service.active === false ? 'Вернуть' : 'Скрыть') + '</button></div></article>').join('') || '<div class="finance-empty">Пока нет услуг в этой категории</div>') + '</div></section>').join('');
+}
+function openServiceEditor(type, id = '') {
+    if (!requireAdminAction('Управлять услугами может только Али')) return;
+    editingServiceType = type === 'top' ? 'top' : 'barber';
+    editingServiceId = id || null;
+    const service = id ? servicesData[editingServiceType].find(item => String(item.id) === String(id)) : null;
+    document.getElementById('serviceEditorTitle').textContent = service ? 'Изменить услугу' : 'Новая услуга';
+    document.getElementById('serviceEditorName').value = service?.title || '';
+    document.getElementById('serviceEditorPrice').value = service ? service.price : '';
+    document.getElementById('serviceEditorDuration').value = service ? getServiceDurationMinutes(service) : 45;
+    document.getElementById('serviceEditorCategory').value = editingServiceType;
+    openModal('serviceEditorModal');
+}
+function saveService() {
+    if (!requireAdminAction('Управлять услугами может только Али')) return;
+    const title = document.getElementById('serviceEditorName').value.trim();
+    const price = Number(document.getElementById('serviceEditorPrice').value);
+    const duration = Number(document.getElementById('serviceEditorDuration').value);
+    const type = document.getElementById('serviceEditorCategory').value === 'top' ? 'top' : 'barber';
+    if (!title || !Number.isFinite(price) || price <= 0 || !Number.isInteger(duration) || duration < 5 || duration > 360) return showToast('Проверьте название, цену и длительность услуги', 'error');
+    const source = servicesData[editingServiceType];
+    const oldIndex = editingServiceId ? source.findIndex(item => String(item.id) === String(editingServiceId)) : -1;
+    let existing = oldIndex >= 0 ? source[oldIndex] : null;
+    if (existing && type !== editingServiceType) {
+        source.splice(oldIndex,1);
+        existing = null;
+    }
+    if (existing) Object.assign(existing,{title,price,duration,type});
+    else servicesData[type].push({id:'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),title,price,duration,type,active:true});
+    persistServicesData();
+    closeModal('serviceEditorModal');
+    renderServices();
+    showToast(editingServiceId ? 'Услуга обновлена' : 'Услуга добавлена','success');
+}
+function toggleServiceActive(type,id) {
+    if (!requireAdminAction('Управлять услугами может только Али')) return;
+    const service = servicesData[type]?.find(item => String(item.id) === String(id));
+    if (!service) return;
+    service.active = service.active === false;
+    persistServicesData();
+    renderServices();
+    showToast(service.active ? 'Услуга снова доступна для записи' : 'Услуга скрыта из новых записей','success');
+}
+
 function buildBottomNav() {
     const nav = document.getElementById('bottomNav');
     nav.innerHTML = '<div class="nav-bubble" id="navBubble"></div>';
@@ -201,6 +283,7 @@ function buildBottomNav() {
     const calendarIcon = '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>';
     const financeIcon = '<path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>';
     const teamIcon = '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>';
+    const servicesIcon = '<path d="M12 2 4 6v12l8 4 8-4V6l-8-4z"/>';
     const clientsIcon = '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>';
 
     if (currentUser.role === 'admin') {
@@ -208,6 +291,7 @@ function buildBottomNav() {
             { id: 'viewSchedule', title: 'Главная', icon: calendarIcon },
             { id: 'viewFinance', title: 'Финансы', icon: financeIcon },
             { id: 'viewTeam', title: 'Команда', icon: teamIcon },
+            { id: 'viewServices', title: 'Услуги', icon: servicesIcon },
             { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
             { id: 'viewProfile', title: 'Профиль', icon: clientsIcon }
         ];
@@ -351,6 +435,7 @@ function switchView(viewId, navElement) {
         'viewSchedule': 'Расписание',
         'viewFinance': 'Финансы',
         'viewTeam': 'Команда',
+        'viewServices': 'Услуги',
         'viewClients': 'Клиенты',
         'viewProfile': 'Профиль'
     };
@@ -1798,9 +1883,7 @@ function updateNewBookingServices() {
     const container = document.getElementById('newBookingServicesList');
     if (!barberId || !container) return;
 
-    const catalog = barberId === 'b_al'
-        ? servicesData.top
-        : servicesData.barber;
+    const catalog = (barberId === 'b_al' ? servicesData.top : servicesData.barber).filter(service => service.active !== false);
 
     container.innerHTML = catalog.map(service => `
         <label class="new-booking-service-option">
@@ -3018,6 +3101,7 @@ const MENSFIRE_BACKUP_KEYS = [
     'mensfire_admin_blocks',
     'mensfire_admin_expenses',
     'mensfire_admin_staff',
+    'mensfire_admin_services',
     'mensfire_client_profiles'
 ];
 
