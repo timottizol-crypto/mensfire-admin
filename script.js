@@ -2223,7 +2223,10 @@ function renderClients(tab = 'all') {
     list.innerHTML = clientArray.map(c => {
         const sortedVisits = c.visits.sort((a, b) => b.date.localeCompare(a.date));
         const lastVisit = sortedVisits[0];
-        
+        const profile = clientProfiles[JSON.stringify([c.name, c.barberId])] || {};
+        const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
+        const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
+
         // Если это Админ на вкладке "Все", показываем мастера
         let masterBadge = '';
         if (currentUser.role === 'admin' && currentClientsTab === 'all') {
@@ -2235,7 +2238,7 @@ function renderClients(tab = 'all') {
             <div class="client-card" onclick="showClientDetails('${c.name}', '${c.barberId}')">
                 <div class="client-avatar">${c.name.charAt(0).toUpperCase()}</div>
                 <div class="client-info">
-                    <div class="client-name">${c.name}</div>
+                    <div class="client-name">${c.name} <span class="client-tag-badge tag-${profile.tag || 'regular'}">${clientTag}</span></div>
                     <div class="client-meta">Визитов: <span class="gold-text">${c.visits.length}</span> · Потрачено: <span class="gold-text">${c.totalSpent} ₽</span></div>
                     <div class="client-meta">Последний: ${lastVisit.date} в ${lastVisit.time}</div>
                     ${masterBadge}
