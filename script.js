@@ -1466,6 +1466,7 @@ function openBookingPaymentEditor(id) {
     amountInput.max = String(balance);
     balanceLabel.textContent = 'К оплате осталось: ' + balance.toLocaleString('ru-RU') + ' ₽';
     methodInput.value = 'cash';
+    setBookingPaymentMethod('cash');
     openModal('bookingPaymentModal');
 }
 
