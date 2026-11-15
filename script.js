@@ -1935,12 +1935,12 @@ function renderFinance() {
         .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
     
     const expensesForDay = expenses.filter(e => e.date === targetDate);
-    const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + e.amount, 0);
+    const totalExpensesDay = expensesForDay.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
     const revenueForMonth = bookings
         .filter(b => b.status === 'completed')
-        .reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
-    const totalExpensesMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+        .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
+    const totalExpensesMonth = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
     document.getElementById('financeToday').innerText = `${revenueForDay} ₽`;
     document.getElementById('financeWeek').innerText = `${revenueForDay * 5} ₽`;
@@ -2078,6 +2078,7 @@ function addExpense() {
 
 // --- КОМАНДА (Только Админ) ---
 function renderTeam() {
+    if (!requireAdminAction('Просматривать команду и управлять PIN может только Али')) return;
     const listPC = document.getElementById('teamListPC');
     const listMobile = document.getElementById('teamList');
     
@@ -2216,7 +2217,7 @@ function showBarberStats(id) {
     const todayBookings = allCompleted.filter(b => b.date === todayStr);
 
     // Считаем суммы
-    const monthRevenue = monthBookings.reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+    const monthRevenue = monthBookings.reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
     const todayRevenue = todayBookings.reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
     
     const monthSalary = Math.round(monthRevenue * 0.4);
