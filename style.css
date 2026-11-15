@@ -4959,3 +4959,30 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
  .workspace-heading .home-cta-btn span { font-size:11px; }
  .clients-workspace { padding:14px; }
 }
+
+
+/* Appointment dashboard */
+.schedule-heading { margin-bottom:14px; }
+.schedule-heading .home-cta-btn { width:auto; min-width:140px; margin:0; }
+.schedule-overview-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+.schedule-overview-card { min-width:0; padding:14px; border:1px solid rgba(255,255,255,.075); border-radius:15px; background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.015)); display:flex; flex-direction:column; gap:6px; }
+.schedule-overview-card span { color:var(--text-muted); font-size:10px; }
+.schedule-overview-card strong { font-size:clamp(18px,2.5vw,24px); overflow-wrap:anywhere; }
+.schedule-overview-card small { color:var(--text-muted); font-size:9px; }
+.schedule-main-card { padding:18px; }
+.schedule-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.schedule-toolbar>div:first-child { display:flex; flex-direction:column; gap:4px; }
+.schedule-toolbar>div:first-child strong { font-size:15px; }
+.schedule-toolbar>div:first-child span { color:var(--gold); font-size:11px; }
+.schedule-tabs { margin:0!important; }
+.schedule-block-btn { margin-top:14px!important; }
+@media(max-width:700px) {
+ .schedule-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .schedule-overview-card { padding:11px; }
+ .schedule-main-card { padding:13px; }
+ .schedule-toolbar { align-items:flex-start; flex-direction:column; }
+ .schedule-tabs { width:100%; }
+ .schedule-tabs .tab-btn { flex:1; }
+ .schedule-heading .home-cta-btn { min-width:0; padding:9px 10px; }
+ .schedule-heading .home-cta-btn span { font-size:11px; }
+}
