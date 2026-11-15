@@ -2281,6 +2281,7 @@ function selectTimePickerValue(value) {
     }
     input.value = value;
     input.dispatchEvent(new Event('change', { bubbles: true }));
+    if (activeTimePickerInputId === 'newBookingTime') renderAvailableBookingSlots();
     closeModal('timePickerModal');
 }
 
