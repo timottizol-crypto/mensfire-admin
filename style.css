@@ -3963,3 +3963,138 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         overflow-wrap: anywhere;
     }
 }
+
+/* =========================================
+   CRM + FINANCE LAYOUT POLISH
+   ========================================= */
+#viewClients #clientsList {
+    min-width: 0;
+}
+
+#viewClients .client-card {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+}
+
+#viewClients .client-avatar {
+    flex: 0 0 44px;
+}
+
+#viewClients .client-info {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#viewClients .client-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+#viewClients .client-tag-badge {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+#viewClients .client-meta {
+    display: block;
+    max-width: 100%;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+#viewClients .client-meta + .client-meta {
+    margin-top: 3px;
+}
+
+#viewClients .client-meta[style*="color: var(--gold)"] {
+    margin-top: 5px;
+}
+
+#expensesList {
+    min-width: 0;
+    overscroll-behavior: contain;
+}
+
+#expensesList > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    min-width: 0;
+    line-height: 1.4;
+}
+
+#expensesList > div > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#expensesList > div > span:last-child {
+    white-space: nowrap;
+    text-align: right;
+}
+
+#analyticsHistoryList > div,
+#analyticsTopServicesList > div {
+    min-width: 0;
+    gap: 12px;
+}
+
+#analyticsHistoryList > div > span:first-child,
+#analyticsTopServicesList > div > div:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+    #viewClients .client-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    #viewClients .client-avatar {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+    #viewClients .client-name {
+        font-size: 13px;
+    }
+
+    #viewClients .client-meta {
+        font-size: 11px;
+    }
+
+    #expensesList > div {
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 768px) {
+    #viewClients #clientsList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+        align-content: start;
+        gap: 12px;
+    }
+
+    #viewClients .client-card {
+        margin: 0;
+        height: 100%;
+    }
+}
