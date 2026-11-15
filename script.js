@@ -3167,7 +3167,7 @@ function renderFinance() {
         <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Получено за день' : 'Получено за период'}</span><strong>${fmt(financePeriodMode === 'day' ? dayRevenue : monthRevenue)}</strong><small>${financePeriodMode === 'day' ? dayCompleted.length + ' завершённых визитов' : periodLabel}</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'Чистый результат дня' : 'Чистый результат периода'}</span><strong class="${(financePeriodMode === 'day' ? dayProfit : monthProfit) < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(financePeriodMode === 'day' ? dayProfit : monthProfit)}</strong><small>После расходов</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Ожидает оплаты</span><strong>${fmt(unpaidBalance)}</strong><small>Баланс по активным записям</small></div>
-        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt((financePeriodMode === 'day' ? dayCompleted : periodCompleted).length ? (financePeriodMode === 'day' ? dayCompleted : periodCompleted).reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / (financePeriodMode === 'day' ? dayCompleted : periodCompleted).length : 0)}</strong><small>По завершённым визитам</small></div>
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt((financePeriodMode === 'day' ? dayCompleted : periodCompleted).length ? (financePeriodMode === 'day' ? dayCompleted : periodCompleted).reduce((sum,b) => sum + (Array.isArray(b.services) ? b.services : []).reduce((n,x) => n + getSafeServiceAmount(x),0),0) / (financePeriodMode === 'day' ? dayCompleted : periodCompleted).length : 0)}</strong><small>По завершённым визитам</small></div>
         <div class="finance-kpi-card finance-kpi-comparison"><span class="finance-kpi-label">${financePeriodMode === 'day' ? 'К прошлому дню' : 'Выбранный период'}</span><strong>${periodLabel}</strong><small>${financePeriodMode === 'day' ? 'Сравнение с предыдущим днём' : 'Интервал для всех расчётов ниже'}</small></div>`;
 
     const chart = document.getElementById('financeRevenueChart');
@@ -3213,18 +3213,31 @@ function renderFinance() {
     const teamStats = document.getElementById('financeTeamStats');
     if (teamStats) {
         const staff = Array.isArray(mockStaff) ? mockStaff : [];
-        const rows = staff.map(person => {
-            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, aggregationStart, aggregationEnd));
-            const paid = own.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
-            const visits = own.filter(item => item.status === 'completed').length;
-            return {name:person.name,paid,visits};
-        }).sort((a,b) => b.paid-a.paid);
+        const teamRows = new Map(staff.map(person => [String(person.id), {
+            name: person.name || 'Мастер',
+            paid: 0,
+            visits: 0
+        }]));
+        bookings.filter(item => inRange(item.date, aggregationStart, aggregationEnd)).forEach(item => {
+            const id = item.barberId == null || item.barberId === '' ? '__unassigned__' : String(item.barberId);
+            if (!teamRows.has(id)) {
+                teamRows.set(id, {
+                    name: id === '__unassigned__' ? 'Без мастера' : 'Мастер из старых записей',
+                    paid: 0,
+                    visits: 0
+                });
+            }
+            const row = teamRows.get(id);
+            row.paid += getBookingCollectedAmount(item);
+            if (item.status === 'completed') row.visits += 1;
+        });
+        const rows = Array.from(teamRows.values()).sort((a,b) => b.paid-a.paid);
         const teamTotal = rows.reduce((sum,person) => sum + person.paid,0);
         teamStats.innerHTML = rows.length ? rows.map(person => {
             const share = teamTotal ? person.paid / teamTotal * 100 : 0;
             return `
             <div class="finance-team-row finance-team-row-detailed"><div class="finance-team-avatar">${escapeBookingHtml(String(person.name || '?').slice(0,1).toUpperCase())}</div><div class="finance-team-copy"><strong>${escapeBookingHtml(person.name)}</strong><span>${person.visits} визитов · ${share.toFixed(0)}% поступлений</span><div class="finance-team-share-track"><i style="width:${share}%"></i></div></div><strong>${fmt(person.paid)}</strong></div>`;
-        }).join('') : '<div class="finance-empty">Добавьте мастеров, чтобы увидеть статистику</div>';
+        }).join('') : '<div class="finance-empty">Нет данных за выбранный период</div>';
     }
 
     const analyticsBookings = bookings.filter(item => inRange(item.date, periodStart, periodEnd) && item.status !== 'cancelled');
@@ -3232,7 +3245,7 @@ function renderFinance() {
     if (analyticsHeader) analyticsHeader.innerHTML = `<div><strong>${periodLabel}</strong><span class="finance-muted">Сводка по записям за период</span></div><strong>${analyticsBookings.length} записей</strong>`;
     const analyticsList = document.getElementById('analyticsHistoryList');
     if (analyticsList) analyticsList.innerHTML = analyticsBookings.length ? analyticsBookings.map(item => {
-        const total = (item.services || []).reduce((sum,service) => sum + Number(service.price || 0),0);
+        const total = (Array.isArray(item.services) ? item.services : []).reduce((sum,service) => sum + getSafeServiceAmount(service),0);
         const state = getBookingPaymentState(item,total);
         const methodKey = ['cash','card','transfer','online','mixed'].includes(state.method) ? state.method : 'other';
         const paymentStatusClass = state.status === 'paid' ? 'is-paid' : state.status === 'partial' ? 'is-partial' : 'is-unpaid';
