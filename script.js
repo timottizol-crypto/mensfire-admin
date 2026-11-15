@@ -1118,26 +1118,66 @@ function renderDesktopSchedule() {
         }
 
         if (currentScheduleTab === 'bookings') {
-            barberBookings.forEach(booking => {
-                const top = (toMinutes(booking.time) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
-                if (top < 0 || top >= totalHeight) return;
+            // Раскладываем пересекающиеся записи по соседним дорожкам,
+            // чтобы старые/импортированные конфликты не скрывали карточки.
+            const layoutItems = barberBookings.map(booking => {
+                const match = /^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(String(booking.time || ''));
+                if (!match) return null;
+                const startMinutes = toMinutes(booking.time);
                 const duration = getBookingDurationMinutes(booking);
-                const height = Math.min(duration / 15 * SLOT_HEIGHT, totalHeight - top);
-                const serviceNames = (Array.isArray(booking.services) ? booking.services : []).map(service => escapeBookingHtml(service?.title || 'Услуга')).join(', ');
-                const bookingTotal = (Array.isArray(booking.services) ? booking.services : []).reduce((sum, service) => sum + Number(service?.price || 0), 0);
-                const payState = getBookingPaymentState(booking, bookingTotal);
-                const bookingStatus = ['active', 'pending', 'confirmed', 'completed', 'cancelled'].includes(booking.status) ? booking.status : 'active';
-                const bookingStatusLabel = bookingStatus === 'completed' ? 'Завершена' : bookingStatus === 'cancelled' ? 'Отменена' : bookingStatus === 'confirmed' ? 'Подтверждена' : bookingStatus === 'pending' ? 'Ожидает' : 'Активная';
-                html += `
-                    <button type="button" class="desktop-booking-card ${bookingStatus} payment-border-${payState.status}"
-                        style="top:${top}px;height:${height}px"
-                        onclick="event.stopPropagation(); openActionModal('${escapeBookingHtml(String(booking.id))}')">
-                        <strong class="booking-card-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</strong>
-                        <span class="booking-card-service">${serviceNames || 'Услуга не указана'}</span>
-                        <small class="booking-card-meta"><b>${escapeBookingHtml(booking.time || '—')}</b> · ${duration} мин. · ${bookingStatusLabel}</small><span class="calendar-payment-label payment-${payState.status}">${payState.label} · ${payState.paid.toLocaleString('ru-RU')} ₽</span>
-                    </button>`;
+                const endMinutes = startMinutes + duration;
+                const top = (startMinutes - START_HOUR * 60) / 15 * SLOT_HEIGHT;
+                if (top < 0 || top >= totalHeight || endMinutes <= startMinutes) return null;
+                return { booking, startMinutes, endMinutes, top, duration };
+            }).filter(Boolean).sort((a, b) =>
+                a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes
+            );
+
+            let cluster = [];
+            let clusterEnd = -1;
+            const renderCluster = items => {
+                if (!items.length) return;
+                const laneEnds = [];
+                items.forEach(item => {
+                    let lane = laneEnds.findIndex(laneEnd => laneEnd <= item.startMinutes);
+                    if (lane < 0) lane = laneEnds.length;
+                    laneEnds[lane] = item.endMinutes;
+                    item.lane = lane;
+                });
+                const laneCount = Math.max(laneEnds.length, 1);
+
+                items.forEach(item => {
+                    const booking = item.booking;
+                    const height = Math.min(item.duration / 15 * SLOT_HEIGHT, totalHeight - item.top);
+                    const serviceNames = (Array.isArray(booking.services) ? booking.services : []).map(service => escapeBookingHtml(service?.title || 'Услуга')).join(', ');
+                    const bookingTotal = (Array.isArray(booking.services) ? booking.services : []).reduce((sum, service) => sum + Number(service?.price || 0), 0);
+                    const payState = getBookingPaymentState(booking, bookingTotal);
+                    const bookingStatus = ['active', 'pending', 'confirmed', 'completed', 'cancelled'].includes(booking.status) ? booking.status : 'active';
+                    const bookingStatusLabel = bookingStatus === 'completed' ? 'Завершена' : bookingStatus === 'cancelled' ? 'Отменена' : bookingStatus === 'confirmed' ? 'Подтверждена' : bookingStatus === 'pending' ? 'Ожидает' : 'Активная';
+                    const laneWidth = 100 / laneCount;
+                    const left = item.lane * laneWidth;
+                    html += `
+                        <button type="button" class="desktop-booking-card ${bookingStatus} payment-border-${payState.status}"
+                            style="top:${item.top}px;height:${height}px;left:calc(${left}% + 3px);width:calc(${laneWidth}% - 6px);right:auto"
+                            onclick="event.stopPropagation(); openActionModal('${escapeBookingHtml(String(booking.id))}')">
+                            <strong class="booking-card-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</strong>
+                            <span class="booking-card-service">${serviceNames || 'Услуга не указана'}</span>
+                            <small class="booking-card-meta"><b>${escapeBookingHtml(booking.time || '—')}</b> · ${item.duration} мин. · ${bookingStatusLabel}</small><span class="calendar-payment-label payment-${payState.status}">${payState.label} · ${payState.paid.toLocaleString('ru-RU')} ₽</span>
+                        </button>`;
+                });
+            };
+
+            layoutItems.forEach(item => {
+                if (cluster.length && item.startMinutes >= clusterEnd) {
+                    renderCluster(cluster);
+                    cluster = [];
+                    clusterEnd = -1;
+                }
+                cluster.push(item);
+                clusterEnd = Math.max(clusterEnd, item.endMinutes);
             });
-        } else {
+            renderCluster(cluster);
+else {
             barberBlocks.forEach(block => {
                 const top = (toMinutes(block.startTime) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
                 const end = toMinutes(block.endTime);
