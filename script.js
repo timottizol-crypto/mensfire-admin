@@ -1349,7 +1349,7 @@ function openActionModal(id) {
             <div class="booking-payment-meta">Способ: ${escapeBookingHtml(payment.methodLabel)}</div>
             ${payment.transactions.length ? '<div class="booking-payment-history">' + payment.transactions.map(item => '<div class="booking-payment-transaction"><span>' + escapeBookingHtml(item.method ? (PAYMENT_METHOD_LABELS[item.method] || item.method) : 'Ранее внесено') + '</span><strong>' + Number(item.amount || 0).toLocaleString('ru-RU') + ' ₽</strong></div>').join('') + '</div>' : ''}
 
-            ${canManage ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Изменить оплату</button>' : ''}
+            ${currentUser ? '<button type="button" class="booking-payment-edit" onclick="openBookingPaymentEditor(\'' + escapeBookingHtml(String(booking.id)) + '\')">Добавить оплату</button>' : ''}
         </div>
         <div class="booking-detail-row">
             <span>Длительность</span><strong>${duration} мин.</strong>
