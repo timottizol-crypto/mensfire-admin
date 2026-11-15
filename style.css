@@ -5102,3 +5102,37 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .finance-date-strip .date-selector-item.is-today:not(.selected) { border-color:rgba(212,175,55,.5); }
 .finance-date-strip .date-selector-item:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 @media(max-width:600px) { .finance-date-strip .date-selector-item { min-width:54px; padding:9px 6px; } }
+
+
+/* Finance analytics: payment channel and collection state, visually aligned with MENSFIRE. */
+.finance-analytics-operation { align-items:center; }
+.finance-analytics-operation .finance-operation-copy { gap:5px; }
+.finance-payment-status { font-weight:750; }
+.finance-payment-status.is-paid { color:#55c78a; }
+.finance-payment-status.is-partial { color:#e7bd55; }
+.finance-payment-status.is-unpaid { color:#ff8585; }
+.finance-payment-method {
+    display:inline-flex;
+    align-items:center;
+    align-self:flex-start;
+    gap:6px;
+    width:max-content;
+    max-width:100%;
+    padding:4px 8px;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:999px;
+    font-size:9px!important;
+    font-weight:750;
+    line-height:1.2;
+}
+.finance-payment-method i { width:6px; height:6px; flex:0 0 6px; border-radius:50%; background:currentColor; }
+.finance-payment-method--cash { color:#55c78a; background:rgba(85,199,138,.09); border-color:rgba(85,199,138,.2); }
+.finance-payment-method--card { color:#77b8ff; background:rgba(91,160,255,.09); border-color:rgba(91,160,255,.2); }
+.finance-payment-method--transfer { color:#c49aff; background:rgba(169,120,255,.09); border-color:rgba(169,120,255,.2); }
+.finance-payment-method--online { color:var(--gold); background:rgba(212,175,55,.09); border-color:rgba(212,175,55,.22); }
+.finance-payment-method--mixed { color:#aeb8c7; background:rgba(174,184,199,.09); border-color:rgba(174,184,199,.2); }
+.finance-payment-method--other { color:var(--text-muted); background:rgba(255,255,255,.04); }
+@media(max-width:480px) {
+    .finance-analytics-operation { align-items:flex-start; gap:8px; }
+    .finance-analytics-operation > strong { white-space:nowrap; font-size:11px; }
+}
