@@ -497,3 +497,41 @@ html.light-theme .tab-btn {
 html.light-theme .calendar-today-btn,
 html.light-theme .tab-btn.active { color: #805F0C !important; }
 html.light-theme .desktop-calendar-date-controls > span { color: #555555 !important; }
+
+
+/* Calendar class names used by the live renderer */
+html.light-theme #desktopSchedule,
+html.light-theme #desktopSchedule .desktop-calendar-scroll,
+html.light-theme #desktopSchedule .desktop-calendar-grid,
+html.light-theme #desktopSchedule .desktop-time-column,
+html.light-theme #desktopSchedule .desktop-staff-column,
+html.light-theme #desktopSchedule .desktop-time-track,
+html.light-theme #desktopSchedule .desktop-staff-track {
+    background-color: #FFFFFF !important;
+    color: #171717 !important;
+}
+html.light-theme #desktopSchedule .desktop-time-column,
+html.light-theme #desktopSchedule .desktop-staff-column,
+html.light-theme #desktopSchedule .desktop-time-track,
+html.light-theme #desktopSchedule .desktop-staff-track {
+    border-color: rgba(0,0,0,.14) !important;
+}
+html.light-theme #desktopSchedule .desktop-time-label,
+html.light-theme #desktopSchedule .desktop-staff-heading,
+html.light-theme #desktopSchedule .desktop-current-time {
+    color: #333333 !important;
+}
+html.light-theme #desktopSchedule .desktop-booking-card {
+    color: #171717 !important;
+}
+html.light-theme #desktopSchedule .desktop-booking-card .desktop-booking-client {
+    color: #171717 !important;
+}
+html.light-theme #desktopSchedule .desktop-booking-card .desktop-booking-service,
+html.light-theme #desktopSchedule .desktop-booking-card .desktop-booking-meta {
+    color: #4A4A4A !important;
+}
+html.light-theme #desktopSchedule .desktop-break-card {
+    color: #333333 !important;
+    background: #EEEEF0 !important;
+}
