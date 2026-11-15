@@ -2549,7 +2549,11 @@ function renderFinanceDateSelector() {
     if (label) {
         const today = new Date(); today.setHours(0,0,0,0);
         const sameDay = base.getTime() === today.getTime();
-        label.textContent = (sameDay ? 'Сегодня · ' : '') + base.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        label.textContent = financePeriodMode === 'day'
+            ? (sameDay ? 'Сегодня · ' : '') + base.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+            : financePeriodMode === 'month'
+                ? base.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})
+                : formatReportDate(parseReportDate(financeRangeStart) || base) + ' — ' + formatReportDate(parseReportDate(financeRangeEnd) || base);
     }
     const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
     for (let i = -7; i < 16; i++) {
@@ -2667,12 +2671,32 @@ function renderFinance() {
 
     const chart = document.getElementById('financeRevenueChart');
     if (chart) {
-        const days = Array.from({length: 7}, (_, index) => shift(selectedDate, index - 6));
-        const values = days.map(date => revenue(date, shift(date, 1)));
-        const max = Math.max(1, ...values);
-        chart.innerHTML = `<div class="finance-chart-bars">${days.map((date,index) => {
+        const spanDays = Math.round((periodEnd - periodStart) / 86400000);
+        const buckets = [];
+        if (financePeriodMode === 'day') {
+            for (let offset = -6; offset <= 0; offset++) {
+                const date = shift(selectedDate,offset);
+                buckets.push({start:date,end:shift(date,1),label:date.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')});
+            }
+        } else if (spanDays > 45) {
+            const cursor = new Date(periodStart.getFullYear(),periodStart.getMonth(),1);
+            while (cursor < periodEnd && buckets.length < 12) {
+                const start = new Date(cursor), end = new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+                buckets.push({start,end,label:start.toLocaleDateString('ru-RU',{month:'short',year:'2-digit'}).replace('.','')});
+                cursor.setMonth(cursor.getMonth()+1);
+            }
+        } else {
+            const step = spanDays > 21 ? 7 : 1;
+            for (let cursor = new Date(periodStart); cursor < periodEnd && buckets.length < 31; cursor = shift(cursor,step)) {
+                const end = new Date(Math.min(shift(cursor,step).getTime(),periodEnd.getTime()));
+                buckets.push({start:new Date(cursor),end,label:step===7?cursor.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.',''):cursor.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')});
+            }
+        }
+        const values = buckets.map(bucket=>revenue(bucket.start,bucket.end));
+        const max = Math.max(1,...values);
+        chart.innerHTML = `<div class="finance-chart-bars">${buckets.map((bucket,index) => {
             const height = Math.max(values[index] > 0 ? 5 : 2, values[index] / max * 100);
-            return `<div class="finance-chart-column"><strong>${values[index] ? fmt(values[index]) : '—'}</strong><div class="finance-chart-track"><i style="height:${height}%"></i></div><span>${date.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}).replace('.','')}</span></div>`;
+            return `<div class="finance-chart-column"><strong>${values[index] ? fmt(values[index]) : '—'}</strong><div class="finance-chart-track"><i style="height:${height}%"></i></div><span>${bucket.label}</span></div>`;
         }).join('')}</div>`;
     }
 
