@@ -76,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (splashGreeting) {
         if (currentUser) {
             // Если пользователь вошел, пишем "Добрый вечер, Али"
-            splashGreeting.innerHTML = `${greetingText}, <span>${currentUser.name}</span>`;
+            splashGreeting.innerHTML = `${greetingText}, <span>${escapeBookingHtml(currentUser.name)}</span>`;
         } else {
             // Если не вошел, пишем "Добро пожаловать"
             splashGreeting.innerHTML = `Добро пожаловать в <span>MENSFIRE</span>`;
@@ -348,7 +348,11 @@ function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${type==='error'?'⚠️':type==='success'?'✅':'ℹ️'}</span><span>${message}</span>`;
+    const icon = document.createElement('span');
+    icon.textContent = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+    const text = document.createElement('span');
+    text.textContent = String(message ?? '');
+    toast.append(icon, text);
     container.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = '0';
