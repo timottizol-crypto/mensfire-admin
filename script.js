@@ -1501,12 +1501,31 @@ function openEditBooking() {
         return showToast('Мастер не найден', 'error');
     }
 
+    const dateMatch = /^(\\d{2})\\.(\\d{2})\\.(\\d{4})$/.exec(String(booking.date || ''));
+    const bookingTime = parseScheduleTimeMinutes(booking.time);
+    if (!dateMatch || bookingTime === null) {
+        return showToast('У записи некорректные дата или время. Исправьте данные перед редактированием', 'error');
+    }
+    const [, day, month, year] = dateMatch;
+    const dateValue = `${year}-${month}-${day}`;
+    const parsedDate = new Date(dateValue + 'T00:00:00');
+    if (Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.getFullYear() !== Number(year) ||
+        parsedDate.getMonth() + 1 !== Number(month) ||
+        parsedDate.getDate() !== Number(day)) {
+        return showToast('У записи некорректная дата. Исправьте её перед редактированием', 'error');
+    }
+
     editingBookingId = booking.id;
 
     const barberSelect = document.getElementById('newBookingBarber');
+    if (!barberSelect) {
+        editingBookingId = null;
+        return showToast('Форма редактирования недоступна', 'error');
+    }
 
     barberSelect.innerHTML = availableStaff.map(s =>
-        `<option value="${s.id}">${s.name}</option>`
+        `<option value="${escapeBookingHtml(String(s.id))}">${escapeBookingHtml(s.name)}</option>`
     ).join('');
 
     if (!availableStaff.some(s => s.id === booking.barberId)) {
@@ -1517,9 +1536,7 @@ function openEditBooking() {
 
     document.getElementById('newBookingClient').value = booking.clientName;
 
-    const [day, month, year] = booking.date.split('.');
-    document.getElementById('newBookingDate').value =
-        `${year}-${month}-${day}`;
+    document.getElementById('newBookingDate').value = dateValue;
 
     document.getElementById('newBookingTime').value = booking.time;
 
@@ -1906,6 +1923,27 @@ function saveNewBooking() {
     }
 
     const wasEditing = Boolean(editingBookingId);
+    const existingBooking = wasEditing
+        ? bookings.find(b => String(b.id) === String(editingBookingId))
+        : null;
+
+    if (wasEditing && !existingBooking) {
+        return showToast('Запись не найдена', 'error');
+    }
+
+    const newTotal = selectedServices.reduce((sum, service) =>
+        sum + (Number(service.price) || 0), 0);
+    if (existingBooking) {
+        const previousTotal = (Array.isArray(existingBooking.services) ? existingBooking.services : [])
+            .reduce((sum, service) => sum + (Number(service.price) || 0), 0);
+        const alreadyPaid = getBookingPaymentState(existingBooking, previousTotal).paid;
+        if (newTotal < alreadyPaid) {
+            return showToast(
+                `Новая стоимость не может быть меньше уже внесённой суммы ${alreadyPaid.toLocaleString('ru-RU')} ₽`,
+                'error'
+            );
+        }
+    }
 
     const bookingData = {
         barberId,
@@ -1915,15 +1953,7 @@ function saveNewBooking() {
         services: selectedServices.map(s => ({ ...s }))
     };
 
-    if (editingBookingId) {
-        const existingBooking = bookings.find(
-            b => String(b.id) === String(editingBookingId)
-        );
-
-        if (!existingBooking) {
-            return showToast('Запись не найдена', 'error');
-        }
-
+    if (existingBooking) {
         Object.assign(existingBooking, bookingData);
     } else {
         bookings.push({
