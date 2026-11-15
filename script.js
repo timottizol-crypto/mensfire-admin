@@ -1098,7 +1098,6 @@ function renderSchedule() {
         const scheduleDate = selectedScheduleDate;
         const staffFilterHost = document.getElementById('scheduleBarberFilterMobile');
         if (staffFilterHost) staffFilterHost.innerHTML = renderScheduleBarberFilter(mockStaff).replace('schedule-barber-filter','schedule-barber-filter-mobile');
-        renderWaitlist();
         const visibleBookings = bookings.filter(item => item.date === scheduleDate &&
             item.status !== 'cancelled' &&
             (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)) &&
@@ -3816,6 +3815,7 @@ function renderClientsAnalytics(sourceBookings, clientGroups) {
 }
 function renderClients(tab = 'all') {
     currentClientsTab = tab;
+    renderWaitlist();
     const list = document.getElementById('clientsList');
     const tabsContainer = document.getElementById('clientsTabsContainer');
     const title = document.getElementById('clientsPageTitle');
