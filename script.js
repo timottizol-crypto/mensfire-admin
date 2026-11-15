@@ -1255,7 +1255,7 @@ function openEditBooking() {
     updateNewBookingSummary();
 
     document.querySelector('#newBookingModal h2').textContent =
-        'Редактирование записи';
+        'Перенос / изменение записи';
 
     document.querySelector('#newBookingModal .checkout-btn').textContent =
         'Сохранить изменения';
