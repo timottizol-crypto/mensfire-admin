@@ -5170,3 +5170,112 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 .payment-choice.is-selected { border-color:rgba(212,175,55,.7); background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.055)); color:var(--gold); box-shadow:inset 0 0 0 1px rgba(212,175,55,.08); }
 .payment-choice-icon { display:grid; place-items:center; width:30px; height:30px; flex:0 0 30px; border-radius:9px; background:rgba(212,175,55,.1); color:var(--gold); font-size:16px; }
 @media(max-width:380px) { .time-picker-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+
+/* MENSFIRE 2026 — refined dark glass interface */
+:root {
+    --glass-surface: rgba(24, 25, 29, .72);
+    --glass-surface-strong: rgba(29, 30, 35, .88);
+    --glass-border: rgba(255,255,255,.085);
+    --glass-highlight: rgba(255,255,255,.055);
+    --glass-shadow: 0 18px 48px rgba(0,0,0,.24);
+}
+html:not(.light-theme) body {
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(212,175,55,.095), transparent 34%),
+      radial-gradient(ellipse at 92% 18%, rgba(104,119,151,.10), transparent 30%),
+      linear-gradient(155deg,#090a0d 0%,#101116 52%,#090a0d 100%);
+}
+html:not(.light-theme) .view { background:transparent; }
+html:not(.light-theme) .glass-card,
+html:not(.light-theme) .login-card,
+html:not(.light-theme) .team-member-card,
+html:not(.light-theme) .finance-kpi-card,
+html:not(.light-theme) .team-overview-card,
+html:not(.light-theme) .client-overview-card,
+html:not(.light-theme) .schedule-overview-card,
+html:not(.light-theme) .service-overview-card,
+html:not(.light-theme) .profile-overview-card,
+html:not(.light-theme) .service-card,
+html:not(.light-theme) .clients-list-premium .client-card,
+html:not(.light-theme) .team-list-premium .team-member-card {
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)) !important;
+    border:1px solid var(--glass-border) !important;
+    box-shadow:var(--glass-shadow),inset 0 1px 0 rgba(255,255,255,.045);
+    -webkit-backdrop-filter:blur(22px) saturate(145%);
+    backdrop-filter:blur(22px) saturate(145%);
+}
+html:not(.light-theme) .header-pill,
+html:not(.light-theme) .bottom-nav {
+    background:rgba(22,23,28,.76) !important;
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 12px 36px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);
+    -webkit-backdrop-filter:blur(26px) saturate(160%);
+    backdrop-filter:blur(26px) saturate(160%);
+}
+html:not(.light-theme) .modal-content {
+    background:linear-gradient(145deg,rgba(34,35,41,.96),rgba(17,18,22,.96)) !important;
+    border:1px solid rgba(255,255,255,.11);
+    box-shadow:0 28px 90px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.07);
+    -webkit-backdrop-filter:blur(30px);
+    backdrop-filter:blur(30px);
+}
+html:not(.light-theme) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.light-theme) textarea,
+html:not(.light-theme) select:not(.visually-hidden-select) {
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:13px;
+    transition:border-color .2s,background .2s,box-shadow .2s;
+}
+html:not(.light-theme) input:focus,
+html:not(.light-theme) textarea:focus,
+html:not(.light-theme) select:focus {
+    border-color:rgba(212,175,55,.65);
+    background:rgba(255,255,255,.065);
+    box-shadow:0 0 0 4px rgba(212,175,55,.09);
+    outline:none;
+}
+html:not(.light-theme) .tab-btn,
+html:not(.light-theme) .client-segment-btn {
+    border:1px solid rgba(255,255,255,.075);
+    background:rgba(255,255,255,.035);
+    border-radius:999px;
+    transition:all .22s ease;
+}
+html:not(.light-theme) .tab-btn.active {
+    color:var(--gold);
+    border-color:rgba(212,175,55,.35);
+    background:linear-gradient(135deg,rgba(212,175,55,.17),rgba(212,175,55,.055));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+html:not(.light-theme) .home-cta-btn,
+html:not(.light-theme) .action-btn-primary,
+html:not(.light-theme) .checkout-btn,
+html:not(.light-theme) .login-btn {
+    border:1px solid rgba(255,224,145,.3);
+    background:linear-gradient(135deg,#d9b653,#a98229);
+    box-shadow:0 9px 26px rgba(177,137,43,.19),inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .2s,filter .2s,box-shadow .2s;
+}
+html:not(.light-theme) .home-cta-btn:active,
+html:not(.light-theme) .action-btn-primary:active,
+html:not(.light-theme) .checkout-btn:active,
+html:not(.light-theme) .login-btn:active { transform:scale(.975); }
+.booking-barber-choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(115px,1fr)); gap:9px; margin-top:8px; }
+.booking-barber-choice {
+    min-height:62px; padding:11px 13px; border-radius:15px;
+    border:1px solid rgba(255,255,255,.09); color:var(--text-main);
+    background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.02));
+    font:inherit; font-size:12px; font-weight:750; cursor:pointer;
+    transition:transform .2s,border-color .2s,background .2s,box-shadow .2s;
+}
+.booking-barber-choice:active { transform:scale(.97); }
+.booking-barber-choice.is-selected {
+    color:var(--gold); border-color:rgba(212,175,55,.55);
+    background:linear-gradient(145deg,rgba(212,175,55,.17),rgba(212,175,55,.055));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 24px rgba(0,0,0,.15);
+}
+@media(prefers-reduced-motion:reduce) {
+    html:not(.light-theme) *, .booking-barber-choice { transition:none!important; animation:none!important; }
+}
