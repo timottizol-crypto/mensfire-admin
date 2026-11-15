@@ -440,6 +440,10 @@
                 <label for="newBookingTime">Время начала</label>
                 <input id="newBookingTime" type="text" inputmode="none" readonly placeholder="Выберите время" onclick="openTimePicker('newBookingTime')">
             </div>
+            <div class="available-slots-panel">
+                <div class="available-slots-heading"><strong>Свободное время</strong><span>С учётом графика и занятости</span></div>
+                <div id="availableSlotsList" class="available-slots-list"><div class="available-slots-empty">Выберите услуги и дату</div></div>
+            </div>
 
             <button class="checkout-btn" onclick="saveNewBooking()">Создать запись</button>
             <button class="btn-cancel" onclick="closeModal('newBookingModal')">Отмена</button>
