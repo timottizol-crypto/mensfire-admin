@@ -109,7 +109,13 @@
 
         <!-- ЭКРАН РАСПИСАНИЯ (Общий) -->
         <div id="viewSchedule" class="view schedule-workspace">
-            <div class="workspace-heading schedule-heading"><div><span class="workspace-eyebrow">MENSFIRE APPOINTMENTS</span><h2>Расписание</h2><p>Управление записями, загрузкой и рабочим временем</p></div><button class="home-cta-btn" onclick="openNewBookingModal()"><div class="cta-text"><span>＋ Новая запись</span></div></button></div>
+            <div class="schedule-top-actions">
+                <div class="schedule-management-actions">
+                    <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
+                    <button class="home-cta-btn schedule-hours-btn" onclick="openWorkScheduleModal()"><div class="cta-text"><span>Рабочий график</span><small>Дни недели и часы каждого мастера</small></div></button>
+                </div>
+                <button type="button" class="home-cta-btn schedule-new-booking-btn" onclick="openNewBookingModal()"><span>＋ Новая запись</span></button>
+            </div>
             <div id="scheduleOverview" class="schedule-overview-grid"></div>
             <div class="glass-card home-bookings-card schedule-main-card">
                 <div class="schedule-toolbar"><div><strong id="scheduleGreeting">Записи</strong><span id="scheduleDateDisplay"></span></div>
@@ -119,23 +125,7 @@
                 <div class="date-selector" id="scheduleDateSelector"></div>
                 <div id="scheduleList" class="home-scroll-area" style="transition:opacity .3s ease;"><!-- Карточки записей генерируются через JS --></div>
             </div>
-            <div class="schedule-management-actions">
-                <button class="home-cta-btn schedule-block-btn" onclick="openBlockTimeModal()"><div class="cta-text"><span>Заблокировать время</span><small>Обед · Личные дела · Выходной</small></div></button>
-                <button class="home-cta-btn schedule-hours-btn" onclick="openWorkScheduleModal()"><div class="cta-text"><span>Рабочий график</span><small>Дни недели и часы каждого мастера</small></div></button>
-            </div>
-            <section class="glass-card schedule-waitlist" id="scheduleWaitlist">
-                <div class="schedule-waitlist-heading"><div><span class="workspace-eyebrow">CLIENT QUEUE</span><h3>Лист ожидания</h3><p>Клиенты, которым нужно предложить свободное окно</p></div><span class="waitlist-count" id="waitlistCount">0</span></div>
-                <div class="waitlist-form">
-                    <div class="form-group"><label for="waitlistClient">Имя клиента</label><input id="waitlistClient" type="text" placeholder="Например, Алексей"></div>
-                    <div class="form-group"><label for="waitlistPhone">Телефон</label><input id="waitlistPhone" type="tel" placeholder="+7 900 000-00-00"></div>
-                    <div class="form-group"><label for="waitlistDate">Желаемая дата</label><input id="waitlistDate" class="mensfire-picker-trigger" type="text" inputmode="none" readonly placeholder="Выбрать дату" onclick="openWaitlistDatePicker()"></div>
-                    <div class="form-group"><label for="waitlistTime">Желаемое время</label><input id="waitlistTime" type="text" inputmode="none" readonly placeholder="Любое время" onclick="openTimePicker('waitlistTime')"></div>
-                    <div class="form-group"><label for="waitlistBarber">Мастер</label><select id="waitlistBarber"></select></div>
-                    <div class="form-group"><label for="waitlistService">Услуга</label><select id="waitlistService"></select></div>
-                    <button type="button" class="checkout-btn" onclick="addWaitlistEntry()">＋ Добавить в ожидание</button>
-                </div>
-                <div class="waitlist-list" id="waitlistList"><div class="waitlist-empty">Пока нет клиентов в листе ожидания</div></div>
-            </section>
+  </section>
         </div>
 
         <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
@@ -212,6 +202,19 @@
                 <div id="clientsOverview" class="clients-overview-grid"></div>
                 <section id="clientsAnalytics" class="clients-analytics" aria-label="Аналитика клиентов"></section>
                 <div id="clientsTabsContainer"></div>
+            <section class="glass-card clients-waitlist" id="scheduleWaitlist">
+                <div class="schedule-waitlist-heading"><div><span class="workspace-eyebrow">CLIENT QUEUE</span><h3>Лист ожидания</h3><p>Клиенты, которым нужно предложить свободное окно</p></div><span class="waitlist-count" id="waitlistCount">0</span></div>
+                <div class="waitlist-form">
+                    <div class="form-group"><label for="waitlistClient">Имя клиента</label><input id="waitlistClient" type="text" placeholder="Например, Алексей"></div>
+                    <div class="form-group"><label for="waitlistPhone">Телефон</label><input id="waitlistPhone" type="tel" placeholder="+7 900 000-00-00"></div>
+                    <div class="form-group"><label for="waitlistDate">Желаемая дата</label><input id="waitlistDate" class="mensfire-picker-trigger" type="text" inputmode="none" readonly placeholder="Выбрать дату" onclick="openWaitlistDatePicker()"></div>
+                    <div class="form-group"><label for="waitlistTime">Желаемое время</label><input id="waitlistTime" type="text" inputmode="none" readonly placeholder="Любое время" onclick="openTimePicker('waitlistTime')"></div>
+                    <div class="form-group"><label for="waitlistBarber">Мастер</label><select id="waitlistBarber"></select></div>
+                    <div class="form-group"><label for="waitlistService">Услуга</label><select id="waitlistService"></select></div>
+                    <button type="button" class="checkout-btn" onclick="addWaitlistEntry()">＋ Добавить в ожидание</button>
+                </div>
+                <div class="waitlist-list" id="waitlistList"><div class="waitlist-empty">Пока нет клиентов в листе ожидания</div></div>
+          
                 <div id="clientsSegmentContainer"></div>
                 <div class="clients-search-wrap"><input type="search" id="clientsSearch" placeholder="Поиск по имени или телефону..." oninput="setClientsSearchQuery(this.value)"></div>
                 <div id="clientsList" class="home-scroll-area clients-list-premium"><!-- Список клиентов --></div>
