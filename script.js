@@ -982,6 +982,16 @@ function renderDesktopSchedule() {
             html += `<div class="desktop-time-line ${i % 4 === 0 ? 'hour' : ''}" style="top:${i * SLOT_HEIGHT}px"></div>`;
         }
 
+        // Тонкая линия текущего времени помогает быстро ориентироваться в сегодняшнем дне.
+        const now = new Date();
+        if (dateKey === now.toLocaleDateString('ru-RU')) {
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            if (nowMinutes >= START_HOUR * 60 && nowMinutes <= END_HOUR * 60) {
+                const nowTop = (nowMinutes - START_HOUR * 60) / 15 * SLOT_HEIGHT;
+                html += `<div class="desktop-current-time" style="top:${nowTop}px"><span>${now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span></div>`;
+            }
+        }
+
         if (currentScheduleTab === 'bookings') {
             barberBookings.forEach(booking => {
                 const top = (toMinutes(booking.time) - START_HOUR * 60) / 15 * SLOT_HEIGHT;
