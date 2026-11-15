@@ -3,8 +3,9 @@
    ========================================= */
 
 // Раздельные пространства данных для демо и рабочей базы.
-let mensfireDataMode = localStorage.getItem('mensfire_data_mode') === 'demo' ? 'demo' : 'live';
-function appStorageKey(key) { return mensfireDataMode === 'demo' ? 'mensfire_demo_' + key.replace(/^mensfire_/, '') : key; }
+let mensfireDataMode = 'demo';
+try { localStorage.setItem('mensfire_data_mode', 'demo'); } catch (error) { console.warn('Не удалось закрепить демо-режим:', error); }
+function appStorageKey(key) { return 'mensfire_demo_' + key.replace(/^mensfire_/, ''); }
 function updateDataModeUI() {
  const demoButton = document.querySelector('.data-mode-switch button[onclick*="demo"]');
  const liveButton = document.querySelector('.data-mode-switch button[onclick*="live"]');
@@ -22,9 +23,15 @@ function updateDataModeUI() {
   : 'Рабочие записи хранятся отдельно от демо-данных';
 }
 function setMensfireDataMode(mode) {
- if (!['demo','live'].includes(mode) || mode === mensfireDataMode) return;
- if (!confirm(mode === 'demo' ? 'Перейти в ДЕМО-режим? Тестовые данные будут отдельно от рабочей базы.' : 'Перейти в РАБОЧИЙ режим? Демо-данные останутся отдельно.')) return;
- localStorage.removeItem('mensfire_admin_user'); localStorage.setItem('mensfire_data_mode', mode); location.reload();
+ if (mode !== 'demo') {
+  showToast('Рабочая база пока отключена. Используются только демо-данные.', 'info');
+  return;
+ }
+ if (mensfireDataMode !== 'demo') {
+  mensfireDataMode = 'demo';
+  localStorage.setItem('mensfire_data_mode', 'demo');
+  location.reload();
+ }
 }
 
 // --- МОК-ДАННЫЕ (В будущем заменятся на YCLIENTS API) ---
@@ -71,6 +78,10 @@ let editingServiceId = null;
 let editingServiceType = 'top';
 
 let currentFinanceTab = 'expenses'; // По умолчанию Расходы
+let dashboardPeriodMode = 'day';
+let dashboardSelectedDate = new Date().toLocaleDateString('ru-RU');
+let dashboardRangeStart = dashboardSelectedDate;
+let dashboardRangeEnd = dashboardSelectedDate;
 let selectedBlockDate = "";
 let pickerYear = new Date().getFullYear();
 let pickerMonth = new Date().getMonth(); // 0-11
@@ -197,11 +208,12 @@ function initAppForUser() {
     buildBottomNav();
     
         // Открываем первый экран по умолчанию
-    const defaultView = 'viewSchedule';
+    const defaultView = 'viewDashboard';
     const defaultNav = document.querySelector(`.nav-item[data-view="${defaultView}"]`);
     switchView(defaultView, defaultNav);
     
     // Инициализируем данные (рендер расписания и т.д. - будет в части 2)
+    if (typeof renderDashboard === 'function') renderDashboard();
     if (typeof renderSchedule === 'function') renderSchedule();
     if (typeof renderBarberRevenue === 'function') renderBarberRevenue();
     if (typeof renderProfileOverview === 'function') renderProfileOverview();
@@ -289,9 +301,11 @@ function buildBottomNav() {
     const servicesIcon = '<path d="M12 2 4 6v12l8 4 8-4V6l-8-4z"/>';
     const clientsIcon = '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>';
 
+    const dashboardIcon = '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>';
     if (currentUser.role === 'admin') {
         navItems = [
-            { id: 'viewSchedule', title: 'Главная', icon: calendarIcon },
+            { id: 'viewDashboard', title: 'Обзор', icon: dashboardIcon },
+            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
             { id: 'viewFinance', title: 'Финансы', icon: financeIcon },
             { id: 'viewTeam', title: 'Команда', icon: teamIcon },
             { id: 'viewServices', title: 'Услуги', icon: servicesIcon },
@@ -300,7 +314,8 @@ function buildBottomNav() {
         ];
     } else {
         navItems = [
-            { id: 'viewSchedule', title: 'Главная', icon: calendarIcon },
+            { id: 'viewDashboard', title: 'Обзор', icon: dashboardIcon },
+            { id: 'viewSchedule', title: 'Расписание', icon: calendarIcon },
             { id: 'viewClients', title: 'Клиенты', icon: clientsIcon },
             { id: 'viewProfile', title: 'Профиль', icon: clientsIcon }
         ];
@@ -435,6 +450,7 @@ function switchView(viewId, navElement) {
 
     const titles = {
         'viewLogin': 'Вход',
+        'viewDashboard': 'Обзор',
         'viewSchedule': 'Расписание',
         'viewFinance': 'Финансы',
         'viewTeam': 'Команда',
@@ -455,6 +471,10 @@ function switchView(viewId, navElement) {
     } else {
         document.body.classList.add('header-hidden');
     }
+    if (viewId === 'viewDashboard' && typeof renderDashboard === 'function') renderDashboard();
+    if (viewId === 'viewFinance' && typeof renderFinance === 'function') renderFinance();
+    if (viewId === 'viewTeam' && typeof renderTeam === 'function') renderTeam();
+    if (viewId === 'viewClients' && typeof renderClients === 'function') renderClients(currentClientsTab);
     if (viewId === 'viewServices' && typeof renderServices === 'function') renderServices();
     if (viewId === 'viewProfile') {
         if (typeof renderBarberRevenue === 'function') renderBarberRevenue();
@@ -1930,7 +1950,12 @@ function renderCalendar() {
                 if (target === 'teamEnd') { teamRangeEnd = thisDateStr; if (parseReportDate(teamRangeEnd) < parseReportDate(teamRangeStart)) teamRangeStart = thisDateStr; }
                 reportDatePickerTarget = null;
                 closeModal('calendarModal');
-                if (target.startsWith('finance')) renderFinance();
+                if (target.startsWith('dashboard')) {
+                    if (target === 'dashboardStart') { dashboardRangeStart = thisDateStr; if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeEnd = thisDateStr; }
+                    else { dashboardRangeEnd = thisDateStr; if (parseReportDate(dashboardRangeEnd) < parseReportDate(dashboardRangeStart)) dashboardRangeStart = thisDateStr; }
+                    renderDashboard();
+                }
+                else if (target.startsWith('finance')) renderFinance();
                 else if (target.startsWith('clients')) renderClients(currentClientsTab);
                 else renderTeam();
                 return;
@@ -2496,7 +2521,7 @@ function formatReportDate(date) { return date.toLocaleDateString('ru-RU'); }
 function openReportDatePicker(target) {
     calendarTargetInputId = null;
     reportDatePickerTarget = target;
-    const value = target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : target === 'clientsEnd' ? clientsRangeEnd : target === 'teamStart' ? teamRangeStart : teamRangeEnd;
+    const value = target === 'dashboardStart' ? dashboardRangeStart : target === 'dashboardEnd' ? dashboardRangeEnd : target === 'financeStart' ? financeRangeStart : target === 'financeEnd' ? financeRangeEnd : target === 'clientsStart' ? clientsRangeStart : target === 'clientsEnd' ? clientsRangeEnd : target === 'teamStart' ? teamRangeStart : teamRangeEnd;
     const date = parseReportDate(value) || new Date();
     selectedBlockDate = formatReportDate(date);
     pickerYear = date.getFullYear();
@@ -2551,6 +2576,110 @@ function setTeamPeriod(mode) {
     }
     renderTeam();
 }
+
+function setDashboardPeriod(mode) {
+    if (!['day','month','custom'].includes(mode)) return;
+    dashboardPeriodMode = mode;
+    const selected = parseReportDate(dashboardSelectedDate) || new Date();
+    if (mode === 'day') {
+        dashboardRangeStart = dashboardRangeEnd = formatReportDate(selected);
+    } else if (mode === 'month') {
+        dashboardRangeStart = formatReportDate(new Date(selected.getFullYear(), selected.getMonth(), 1));
+        dashboardRangeEnd = formatReportDate(new Date(selected.getFullYear(), selected.getMonth() + 1, 0));
+    } else if (!parseReportDate(dashboardRangeStart) || !parseReportDate(dashboardRangeEnd)) {
+        dashboardRangeStart = formatReportDate(new Date(selected.getFullYear(), selected.getMonth(), 1));
+        dashboardRangeEnd = formatReportDate(selected);
+    }
+    renderDashboard();
+}
+function dashboardEscape(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function renderDashboard() {
+    if (!currentUser) return;
+    const controls = document.getElementById('dashboardPeriodControls');
+    const rangeStart = parseReportDate(dashboardRangeStart) || new Date();
+    const rangeEndDate = parseReportDate(dashboardRangeEnd) || rangeStart;
+    rangeStart.setHours(0,0,0,0);
+    rangeEndDate.setHours(0,0,0,0);
+    const endExclusive = new Date(rangeEndDate); endExclusive.setDate(endExclusive.getDate()+1);
+    const startKey = formatReportDate(rangeStart), endKey = formatReportDate(rangeEndDate);
+    const inRange = value => { const date = parseReportDate(value); return !!date && date >= rangeStart && date < endExclusive; };
+    const periodLabel = startKey === endKey ? startKey : startKey + ' — ' + endKey;
+    if (controls) controls.innerHTML = `
+        <div class="finance-range-toolbar clients-range-toolbar">
+            <div class="finance-range-presets" role="group" aria-label="Период главной панели">
+                <button type="button" class="finance-range-btn ${dashboardPeriodMode==='day'?'active':''}" onclick="setDashboardPeriod('day')">День</button>
+                <button type="button" class="finance-range-btn ${dashboardPeriodMode==='month'?'active':''}" onclick="setDashboardPeriod('month')">Месяц</button>
+                <button type="button" class="finance-range-btn ${dashboardPeriodMode==='custom'?'active':''}" onclick="setDashboardPeriod('custom')">Период</button>
+            </div>
+            ${dashboardPeriodMode==='custom' ? `<div class="finance-range-fields"><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardStart')">${dashboardEscape(startKey)}</button><span>—</span><button type="button" class="finance-range-date" onclick="openReportDatePicker('dashboardEnd')">${dashboardEscape(endKey)}</button></div>` : ''}
+        </div>`;
+    const scoped = bookings.filter(item => inRange(item.date) && item.status !== 'cancelled' && (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
+    const completed = scoped.filter(item => item.status === 'completed');
+    const collected = scoped.reduce((sum,item)=>sum+getBookingCollectedAmount(item),0);
+    const outstanding = scoped.reduce((sum,item)=>{
+        const total=(Array.isArray(item.services)?item.services:[]).reduce((n,s)=>n+Math.max(0,Number(s.price)||0),0);
+        return sum+Math.max(0,total-getBookingPaymentState(item,total).paid);
+    },0);
+    const periodExpenses = currentUser.role === 'admin' ? expenses.filter(item=>inRange(item.date)).reduce((sum,item)=>sum+Math.max(0,Number(item.amount)||0),0) : 0;
+    const newClients = completed.filter(item=>getBookingClientType(item).label==='Новый клиент').length;
+    const kpis = document.getElementById('dashboardKpis');
+    if (kpis) {
+        const cards = [
+            ['Записей',scoped.length,'Активные и завершённые визиты'],
+            ['Завершено',completed.length,'Успешно оказанные услуги'],
+            ['Получено',Math.round(collected).toLocaleString('ru-RU')+' ₽','Фактические оплаты'],
+            ['К оплате',Math.round(outstanding).toLocaleString('ru-RU')+' ₽','Остаток по записям']
+        ];
+        if (currentUser.role === 'admin') {
+            cards.push(['Расходы',Math.round(periodExpenses).toLocaleString('ru-RU')+' ₽','За выбранный период']);
+            cards.push(['Результат',Math.round(collected-periodExpenses).toLocaleString('ru-RU')+' ₽','Получено минус расходы']);
+        } else {
+            cards.push(['Новые клиенты',newClients,'По завершённым визитам']);
+            cards.push(['Средний чек',completed.length?Math.round(completed.reduce((sum,item)=>sum+getBookingCollectedAmount(item),0)/completed.length).toLocaleString('ru-RU')+' ₽':'0 ₽','По завершённым визитам']);
+        }
+        kpis.innerHTML = cards.map((card,index)=>`<article class="dashboard-kpi-card ${index===2?'is-primary':''}"><span>${dashboardEscape(card[0])}</span><strong>${dashboardEscape(card[1])}</strong><small>${dashboardEscape(card[2])}</small></article>`).join('');
+    }
+    const chart = document.getElementById('dashboardRevenueChart');
+    if (chart) {
+        const days = Math.max(1,Math.round((endExclusive-rangeStart)/86400000));
+        const bucketCount = days<=1?1:Math.min(7,days);
+        const buckets=[];
+        for(let i=0;i<bucketCount;i++){
+            const from=new Date(rangeStart); from.setDate(from.getDate()+Math.floor(i*days/bucketCount));
+            const to=new Date(rangeStart); to.setDate(to.getDate()+Math.floor((i+1)*days/bucketCount));
+            if(to<=from)to.setDate(from.getDate()+1);
+            const value=scoped.filter(item=>item.status==='completed'&&(()=>{const d=parseReportDate(item.date);return d&&d>=from&&d<to;})()).reduce((sum,item)=>sum+getBookingCollectedAmount(item),0);
+            buckets.push({label:days===1?'Сегодня':from.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}),value});
+        }
+        const max=Math.max(1,...buckets.map(b=>b.value));
+        chart.innerHTML='<div class="dashboard-bars">'+buckets.map(b=>`<div class="dashboard-bar-col"><div class="dashboard-bar-track"><i style="height:${Math.max(4,b.value/max*100)}%"></i></div><strong>${Math.round(b.value).toLocaleString('ru-RU')} ₽</strong><span>${dashboardEscape(b.label)}</span></div>`).join('')+'</div>';
+        const caption=document.getElementById('dashboardChartCaption'); if(caption)caption.textContent='Оплаченные завершённые визиты · '+periodLabel;
+    }
+    const mix=document.getElementById('dashboardBookingMix');
+    if(mix){
+        const counts=[['Завершено',completed.length,'completed'],['Ожидает',scoped.filter(item=>['pending','confirmed','active'].includes(item.status||'active')).length,'pending'],['Частично оплачено',scoped.filter(item=>{const total=(item.services||[]).reduce((n,s)=>n+Number(s.price||0),0);const p=getBookingPaymentState(item,total);return p.status==='partial';}).length,'partial']];
+        mix.innerHTML='<div class="dashboard-mix-list">'+counts.map(([label,value,cls])=>`<div class="dashboard-mix-row"><span><i class="${cls}"></i>${label}</span><strong>${value}</strong></div>`).join('')+'</div>';
+    }
+    const team=document.getElementById('dashboardTeamSnapshot');
+    if(team){
+        const staff=mockStaff.filter(person=>currentUser.role==='admin'||String(person.id)===String(currentUser.id));
+        team.innerHTML=staff.map(person=>{
+            const own=scoped.filter(item=>String(item.barberId)===String(person.id));
+            const paid=own.reduce((sum,item)=>sum+getBookingCollectedAmount(item),0);
+            const visits=own.filter(item=>item.status==='completed').length;
+            return `<div class="dashboard-team-row"><span class="dashboard-avatar">${dashboardEscape(person.name.slice(0,1))}</span><div><strong>${dashboardEscape(person.name)}</strong><small>${visits} визитов</small></div><b>${Math.round(paid).toLocaleString('ru-RU')} ₽</b></div>`;
+        }).join('')||'<div class="finance-empty">Нет данных за период</div>';
+    }
+    const upcoming=document.getElementById('dashboardUpcoming');
+    if(upcoming){
+        const now=new Date();
+        const future=scoped.filter(item=>item.status!=='completed'&&(()=>{const d=parseReportDate(item.date);if(!d)return false;const [hh,mm]=String(item.time||'00:00').split(':').map(Number);d.setHours(hh||0,mm||0,0,0);return d>=now;})()).sort((a,b)=>{const da=parseReportDate(a.date),db=parseReportDate(b.date);return da-db||String(a.time||'').localeCompare(String(b.time||''));}).slice(0,5);
+        upcoming.innerHTML=future.length?future.map(item=>`<div class="dashboard-upcoming-row"><div class="dashboard-upcoming-time"><strong>${dashboardEscape(item.time||'—')}</strong><small>${dashboardEscape(item.date||'')}</small></div><div class="dashboard-upcoming-info"><strong>${dashboardEscape(item.clientName||'Клиент')}</strong><small>${dashboardEscape(item.services?.map(s=>s.title).join(', ')||'Услуга')} · ${dashboardEscape(mockStaff.find(s=>String(s.id)===String(item.barberId))?.name||'Мастер')}</small></div><span class="dashboard-upcoming-status">${item.status==='pending'?'Ожидает':'Подтверждена'}</span></div>`).join(''):'<div class="finance-empty">Нет предстоящих записей в выбранном периоде</div>';
+    }
+}
+
 function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
     if (!container) return;
