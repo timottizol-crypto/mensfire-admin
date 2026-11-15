@@ -2143,8 +2143,12 @@ let selectedClientProfileKey = null;
 function saveClientProfile() {
     if (!selectedClientProfileKey) return;
 
+    const previousProfile = clientProfiles[selectedClientProfileKey] || {};
     clientProfiles[selectedClientProfileKey] = {
+        ...previousProfile,
         phone: document.getElementById('clientDetailsPhone').value.trim(),
+        birthday: document.getElementById('clientDetailsBirthday')?.value || '',
+        tag: document.getElementById('clientDetailsTag')?.value || 'regular',
         notes: document.getElementById('clientDetailsNotes').value.trim()
     };
 
@@ -2271,7 +2275,7 @@ function showClientDetails(name, barberId) {
         if (b.status === 'completed') { statusIcon = '✅'; statusColor = '#4CAF50'; }
         else if (b.status === 'cancelled') { statusIcon = '❌'; statusColor = '#ff4d4d'; }
 
-        const servicesText = b.services.map(s => s.title).join(', ');
+        const servicesText = (b.services || []).map(s => s.title).join(', ');
         const masterName = mockStaff.find(s => s.id === b.barberId)?.name || '—';
 
         return `
@@ -2291,15 +2295,26 @@ function showClientDetails(name, barberId) {
 
     const profile = clientProfiles[selectedClientProfileKey] || {};
 
-    document.getElementById('clientDetailsPhone').value =
-        profile.phone || '';
-
-    document.getElementById('clientDetailsNotes').value =
-        profile.notes || '';
+    document.getElementById('clientDetailsPhone').value = profile.phone || '';
+    const birthdayInput = document.getElementById('clientDetailsBirthday');
+    if (birthdayInput) birthdayInput.value = profile.birthday || '';
+    const tagInput = document.getElementById('clientDetailsTag');
+    if (tagInput) tagInput.value = profile.tag || 'regular';
+    document.getElementById('clientDetailsNotes').value = profile.notes || '';
     document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => s.id === barberId)?.name || 'Мастер';
     document.getElementById('clientDetailsVisits').innerText = completedCount;
     document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
     
+    const cancelledCount = myBookings.filter(b => b.status === 'cancelled').length;
+    const averageCheck = completedCount ? Math.round(total / completedCount) : 0;
+    const metrics = document.getElementById('clientDetailsMetrics');
+    if (metrics) {
+        metrics.innerHTML = `
+            <span>Отмен: <b>${cancelledCount}</b></span>
+            <span>Средний чек: <b>${averageCheck} ₽</b></span>
+        `;
+    }
+
     const historyContainer = document.getElementById('clientDetailsHistory');
     if (historyContainer) {
         historyContainer.innerHTML = historyHTML || '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">История пуста</div>';
