@@ -2776,6 +2776,7 @@ function showBarberStats(id) {
 // Добавь эту переменную в начало скрипта или прямо перед функцией
 let currentClientsTab = 'all'; 
 let clientsSearchQuery = '';
+let clientsSegmentFilter = 'all';
 
 function setClientsSearchQuery(value) {
     clientsSearchQuery = value.trim().toLowerCase();
@@ -2837,11 +2838,17 @@ function saveClientProfile() {
 
     showToast('Данные клиента сохранены', 'success');
 }
+function setClientsSegmentFilter(filter) {
+    clientsSegmentFilter = ['all','new','regular','vip'].includes(filter) ? filter : 'all';
+    renderClients(currentClientsTab);
+}
+
 function renderClients(tab = 'all') {
     currentClientsTab = tab;
     const list = document.getElementById('clientsList');
     const tabsContainer = document.getElementById('clientsTabsContainer');
     const title = document.getElementById('clientsPageTitle');
+    const segmentContainer = document.getElementById('clientsSegmentContainer');
     if (!list || !tabsContainer || !title) return;
 
     title.innerText = currentUser.role === 'admin' ? 'Клиенты' : 'Мои клиенты';
@@ -2856,6 +2863,13 @@ function renderClients(tab = 'all') {
         `;
     } else {
         tabsContainer.innerHTML = ''; // У барберов табов нет
+    }
+
+    if (segmentContainer) {
+        const filters = [{id:'all',label:'Все'},{id:'new',label:'Новые'},{id:'regular',label:'Постоянные'},{id:'vip',label:'VIP'}];
+        segmentContainer.innerHTML = '<div class="client-segment-tabs">' + filters.map(item =>
+            '<button type="button" class="client-segment-btn ' + (clientsSegmentFilter === item.id ? 'active' : '') + '" onclick="setClientsSegmentFilter(\'' + item.id + '\')">' + item.label + '</button>'
+        ).join('') + '</div>';
     }
 
     // 3. Фильтруем записи для подсчета
@@ -2948,6 +2962,11 @@ function renderClients(tab = 'all') {
 
     const clientArray = Object.values(groupedClients)
     .filter(c => {
+        if (clientsSegmentFilter !== 'all') {
+            const explicitTag = c.profileSummary.tag;
+            const inferredTag = explicitTag || (c.completedCount <= 1 ? 'new' : (c.completedCount >= 8 ? 'vip' : 'regular'));
+            if (inferredTag !== clientsSegmentFilter) return false;
+        }
         const phone = normalizeClientPhone(c.profileSummary.phone);
         const phoneQuery = normalizeClientPhone(clientsSearchQuery);
         return (
