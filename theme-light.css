@@ -408,3 +408,92 @@ html.light-theme .tab-btn.active {
     border-color: var(--gold) !important;
     color: var(--gold) !important;
 }
+
+/* ---------- 19. Контраст календаря и новых форм ---------- */
+html.light-theme {
+    --bg-card: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --border-color: rgba(20, 20, 20, .14);
+    --text-primary: #171717;
+    --text-secondary: #4A4A4A;
+    --text-muted: #555555;
+    --bg-secondary: #F0F0F2;
+}
+html.light-theme .desktop-calendar,
+html.light-theme .desktop-calendar-panel,
+html.light-theme .desktop-calendar-scroll,
+html.light-theme .desktop-calendar-grid {
+    color: var(--text-main) !important;
+    background-color: #FFFFFF !important;
+}
+html.light-theme .desktop-calendar-toolbar,
+html.light-theme .desktop-calendar-date-controls strong,
+html.light-theme .desktop-calendar-staff-name,
+html.light-theme .desktop-calendar-time-label,
+html.light-theme .desktop-month-day,
+html.light-theme .desktop-month-weekday {
+    color: var(--text-main) !important;
+}
+html.light-theme .desktop-calendar-time-axis,
+html.light-theme .desktop-calendar-staff-column,
+html.light-theme .desktop-calendar-track,
+html.light-theme .desktop-month-day {
+    border-color: var(--border-color) !important;
+}
+html.light-theme .desktop-calendar-time-label,
+html.light-theme .desktop-month-preview,
+html.light-theme .desktop-month-weekday {
+    color: #555555 !important;
+}
+html.light-theme .desktop-month-day { background: #FFFFFF !important; }
+html.light-theme .desktop-month-day.outside-month {
+    background: #F3F3F5 !important;
+    color: #777777 !important;
+}
+html.light-theme .desktop-month-day.selected { background: #FFF9E8 !important; }
+html.light-theme .desktop-month-count,
+html.light-theme .desktop-month-day small { color: #8A6815 !important; }
+
+html.light-theme .booking-detail-modal,
+html.light-theme .booking-detail-content,
+html.light-theme .booking-detail-main,
+html.light-theme .booking-detail-row,
+html.light-theme .booking-detail-services {
+    color: var(--text-main) !important;
+}
+html.light-theme .booking-detail-section-label { color: #555555 !important; }
+html.light-theme .booking-detail-service { color: #222222 !important; }
+html.light-theme .booking-detail-service strong { color: #8A6815 !important; }
+html.light-theme .booking-detail-date { color: #555555 !important; }
+
+html.light-theme .form-group select,
+html.light-theme .form-group input,
+html.light-theme .form-group textarea,
+html.light-theme #newBookingBarber,
+html.light-theme #blockBarberSelect {
+    color: #171717 !important;
+    background-color: #F7F7F8 !important;
+    border: 1px solid rgba(0,0,0,.18) !important;
+}
+html.light-theme .form-group select option,
+html.light-theme #newBookingBarber option,
+html.light-theme #blockBarberSelect option {
+    color: #171717 !important;
+    background: #FFFFFF !important;
+}
+html.light-theme input[type="date"],
+html.light-theme input[type="time"] { color-scheme: light; }
+html.light-theme .new-booking-duration { color: #333333 !important; }
+html.light-theme .new-booking-duration strong,
+html.light-theme .new-booking-price strong { color: #805F0C !important; }
+
+html.light-theme .calendar-date-arrow,
+html.light-theme .calendar-today-btn,
+html.light-theme .tab-btn {
+    color: #222222 !important;
+    background: #FFFFFF !important;
+    border-color: rgba(0,0,0,.18) !important;
+}
+html.light-theme .calendar-today-btn,
+html.light-theme .tab-btn.active { color: #805F0C !important; }
+html.light-theme .desktop-calendar-date-controls > span { color: #555555 !important; }
