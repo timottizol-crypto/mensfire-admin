@@ -3215,11 +3215,8 @@ function renderClientsAnalytics(sourceBookings, clientGroups) {
     const newPercent=totalClients?Math.round(segmentCounts.new/totalClients*100):0,regularPercent=totalClients?Math.round(segmentCounts.regular/totalClients*100):0,vipStart=newPercent+regularPercent;
     const maxVisits=Math.max(0,...monthStats.map(item=>item.visits));
     const periodLabel=formatReportDate(rangeStart)+' — '+formatReportDate(rangeEnd);
-    root.innerHTML = `
-        <div class="clients-analytics-heading">
-            <div><span class="finance-eyebrow">CLIENT INSIGHTS</span><h3>Аналитика клиентов</h3><p>Визиты, выручка и структура аудитории за период</p></div>
-            <span class="clients-analytics-period">${clientsPeriodMode==='sixMonths'?'6 месяцев':clientsPeriodMode==='month'?'Текущий месяц':periodLabel}</span>
-        </div>
+    const controls=document.getElementById('clientsPeriodControls');
+    if (controls) controls.innerHTML = `
         <div class="finance-range-toolbar clients-range-toolbar">
             <div class="finance-range-presets" role="group" aria-label="Период аналитики клиентов">
                 <button type="button" class="finance-range-btn ${clientsPeriodMode==='sixMonths'?'active':''}" onclick="setClientsPeriod('sixMonths')">6 месяцев</button>
@@ -3231,6 +3228,11 @@ function renderClientsAnalytics(sourceBookings, clientGroups) {
                 <span>—</span>
                 <button type="button" class="finance-range-date" onclick="openReportDatePicker('clientsEnd')">${formatReportDate(parseReportDate(clientsRangeEnd)||rangeEnd)}</button>
             </div>
+        </div>`;
+    root.innerHTML = `
+        <div class="clients-analytics-heading">
+            <div><span class="finance-eyebrow">CLIENT INSIGHTS</span><h3>Аналитика клиентов</h3><p>Визиты, выручка и структура аудитории за период</p></div>
+            <span class="clients-analytics-period">${clientsPeriodMode==='sixMonths'?'6 месяцев':clientsPeriodMode==='month'?'Текущий месяц':periodLabel}</span>
         </div>
         <div class="clients-period-summary">
             <div><span>Получено за период</span><strong>${Math.round(totalRevenue).toLocaleString('ru-RU')} ₽</strong></div>
