@@ -293,12 +293,15 @@
             </div>
             <div class="form-group">
                 <label for="bookingPaymentMethod">Способ оплаты</label>
-                <select id="bookingPaymentMethod">
-                    <option value="cash">Наличные</option>
-                    <option value="card">Карта</option>
-                    <option value="transfer">Перевод</option>
-                    <option value="online">Онлайн</option>
+                <select id="bookingPaymentMethod" class="visually-hidden-select" aria-hidden="true" tabindex="-1">
+                    <option value="cash">Наличные</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="online">Онлайн</option>
                 </select>
+                <div class="payment-method-choices" id="bookingPaymentMethodChoices">
+                    <button type="button" class="payment-choice is-selected" data-method="cash" onclick="setBookingPaymentMethod('cash')"><span class="payment-choice-icon">₽</span><span>Наличные</span></button>
+                    <button type="button" class="payment-choice" data-method="card" onclick="setBookingPaymentMethod('card')"><span class="payment-choice-icon">▤</span><span>Карта</span></button>
+                    <button type="button" class="payment-choice" data-method="transfer" onclick="setBookingPaymentMethod('transfer')"><span class="payment-choice-icon">↗</span><span>Перевод</span></button>
+                    <button type="button" class="payment-choice" data-method="online" onclick="setBookingPaymentMethod('online')"><span class="payment-choice-icon">◎</span><span>Онлайн</span></button>
+                </div>
             </div>
             <button type="button" class="checkout-btn" onclick="saveBookingPayment()">Сохранить оплату</button>
             <button type="button" class="btn-cancel" style="margin-top:10px" onclick="closeModal('bookingPaymentModal')">Отмена</button>
