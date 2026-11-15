@@ -2239,7 +2239,7 @@ function showBarberStats(id) {
     // Топ услуга за месяц
     const serviceCounts = {};
     monthBookings.forEach(b => {
-        b.services.forEach(s => {
+        (b.services || []).forEach(s => {
             serviceCounts[s.title] = (serviceCounts[s.title] || 0) + 1;
         });
     });
@@ -2578,7 +2578,7 @@ function renderBarberRevenue() {
         // БАРБЕР: Считаем его личную выручку (40%)
         const todayRevenue = bookings
             .filter(b => b.barberId === currentUser.id && b.date === today && b.status === 'completed')
-            .reduce((sum, b) => sum + b.services.reduce((s, serv) => s + serv.price, 0), 0);
+            .reduce((sum, b) => sum + (b.services || []).reduce((s, serv) => s + Number(serv.price || 0), 0), 0);
         
         const barberShare = Math.round(todayRevenue * 0.4);
         revenueEl.innerText = `${barberShare} ₽`;
