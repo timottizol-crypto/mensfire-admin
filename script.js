@@ -2381,6 +2381,24 @@ function renderTeam() {
     const listPC = document.getElementById('teamListPC');
     const listMobile = document.getElementById('teamList');
 
+    const todayKey = new Date().toLocaleDateString('ru-RU');
+    const monthParts = todayKey.split('.').map(Number);
+    const monthStart = new Date(monthParts[2], monthParts[1] - 1, 1);
+    const parseDate = value => {
+        const parts = String(value || '').split('.').map(Number);
+        return parts.length === 3 && parts.every(Number.isFinite) ? new Date(parts[2], parts[1] - 1, parts[0]) : null;
+    };
+    const inCurrentMonth = value => { const date = parseDate(value); return date && date >= monthStart && date <= new Date(); };
+    const teamCompleted = bookings.filter(item => item.status === 'completed' && inCurrentMonth(item.date));
+    const teamRevenue = bookings.reduce((sum,item) => sum + (inCurrentMonth(item.date) ? getBookingCollectedAmount(item) : 0),0);
+    const teamToday = bookings.filter(item => item.date === todayKey && item.status !== 'cancelled').length;
+    const overview = document.getElementById('teamOverview');
+    if (overview) overview.innerHTML = `
+        <div class="team-overview-card"><span>Мастеров в команде</span><strong>${mockStaff.length}</strong><small>Активные профили</small></div>
+        <div class="team-overview-card"><span>Записей сегодня</span><strong>${teamToday}</strong><small>По всем мастерам</small></div>
+        <div class="team-overview-card"><span>Визитов за месяц</span><strong>${teamCompleted.length}</strong><small>Завершённые записи</small></div>
+        <div class="team-overview-card"><span>Получено за месяц</span><strong>${Math.round(teamRevenue).toLocaleString('ru-RU')} ₽</strong><small>Фактические оплаты</small></div>`;
+
     if (mockStaff.length === 0) {
         const empty = '<p class="team-empty-state">Нет мастеров</p>';
         if (listPC) listPC.innerHTML = empty;
@@ -2395,12 +2413,17 @@ function renderTeam() {
         const isAdmin = staff.role === 'admin';
         const roleLabel = isAdmin ? 'Главный мастер' : 'Барбер';
         const initials = escapeBookingHtml(String(staff.name || '?').trim().slice(0, 1).toUpperCase() || '?');
+        const staffBookings = bookings.filter(item => String(item.barberId) === String(staff.id));
+        const staffMonthBookings = staffBookings.filter(item => inCurrentMonth(item.date));
+        const staffCompleted = staffMonthBookings.filter(item => item.status === 'completed').length;
+        const staffRevenue = staffMonthBookings.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
         return `
             <article class="team-card team-member-card" data-staff-card data-staff-id="${id}" tabindex="0" role="button" aria-label="Статистика: ${name}">
                 <div class="team-avatar" aria-hidden="true">${initials}</div>
                 <div class="team-info">
                     <h3 class="team-name">${name}</h3>
                     <span class="team-role">${roleLabel}</span>
+                    <div class="team-performance"><span><strong>${staffCompleted}</strong> визитов</span><span><strong>${Math.round(staffRevenue).toLocaleString('ru-RU')} ₽</strong> получено</span></div>
                     <span class="team-pin">PIN: ${pin}</span>
                 </div>
                 <div class="team-actions">
@@ -2753,6 +2776,19 @@ function renderClients(tab = 'all') {
             }
         }
     });
+
+    const allClientGroups = Object.values(groupedClients);
+    const clientsOverview = document.getElementById('clientsOverview');
+    if (clientsOverview) {
+        const loyalClients = allClientGroups.filter(client => client.completedCount >= 3).length;
+        const visitTotal = allClientGroups.reduce((sum,client) => sum + client.completedCount,0);
+        const spentTotal = allClientGroups.reduce((sum,client) => sum + client.totalSpent,0);
+        clientsOverview.innerHTML = `
+            <div class="client-overview-card"><span>Клиентов</span><strong>${allClientGroups.length}</strong></div>
+            <div class="client-overview-card"><span>Постоянных</span><strong>${loyalClients}</strong></div>
+            <div class="client-overview-card"><span>Завершённых визитов</span><strong>${visitTotal}</strong></div>
+            <div class="client-overview-card"><span>Оплачено всего</span><strong>${Math.round(spentTotal).toLocaleString('ru-RU')} ₽</strong></div>`;
+    }
 
     const clientArray = Object.values(groupedClients)
     .filter(c => {
