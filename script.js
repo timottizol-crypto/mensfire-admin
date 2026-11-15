@@ -1505,6 +1505,7 @@ function saveNewBooking() {
 
 
 function addTimeBlock() {
+    if (!requireAdminAction('Создавать и изменять перерывы может только Али')) return;
     const start = document.getElementById('blockStartTime').value;
     const end = document.getElementById('blockEndTime').value;
     const date = selectedBlockDate;
