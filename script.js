@@ -2691,13 +2691,13 @@ function renderClients(tab = 'all') {
     
     // Если это барбер ИЛИ админ на вкладке "Мои клиенты" — фильтруем по ID
     if (currentUser.role === 'barber' || (currentUser.role === 'admin' && currentClientsTab === 'my')) {
-        filteredBookings = filteredBookings.filter(b => b.barberId === currentUser.id);
+        filteredBookings = filteredBookings.filter(b => String(b.barberId) === String(currentUser.id));
     }
 
         // Собираем клиентов (привязка к мастеру, чтобы не сливались)
     const clients = {};
     filteredBookings.forEach(b => {
-        const clientKey = b.clientName + '_' + b.barberId; 
+        const clientKey = JSON.stringify([String(b.clientName || ''), String(b.barberId || '')]); 
         
         if (!clients[clientKey]) {
             clients[clientKey] = {
@@ -2732,7 +2732,13 @@ function renderClients(tab = 'all') {
                 ...client,
                 names: [client.name],
                 barberIds: [client.barberId],
-                profiles: [profile]
+                profiles: [profile],
+                profileSummary: {
+                    phone: String(profile.phone || ''),
+                    birthday: String(profile.birthday || ''),
+                    tag: ['new', 'regular', 'vip'].includes(profile.tag) ? profile.tag : '',
+                    notes: String(profile.notes || '')
+                }
             };
         } else {
             const group = groupedClients[groupKey];
@@ -2744,15 +2750,24 @@ function renderClients(tab = 'all') {
             group.totalSpent += client.totalSpent;
             group.completedRevenue += client.completedRevenue;
             group.profiles.push(profile);
+            ['phone', 'birthday', 'notes'].forEach(field => {
+                if (!group.profileSummary[field] && profile[field]) {
+                    group.profileSummary[field] = String(profile[field]);
+                }
+            });
+            if (!group.profileSummary.tag && ['new', 'regular', 'vip'].includes(profile.tag)) {
+                group.profileSummary.tag = profile.tag;
+            }
         }
     });
 
     const clientArray = Object.values(groupedClients)
     .filter(c => {
-        const phone = normalizeClientPhone(c.profiles.find(p => p.phone)?.phone || '');
+        const phone = normalizeClientPhone(c.profileSummary.phone);
+        const phoneQuery = normalizeClientPhone(clientsSearchQuery);
         return (
-            c.names.some(name => name.toLowerCase().includes(clientsSearchQuery)) ||
-            phone.includes(normalizeClientPhone(clientsSearchQuery))
+            c.names.some(name => String(name || '').toLowerCase().includes(clientsSearchQuery)) ||
+            (phoneQuery.length > 0 && phone.includes(phoneQuery))
         );
     })
     .sort((a, b) => b.completedCount - a.completedCount || b.totalSpent - a.totalSpent);
@@ -2777,7 +2792,7 @@ function renderClients(tab = 'all') {
         const sortedVisits = c.visits.slice()
             .sort((a, b) => parseVisitDate(b.date) - parseVisitDate(a.date));
         const lastVisit = completedVisits[0] || sortedVisits[0];
-        const profile = c.profiles[0] || {};
+        const profile = c.profileSummary || c.profiles[0] || {};
         const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
         const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
         const masterNames = c.barberIds.map(id => mockStaff.find(staff => staff.id === id)?.name || 'Мастер');
