@@ -4753,3 +4753,108 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         font-size: 10px;
     }
 }
+
+/* New/edit booking form — clear service selection and compact mobile summary. */
+#newBookingModal .new-booking-modal {
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+#newBookingModal .new-booking-services-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    max-height: min(34vh, 300px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 4px 2px 0;
+    overscroll-behavior: contain;
+}
+
+#newBookingModal .new-booking-service-option {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    min-width: 0;
+    box-sizing: border-box;
+    line-height: 1.4;
+}
+
+#newBookingModal .new-booking-service-option span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#newBookingModal .new-booking-service-option strong {
+    font-size: 12px;
+    text-align: right;
+}
+
+#newBookingModal .new-booking-duration {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+    min-width: 0;
+    box-sizing: border-box;
+    line-height: 1.45;
+}
+
+#newBookingModal .new-booking-duration > strong,
+#newBookingModal .new-booking-price {
+    margin: 0;
+}
+
+#newBookingModal .new-booking-price {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+}
+
+#newBookingModal .new-booking-duration strong {
+    overflow-wrap: anywhere;
+}
+
+#newBookingModal .form-group,
+#newBookingModal .form-group input,
+#newBookingModal .form-group select {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#newBookingModal .checkout-btn,
+#newBookingModal .btn-cancel {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+    #newBookingModal .modal-content {
+        padding: 18px 14px;
+    }
+
+    #newBookingModal .new-booking-heading {
+        margin-bottom: 16px;
+    }
+
+    #newBookingModal .new-booking-service-option {
+        grid-template-columns: 20px minmax(0, 1fr);
+        gap: 6px 9px;
+        padding: 10px;
+    }
+
+    #newBookingModal .new-booking-service-option strong {
+        grid-column: 2;
+        justify-self: start;
+        text-align: left;
+    }
+
+    #newBookingModal .new-booking-duration {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    #newBookingModal .new-booking-price {
+        display: flex;
+    }
+}
