@@ -1772,7 +1772,21 @@ function openBlockTimeModal() {
 }
 
 // Функции для календаря
+function openNewBookingDatePicker() {
+    const input = document.getElementById('newBookingDate');
+    if (!input) return;
+    calendarTargetInputId = 'newBookingDate';
+    const parts = input.value ? input.value.split('.').map(Number) : [];
+    const base = parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]) : new Date();
+    selectedBlockDate = input.value || base.toLocaleDateString('ru-RU');
+    pickerYear = base.getFullYear();
+    pickerMonth = base.getMonth();
+    renderCalendar();
+    openModal('calendarModal');
+}
+
 function openCustomDatePicker() {
+    calendarTargetInputId = null;
     renderCalendar();
     openModal('calendarModal');
 }
@@ -1811,7 +1825,14 @@ function renderCalendar() {
 
         dayDiv.onclick = () => {
             selectedBlockDate = thisDateStr;
-            document.getElementById('customDateDisplay').innerText = selectedBlockDate;
+            if (calendarTargetInputId === 'newBookingDate') {
+                const target = document.getElementById('newBookingDate');
+                if (target) target.value = thisDateStr;
+                calendarTargetInputId = null;
+            } else {
+                const display = document.getElementById('customDateDisplay');
+                if (display) display.innerText = selectedBlockDate;
+            }
             closeModal('calendarModal');
         };
         grid.appendChild(dayDiv);
@@ -1862,6 +1883,7 @@ function openNewBookingFromSlot(event, barberId, date) {
 
 
 let activeTimePickerInputId = null;
+let calendarTargetInputId = null;
 
 function openTimePicker(inputId) {
     const input = document.getElementById(inputId);
@@ -1933,9 +1955,7 @@ function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDa
     }
 
     const parts = date.split('.');
-    dateInput.value = parts.length === 3
-        ? `${parts[2]}-${parts[1]}-${parts[0]}`
-        : '';
+    dateInput.value = parts.length === 3 ? date : '';
 
     timeInput.value = time || '10:00';
     clientInput.value = '';
@@ -2046,12 +2066,12 @@ function saveNewBooking() {
         return showToast('Укажите клиента, мастера, услуги, дату и время', 'error');
     }
 
-    const [year, month, day] = dateValue.split('-').map(Number);
+    const [day, month, year] = dateValue.split('.').map(Number);
     const date = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
 
-    const parsedDate = new Date(dateValue + 'T00:00:00');
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(dateValue) ||
+    const parsedDate = new Date(year, month - 1, day);
+    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time) ||
+        !/^\\d{2}\\.\\d{2}\\.\\d{4}$/.test(dateValue) ||
         Number.isNaN(parsedDate.getTime()) ||
         parsedDate.getFullYear() !== year ||
         parsedDate.getMonth() + 1 !== month ||
