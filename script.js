@@ -4075,7 +4075,7 @@ function renderClientLoyaltyPanel(sourceBookings) {
                 const booking = item.booking;
                 const date = escapeBookingHtml(booking.date || 'Дата не указана');
                 const time = escapeBookingHtml(booking.time || '');
-                const serviceNames = (booking.services || []).map(service => escapeBookingHtml(service.title || 'Услуга')).join(', ');
+                const serviceNames = (Array.isArray(booking.services) ? booking.services : []).map(service => escapeBookingHtml(service?.title || 'Услуга')).join(', ');
                 const barberName = mockStaff.find(staff => String(staff.id) === String(booking.barberId))?.name || 'Мастер';
                 const visitMeta = [barberName, serviceNames, item.total.toLocaleString('ru-RU') + ' ₽ × ' + Math.round(item.rate * 100) + '%'].filter(Boolean).join(' · ');
                 return '<div class="client-loyalty-row"><span><b>' + date + (time ? ' · ' + time : '') + '</b><small>' + escapeBookingHtml(visitMeta) + '</small></span><strong>+' + item.earned.toLocaleString('ru-RU') + ' б.</strong></div>';
