@@ -31,6 +31,16 @@ let confirmCallback = null;
 let staffToResetPin = null;
 
 let currentUser = JSON.parse(localStorage.getItem('mensfire_admin_user')) || null;
+
+function isAdminUser() {
+    return Boolean(currentUser && currentUser.role === 'admin');
+}
+
+function requireAdminAction(message = 'Это действие доступно только администратору Али') {
+    if (isAdminUser()) return true;
+    showToast(message, 'error');
+    return false;
+}
 // --- ГЕНЕРАЦИЯ ДЕМО-ДАННЫХ ---
 function seedDatabase() {
     let existing = JSON.parse(localStorage.getItem('mensfire_admin_bookings')) || [];
@@ -93,8 +103,7 @@ function seedDatabase() {
 let bookings = JSON.parse(localStorage.getItem('mensfire_admin_bookings')) || [];
 let expenses = JSON.parse(localStorage.getItem('mensfire_admin_expenses')) || [];
 
-// Запускаем генерацию при загрузке
-seedDatabase();
+// Демоданные больше не генерируются автоматически: это предотвращает перезапись данных салона.
 
 let selectedBookingId = null;
 let editingBookingId = null;
@@ -172,8 +181,8 @@ function initAppForUser() {
     document.getElementById('profileName').innerText = currentUser.name;
     document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'Главный мастер' : 'Барбер';
     
-    document.getElementById('barberRevenueCard').style.display = 'block';
-    if (currentUser.role === 'admin') {
+    document.getElementById('barberRevenueCard').style.display = isAdminUser() ? 'block' : 'none';
+    if (isAdminUser()) {
         document.getElementById('profileRevenueTitle').innerText = 'Прибыль барбершопа';
     } else {
         document.getElementById('profileRevenueTitle').innerText = 'Моя выручка за сегодня';
@@ -1093,6 +1102,7 @@ function openActionModal(id) {
 }
 
 function openEditBooking() {
+    if (!requireAdminAction('Редактировать записи может только Али')) return;
     const booking = bookings.find(
         b => String(b.id) === String(selectedBookingId)
     );
@@ -1105,15 +1115,12 @@ function openEditBooking() {
         return showToast('Можно редактировать только активные записи', 'error');
     }
 
+    const availableStaff = mockStaff;
     if (!availableStaff.some(s => s.id === booking.barberId)) {
-        return showToast('Нет доступа к этому мастеру', 'error');
+        return showToast('Мастер не найден', 'error');
     }
 
     editingBookingId = booking.id;
-
-    const availableStaff = currentUser.role === 'admin'
-        ? mockStaff
-        : mockStaff.filter(s => s.id === currentUser.id);
 
     const barberSelect = document.getElementById('newBookingBarber');
 
@@ -1157,6 +1164,7 @@ function openEditBooking() {
 
 
 function completeBooking() {
+    if (!requireAdminAction('Изменять статус записи может только Али')) return;
     const booking = bookings.find(b => b.id === selectedBookingId);
     if (booking) {
         booking.status = 'completed';
@@ -1170,6 +1178,7 @@ function completeBooking() {
 }
 
 function cancelBooking() {
+    if (!requireAdminAction('Отменять записи может только Али')) return;
     const booking = bookings.find(b => b.id === selectedBookingId);
     if (booking) {
         booking.status = 'cancelled';
@@ -1208,6 +1217,7 @@ function updateBlockBarberSelect(selectedId = '') {
 // --- БЛОКИРОВКА ВРЕМЕНИ ---
 
 function openBlockTimeModal() {
+    if (!requireAdminAction('Создавать перерывы может только Али')) return;
     editingBlockId = null;
 
     const today = new Date();
@@ -1291,6 +1301,7 @@ function changeMonth(delta) {
 
 
 function openNewBookingFromSlot(event, barberId, date) {
+    if (!requireAdminAction('Создавать записи может только Али')) return;
     if (currentScheduleTab !== 'bookings') return;
 
     const track = event.currentTarget;
@@ -1318,6 +1329,7 @@ function openNewBookingFromSlot(event, barberId, date) {
 
 
 function openNewBookingModal(barberId = '', time = '', date = selectedScheduleDate) {
+    if (!requireAdminAction('Создавать записи может только Али')) return;
     editingBookingId = null;
 
     document.querySelector('#newBookingModal h2').textContent = 'Новая запись';
@@ -1403,6 +1415,7 @@ function updateNewBookingSummary() {
 
 
 function saveNewBooking() {
+    if (!requireAdminAction('Создавать и изменять записи может только Али')) return;
     const clientName = document.getElementById('newBookingClient').value.trim();
     const barberId = document.getElementById('newBookingBarber').value;
     const dateValue = document.getElementById('newBookingDate').value;
@@ -1615,11 +1628,13 @@ function addTimeBlock() {
 
 // --- УПРАВЛЕНИЕ БЛОКИРОВКОЙ ---
 function openBlockActionModal(id) {
+    if (!requireAdminAction('Управлять перерывами может только Али')) return;
     editingBlockId = id;
     openModal('blockActionModal');
 }
 
 function editTimeBlock() {
+    if (!requireAdminAction('Изменять перерывы может только Али')) return;
     const block = timeBlocks.find(tb => tb.id === editingBlockId);
     if (!block) return;
 
@@ -1645,6 +1660,7 @@ function editTimeBlock() {
 }
 
 function deleteTimeBlock() {
+    if (!requireAdminAction('Удалять перерывы может только Али')) return;
     showConfirm(
         'Удалить перерыв?', 
         'Это действие нельзя отменить.', 
@@ -1900,12 +1916,14 @@ function renderTeam() {
 }
 
 function openStaffModal() {
+    if (!requireAdminAction('Управлять командой может только Али')) return;
     document.getElementById('staffName').value = '';
     document.getElementById('staffPin').value = '';
     openModal('staffModal');
 }
 
 function addStaff() {
+    if (!requireAdminAction('Добавлять мастеров может только Али')) return;
     const name = document.getElementById('staffName').value;
     const pin = document.getElementById('staffPin').value;
 
@@ -1928,12 +1946,14 @@ function addStaff() {
 }
 
 function resetStaffPin(id) {
+    if (!requireAdminAction('Изменять PIN мастеров может только Али')) return;
     staffToResetPin = id;
     document.getElementById('adminNewPinInput').value = '';
     openModal('adminResetPinModal');
 }
 
 function submitAdminResetPin() {
+    if (!requireAdminAction('Изменять PIN мастеров может только Али')) return;
     const newPin = document.getElementById('adminNewPinInput').value;
     if (!newPin || newPin.length !== 4) {
         return showToast('PIN должен состоять из 4 цифр', 'error');
@@ -1960,6 +1980,7 @@ function submitAdminResetPin() {
 }
 
 function deleteStaff(id) {
+    if (!requireAdminAction('Удалять мастеров может только Али')) return;
     showConfirm(
         'Удалить мастера?', 
         'Мастер и его доступ будут удалены.', 
@@ -1979,6 +2000,7 @@ function deleteStaff(id) {
 
 // --- АНАЛИТИКА БАРБЕРА ---
 function showBarberStats(id) {
+    if (!requireAdminAction('Статистика мастеров доступна только Али')) return;
     const staff = mockStaff.find(s => s.id === id);
     if (!staff) return;
 
@@ -2233,6 +2255,11 @@ function showClientDetails(name, barberId) {
 }
 // --- ПРОФИЛЬ ---
 function renderBarberRevenue() {
+    const card = document.getElementById('barberRevenueCard');
+    if (!isAdminUser()) {
+        if (card) card.style.display = 'none';
+        return;
+    }
     const today = new Date().toLocaleDateString('ru-RU');
     const revenueEl = document.getElementById('barberRevenue');
     const titleEl = document.getElementById('profileRevenueTitle');
