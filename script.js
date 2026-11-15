@@ -667,7 +667,7 @@ function renderSchedule() {
                     </div>
                 `;
             } else {
-                const servicesText = b.services.map(s => s.title).join(', ');
+                const servicesText = (b.services || []).map(s => s.title).join(', ');
                 let itemClass = b.status === 'completed' ? 'completed' : (b.status === 'cancelled' ? 'cancelled' : '');
                 let statusBadge = '';
                 if (b.status === 'completed') statusBadge = `<div class="status-badge completed" style="margin:0;">Завершена</div>`;
@@ -1031,6 +1031,11 @@ function renderDateSelector() {
             renderSchedule();
         };
         container.appendChild(div);
+    }
+
+    const activeDate = container.querySelector('.date-selector-item.selected');
+    if (activeDate && window.innerWidth < 768) {
+        activeDate.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
     }
 }
 function shiftScheduleDate(offset) {
