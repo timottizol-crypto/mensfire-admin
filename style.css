@@ -3787,3 +3787,7 @@ html.light-theme .calendar-day:hover:not(.empty) {
 
 .desktop-booking-card .calendar-payment-label{display:inline-flex;align-self:flex-start;margin-top:5px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .home-booking-item .calendar-payment-label{display:inline-flex;margin-top:6px}
+
+.booking-payment-history{margin-top:9px;padding-top:8px;border-top:1px solid var(--border-color,rgba(255,255,255,.12))}
+.booking-payment-transaction{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:11px;color:var(--text-muted)}
+.booking-payment-transaction strong{color:var(--text-color,#fff);white-space:nowrap}
