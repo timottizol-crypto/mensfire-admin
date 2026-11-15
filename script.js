@@ -2405,7 +2405,8 @@ function renderFinance() {
         <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">Получено за день</span><strong>${fmt(dayRevenue)}</strong><small>${dayCompleted.length} завершённых визитов</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Чистый результат дня</span><strong class="${dayProfit < 0 ? 'finance-negative' : 'finance-positive'}">${fmt(dayProfit)}</strong><small>После расходов за день</small></div>
         <div class="finance-kpi-card"><span class="finance-kpi-label">Ожидает оплаты</span><strong>${fmt(unpaidBalance)}</strong><small>Баланс по активным записям</small></div>
-        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt(dayCompleted.length ? dayCompleted.reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / dayCompleted.length : 0)}</strong><small>По завершённым визитам</small></div>`;
+        <div class="finance-kpi-card"><span class="finance-kpi-label">Средний чек</span><strong>${fmt(dayCompleted.length ? dayCompleted.reduce((sum,b) => sum + (b.services || []).reduce((n,x) => n + Number(x.price || 0),0),0) / dayCompleted.length : 0)}</strong><small>По завершённым визитам</small></div>
+        <div class="finance-kpi-card finance-kpi-comparison"><span class="finance-kpi-label">К прошлому дню</span><strong class="${dayRevenue >= revenue(shift(selectedDate,-1),selectedDate) ? 'finance-positive' : 'finance-negative'}">${dayRevenue >= revenue(shift(selectedDate,-1),selectedDate) ? '+' : '−'}${fmt(Math.abs(dayRevenue - revenue(shift(selectedDate,-1),selectedDate)))}</strong><small>Поступления относительно предыдущего дня</small></div>`;
 
     const chart = document.getElementById('financeRevenueChart');
     if (chart) {
@@ -2436,9 +2437,12 @@ function renderFinance() {
             const visits = own.filter(item => item.status === 'completed').length;
             return {name:person.name,paid,visits};
         }).sort((a,b) => b.paid-a.paid);
-        teamStats.innerHTML = rows.length ? rows.map(person => `
-            <div class="finance-team-row"><div class="finance-team-avatar">${escapeBookingHtml(String(person.name || '?').slice(0,1).toUpperCase())}</div><div class="finance-team-copy"><strong>${escapeBookingHtml(person.name)}</strong><span>${person.visits} визитов за месяц</span></div><strong>${fmt(person.paid)}</strong></div>`
-        ).join('') : '<div class="finance-empty">Добавьте мастеров, чтобы увидеть статистику</div>';
+        const teamTotal = rows.reduce((sum,person) => sum + person.paid,0);
+        teamStats.innerHTML = rows.length ? rows.map(person => {
+            const share = teamTotal ? person.paid / teamTotal * 100 : 0;
+            return `
+            <div class="finance-team-row finance-team-row-detailed"><div class="finance-team-avatar">${escapeBookingHtml(String(person.name || '?').slice(0,1).toUpperCase())}</div><div class="finance-team-copy"><strong>${escapeBookingHtml(person.name)}</strong><span>${person.visits} визитов · ${share.toFixed(0)}% поступлений</span><div class="finance-team-share-track"><i style="width:${share}%"></i></div></div><strong>${fmt(person.paid)}</strong></div>`;
+        }).join('') : '<div class="finance-empty">Добавьте мастеров, чтобы увидеть статистику</div>';
     }
 
     const analyticsHeader = document.getElementById('analyticsHeaderBlock');
@@ -2455,15 +2459,32 @@ function renderFinance() {
     bookings.filter(item => item.status === 'completed' && inRange(item.date, thirtyDaysStart, shift(new Date(),1))).forEach(item => {
         (Array.isArray(item.services) ? item.services : []).forEach(service => {
             const name = String(service.title || 'Услуга');
-            serviceCounts[name] = (serviceCounts[name] || 0) + 1;
+            if (!serviceCounts[name]) serviceCounts[name] = {count:0,revenue:0};
+            serviceCounts[name].count += 1;
+            serviceCounts[name].revenue += Math.max(0,Number(service.price || 0));
         });
     });
     const topServices = document.getElementById('analyticsTopServicesList');
     if (topServices) {
-        const sorted = Object.entries(serviceCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
-        topServices.innerHTML = sorted.length ? sorted.map(([name,count],index) => `
-            <div class="finance-service-row"><span class="finance-service-rank">${index+1}</span><strong>${escapeBookingHtml(name)}</strong><span>${count} раз</span></div>`
+        const sorted = Object.entries(serviceCounts).sort((a,b) => b[1].revenue-a[1].revenue).slice(0,5);
+        const maxServiceRevenue = Math.max(1,...sorted.map(([,data]) => data.revenue));
+        topServices.innerHTML = sorted.length ? sorted.map(([name,data],index) => `
+            <div class="finance-service-row finance-service-row-detailed"><span class="finance-service-rank">${index+1}</span><div class="finance-service-copy"><strong>${escapeBookingHtml(name)}</strong><span>${data.count} выполнено за 30 дней</span><div class="finance-service-track"><i style="width:${data.revenue/maxServiceRevenue*100}%"></i></div></div><strong>${fmt(data.revenue)}</strong></div>`
         ).join('') : '<div class="finance-empty">Статистика появится после завершённых визитов</div>';
+    }
+
+    const expenseBreakdown = document.getElementById('financeExpenseBreakdown');
+    if (expenseBreakdown) {
+        const groups = {};
+        dayExpenses.forEach(item => {
+            const label = String(item.category || item.title || 'Прочие расходы');
+            groups[label] = (groups[label] || 0) + Math.max(0,Number(item.amount || 0));
+        });
+        const rows = Object.entries(groups).sort((a,b) => b[1]-a[1]);
+        const maxExpense = Math.max(1,...rows.map(([,amount]) => amount));
+        expenseBreakdown.innerHTML = rows.length ? '<div class="finance-breakdown-heading">Структура расходов за день</div>' + rows.map(([label,amount]) => `
+            <div class="finance-expense-breakdown-row"><div><span>${escapeBookingHtml(label)}</span><strong>${fmt(amount)}</strong></div><div class="finance-expense-track"><i style="width:${amount/maxExpense*100}%"></i></div></div>`
+        ).join('') : '<div class="finance-empty">Добавьте расходы, чтобы увидеть структуру</div>';
     }
 }
 function openExpenseModal() {
