@@ -456,6 +456,10 @@
                 <label>Дата</label>
                 <div id="customDateDisplay" onclick="openCustomDatePicker()" class="custom-date-input">Выберите дату</div>
             </div>
+            <div class="block-mode-options">
+                <label class="block-mode-choice"><input type="checkbox" id="blockAllDay" onchange="toggleBlockAllDay()"> <span><strong>Полный выходной</strong><small>Закрыть мастера на весь день</small></span></label>
+                <label class="block-mode-choice"><input type="checkbox" id="blockRepeatWeekly"> <span><strong>Повторять еженедельно</strong><small>На следующие 12 недель</small></span></label>
+            </div>
             <div class="form-group">
                 <label>Время начала (ЧЧ:ММ)</label>
                 <input type="text" id="blockStartTime" inputmode="none" readonly placeholder="Выберите время" onclick="openTimePicker('blockStartTime')">
