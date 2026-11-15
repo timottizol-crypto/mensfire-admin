@@ -1625,6 +1625,12 @@ function saveNewBooking() {
     const [year, month, day] = dateValue.split('-').map(Number);
     const date = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
 
+    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time) ||
+        !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateValue) ||
+        Number.isNaN(new Date(dateValue + 'T00:00:00').getTime())) {
+        return showToast('Укажите корректные дату и время записи', 'error');
+    }
+
     const [hours, minutes] = time.split(':').map(Number);
     const start = hours * 60 + minutes;
     const duration = selectedServices.length * 45;
@@ -1731,6 +1737,10 @@ function addTimeBlock() {
         return h * 60 + m;
     };
 
+    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(start) || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(end)) {
+        return showToast('Укажите корректное время начала и окончания', 'error');
+    }
+
     const newStart = toMinutes(start);
     const newEnd = toMinutes(end);
 
@@ -1823,7 +1833,7 @@ function openBlockActionModal(id) {
 
 function editTimeBlock() {
     if (!requireAdminAction('Изменять перерывы может только Али')) return;
-    const block = timeBlocks.find(tb => tb.id === editingBlockId);
+    const block = timeBlocks.find(tb => String(tb.id) === String(editingBlockId));
     if (!block) return;
 
     // Заполняем поля данными из блокировки
@@ -1854,7 +1864,7 @@ function deleteTimeBlock() {
         'Это действие нельзя отменить.', 
         'Да, удалить', 
         () => {
-            timeBlocks = timeBlocks.filter(tb => tb.id !== editingBlockId);
+            timeBlocks = timeBlocks.filter(tb => String(tb.id) !== String(editingBlockId));
             localStorage.setItem('mensfire_admin_blocks', JSON.stringify(timeBlocks));
             closeModal('blockActionModal');
             showToast('Перерыв удален', 'success');
