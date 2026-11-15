@@ -1988,13 +1988,13 @@ function openBlockTimeModal() {
     if (!requireAdminAction('Создавать перерывы может только Али')) return;
     editingBlockId = null;
 
-    const today = new Date();
-    selectedBlockDate = today.toLocaleDateString('ru-RU');
+    const selectedDate = parseReportDate(selectedScheduleDate) || new Date();
+    selectedBlockDate = formatReportDate(selectedDate);
 
     document.getElementById('customDateDisplay').innerText = selectedBlockDate;
 
-    pickerYear = today.getFullYear();
-    pickerMonth = today.getMonth();
+    pickerYear = selectedDate.getFullYear();
+    pickerMonth = selectedDate.getMonth();
 
     document.getElementById('blockStartTime').value = '';
     document.getElementById('blockEndTime').value = '';
