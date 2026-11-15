@@ -2823,6 +2823,18 @@ function renderClients(tab = 'all') {
 function showClientDetails(name, barberId) {
     const selectedProfile = findClientProfile(name, barberId);
     const selectedPhone = normalizeClientPhone(selectedProfile.profile.phone);
+    const mergedClientProfile = { ...selectedProfile.profile };
+    if (selectedPhone.length >= 7) {
+        Object.values(clientProfiles)
+            .filter(profile => normalizeClientPhone(profile.phone) === selectedPhone)
+            .forEach(profile => {
+                ['phone', 'birthday', 'tag', 'notes'].forEach(field => {
+                    if (!mergedClientProfile[field] && profile[field]) {
+                        mergedClientProfile[field] = profile[field];
+                    }
+                });
+            });
+    }
     const myBookings = bookings.filter(b => {
         if (b.clientName === name && String(b.barberId) === String(barberId)) return true;
         if (!selectedPhone) return false;
@@ -2880,7 +2892,7 @@ function showClientDetails(name, barberId) {
     document.getElementById('clientDetailsName').innerText = name;
     selectedClientProfileKey = selectedProfile.key;
     clientProfiles[selectedClientProfileKey] = {
-        ...selectedProfile.profile,
+        ...mergedClientProfile,
         clientName: name,
         barberId
     };
