@@ -388,7 +388,7 @@
 
             <div class="form-group">
                 <label for="newBookingTime">Время начала</label>
-                <input id="newBookingTime" type="time" min="08:00" max="21:15" step="900">
+                <input id="newBookingTime" type="text" inputmode="none" readonly placeholder="Выберите время" onclick="openTimePicker('newBookingTime')">
             </div>
 
             <button class="checkout-btn" onclick="saveNewBooking()">Создать запись</button>
@@ -411,11 +411,11 @@
             </div>
             <div class="form-group">
                 <label>Время начала (ЧЧ:ММ)</label>
-                <input type="time" id="blockStartTime">
+                <input type="text" id="blockStartTime" inputmode="none" readonly placeholder="Выберите время" onclick="openTimePicker('blockStartTime')">
             </div>
             <div class="form-group">
                 <label>Время окончания (ЧЧ:ММ)</label>
-                <input type="time" id="blockEndTime">
+                <input type="text" id="blockEndTime" inputmode="none" readonly placeholder="Выберите время" onclick="openTimePicker('blockEndTime')">
             </div>
             <button class="checkout-btn" onclick="addTimeBlock()">Заблокировать</button>
             <button class="btn-cancel" style="margin-top: 10px;" onclick="closeModal('blockTimeModal')">Отмена</button>
