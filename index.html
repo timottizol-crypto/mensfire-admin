@@ -152,6 +152,13 @@
             <div id="teamList" class="team-list-premium"><!-- Карточки мастеров генерируются через JS --></div>
         </div>
 
+        <!-- ЭКРАН УСЛУГ -->
+        <div id="viewServices" class="view services-workspace">
+            <div class="workspace-heading"><div><span class="workspace-eyebrow">MENSFIRE CATALOG</span><h2>Услуги и цены</h2><p>Управление прайсом и длительностью для каждого типа мастера</p></div><button class="home-cta-btn" onclick="openServiceEditor('top')"><div class="cta-text"><span>＋ Новая услуга</span></div></button></div>
+            <div id="servicesOverview" class="services-overview-grid"></div>
+            <div id="servicesCatalog"></div>
+        </div>
+
         <!-- ЭКРАН КЛИЕНТОВ -->
         <div id="viewClients" class="view">
             <div class="glass-card home-bookings-card clients-workspace">
@@ -223,6 +230,19 @@
     </div>
 
     <!-- МОДАЛКИ -->
+
+    <!-- Редактор услуги -->
+    <div class="modal" id="serviceEditorModal">
+        <div class="modal-content">
+            <div class="booking-detail-heading"><h2 id="serviceEditorTitle">Новая услуга</h2><button class="close-btn" type="button" onclick="closeModal('serviceEditorModal')">&times;</button></div>
+            <div class="form-group"><label for="serviceEditorName">Название услуги</label><input id="serviceEditorName" type="text" maxlength="80" placeholder="Например, мужская стрижка"></div>
+            <div class="form-group"><label for="serviceEditorPrice">Цена, ₽</label><input id="serviceEditorPrice" type="number" min="1" step="1" inputmode="numeric" placeholder="1500"></div>
+            <div class="form-group"><label for="serviceEditorDuration">Длительность, минут</label><input id="serviceEditorDuration" type="number" min="5" max="360" step="5" value="45"></div>
+            <div class="form-group"><label for="serviceEditorCategory">Для кого</label><select id="serviceEditorCategory"><option value="top">Али — главный мастер</option><option value="barber">Барберы</option></select></div>
+            <button type="button" class="checkout-btn" onclick="saveService()">Сохранить услугу</button>
+            <button type="button" class="btn-cancel" onclick="closeModal('serviceEditorModal')">Отмена</button>
+        </div>
+    </div>
 
     <!-- Управление записью -->
         
