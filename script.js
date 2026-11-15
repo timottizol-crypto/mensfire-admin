@@ -452,6 +452,7 @@ function switchView(viewId, navElement) {
     } else {
         document.body.classList.add('header-hidden');
     }
+    if (viewId === 'viewServices' && typeof renderServices === 'function') renderServices();
 }
 
 // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (UI) ---
@@ -1903,9 +1904,7 @@ function updateNewBookingSummary() {
     const container = document.getElementById('newBookingServicesList');
     if (!barberId || !container) return;
 
-    const catalog = barberId === 'b_al'
-        ? servicesData.top
-        : servicesData.barber;
+    const catalog = (barberId === 'b_al' ? servicesData.top : servicesData.barber).filter(service => service.active !== false);
 
     const selectedIds = [...container.querySelectorAll('input:checked')]
         .map(input => input.value);
@@ -1970,9 +1969,7 @@ function saveNewBooking() {
     const time = document.getElementById('newBookingTime').value;
     const container = document.getElementById('newBookingServicesList');
 
-    const catalog = barberId === 'b_al'
-        ? servicesData.top
-        : servicesData.barber;
+    const catalog = (barberId === 'b_al' ? servicesData.top : servicesData.barber).filter(service => service.active !== false);
 
     const selectedIds = [...container.querySelectorAll('input:checked')]
         .map(input => input.value);
