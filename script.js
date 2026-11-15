@@ -1736,9 +1736,15 @@ function getBookingPaymentState(booking, total) {
         const amount = Number(item?.amount);
         return sum + (Number.isFinite(amount) ? Math.max(0, amount) : 0);
     }, 0);
+    const hasLegacyPaidAmount = Object.prototype.hasOwnProperty.call(booking || {}, 'paidAmount');
     const legacyPaidValue = Number(booking?.paidAmount || 0);
     const legacyPaid = Number.isFinite(legacyPaidValue) ? Math.max(0, legacyPaidValue) : 0;
-    const paid = Math.min(safeTotal, transactions.length ? transactionTotal : legacyPaid);
+    // Синхронизируем статус оплаты с общей функцией суммы: старые завершённые
+    // записи без отдельной истории платежей считаются полностью оплаченными.
+    const fallbackPaid = !transactions.length && !hasLegacyPaidAmount && booking?.status === 'completed'
+        ? safeTotal
+        : legacyPaid;
+    const paid = Math.min(safeTotal, transactions.length ? transactionTotal : fallbackPaid);
     const status = paid <= 0 || safeTotal <= 0 ? 'unpaid' : paid >= safeTotal ? 'paid' : 'partial';
     const methods = [...new Set(transactions
         .filter(item => Number.isFinite(Number(item?.amount)) && Number(item.amount) > 0)
