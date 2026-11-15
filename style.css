@@ -5685,3 +5685,14 @@ html.light-theme .work-schedule-day{background:rgba(255,255,255,.65)}
 html.light-theme .available-slots-panel{background:#fbf8ef;border-color:rgba(172,132,40,.2)}
 html.light-theme .available-slot{background:#fff;color:#433b2b}
 @media(max-width:420px){.available-slots-heading{align-items:flex-start;flex-direction:column;gap:3px}.available-slot{flex:1 0 58px}}
+
+/* CRM lookup in booking form */
+.booking-client-lookup{margin-top:7px}
+.booking-client-lookup-new{padding:9px 11px;border:1px solid rgba(212,175,55,.16);border-radius:10px;background:rgba(212,175,55,.045);color:var(--text-muted);font-size:10px;line-height:1.5}
+.booking-client-match{display:flex;width:100%;align-items:center;gap:9px;padding:10px 11px;border:1px solid rgba(212,175,55,.28);border-radius:12px;background:rgba(212,175,55,.07);color:var(--text-main);text-align:left;cursor:pointer}
+.booking-client-match-icon{display:grid;place-items:center;flex:0 0 27px;height:27px;border-radius:9px;background:rgba(212,175,55,.16);color:var(--gold);font-size:13px}
+.booking-client-match-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:3px}
+.booking-client-match-copy strong{font-size:11px}
+.booking-client-match-copy small{color:var(--text-muted);font-size:9px;line-height:1.4}
+.booking-client-match-tag{color:var(--gold);font-size:9px;white-space:nowrap}
+html.light-theme .booking-client-match{background:#fbf8ef}
