@@ -1900,7 +1900,7 @@ function addTimeBlock() {
 
     const conflict = activeBookings.find(b => {
         const bookingStart = toMinutes(b.time);
-        const duration = Math.max(45, (b.services || []).length * 45);
+        const duration = getBookingDurationMinutes(b);
 
         return overlaps(
             newStart,
