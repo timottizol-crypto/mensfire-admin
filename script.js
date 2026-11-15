@@ -2660,7 +2660,7 @@ function renderDashboard() {
             const to=new Date(rangeStart); to.setDate(to.getDate()+Math.floor((i+1)*days/bucketCount));
             if(to<=from)to.setDate(from.getDate()+1);
             const value=scoped.filter(item=>item.status==='completed'&&(()=>{const d=parseReportDate(item.date);return d&&d>=from&&d<to;})()).reduce((sum,item)=>sum+getBookingCollectedAmount(item),0);
-            buckets.push({label:days===1?'Сегодня':from.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}),value});
+            buckets.push({label:days===1?startKey:from.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}),value});
         }
         const max=Math.max(1,...buckets.map(b=>b.value));
         chart.innerHTML='<div class="dashboard-bars">'+buckets.map(b=>`<div class="dashboard-bar-col"><div class="dashboard-bar-track"><i style="height:${Math.max(4,b.value/max*100)}%"></i></div><strong>${Math.round(b.value).toLocaleString('ru-RU')} ₽</strong><span>${dashboardEscape(b.label)}</span></div>`).join('')+'</div>';
