@@ -5096,22 +5096,9 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
 @media(max-width:700px) { .clients-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
 
-/* Finance date controls: direct calendar access and clear navigation */
-.finance-date-tools { display:flex; align-items:center; gap:8px; margin:0 0 10px; padding:10px; border:1px solid rgba(255,255,255,.075); border-radius:14px; background:rgba(255,255,255,.025); }
-.finance-date-nav,.finance-date-today { min-width:38px; height:38px; border:1px solid rgba(255,255,255,.1); border-radius:10px; color:var(--text-main); background:rgba(255,255,255,.045); font:inherit; font-size:20px; cursor:pointer; }
-.finance-date-today { padding:0 13px; color:var(--gold); font-size:11px; font-weight:750; white-space:nowrap; }
-.finance-date-input-wrap { display:flex; align-items:center; gap:8px; margin-left:auto; min-width:0; color:var(--text-muted); font-size:10px; }
-.finance-date-input-wrap input { width:155px; max-width:100%; min-height:38px; padding:7px 9px; border:1px solid rgba(212,175,55,.3); border-radius:10px; color:var(--text-main); color-scheme:dark; background:rgba(255,255,255,.045); font:inherit; font-size:12px; }
-.finance-date-strip { margin-bottom:18px!important; padding:5px 2px 11px!important; scroll-snap-type:x proximity; }
+/* Finance date strip keeps the native MENSFIRE calendar language */
+.finance-date-strip { margin:0 0 18px!important; padding:5px 2px 11px!important; scroll-snap-type:x proximity; }
 .finance-date-strip .date-selector-item { font:inherit; scroll-snap-align:center; }
 .finance-date-strip .date-selector-item.is-today:not(.selected) { border-color:rgba(212,175,55,.5); }
-.finance-date-strip .date-selector-item:focus-visible,.finance-date-tools button:focus-visible,.finance-date-input-wrap input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
-@media(max-width:600px) {
- .finance-date-tools { gap:6px; padding:8px; }
- .finance-date-nav { min-width:34px; height:36px; }
- .finance-date-today { padding:0 9px; height:36px; }
- .finance-date-input-wrap { gap:0; }
- .finance-date-input-wrap span { display:none; }
- .finance-date-input-wrap input { width:132px; min-height:36px; font-size:11px; }
- .finance-date-strip .date-selector-item { min-width:54px; padding:9px 6px; }
-}
+.finance-date-strip .date-selector-item:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+@media(max-width:600px) { .finance-date-strip .date-selector-item { min-width:54px; padding:9px 6px; } }
