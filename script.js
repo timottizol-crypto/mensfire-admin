@@ -1321,12 +1321,14 @@ function renderDesktopSchedule() {
     if (!calendar) {
         calendar = document.createElement('div');
         calendar.id = 'desktopSchedule';
-        const blockButton = view.querySelector(':scope > .home-cta-btn');
-        if (blockButton && blockButton.parentElement === view) {
-            view.insertBefore(calendar, blockButton);
-        } else {
-            view.appendChild(calendar);
-        }
+    }
+    // Календарь должен находиться сразу после основной карточки расписания,
+    // а не в самом конце вкладки под блокировками и листом ожидания.
+    const scheduleCard = view.querySelector(':scope > .schedule-main-card');
+    if (scheduleCard && calendar.previousElementSibling !== scheduleCard) {
+        scheduleCard.insertAdjacentElement('afterend', calendar);
+    } else if (!scheduleCard && calendar.parentElement !== view) {
+        view.appendChild(calendar);
     }
 
     const [day, month, year] = selectedScheduleDate.split('.').map(Number);
