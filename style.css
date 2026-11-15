@@ -5733,3 +5733,31 @@ html.light-theme .booking-client-match{background:#fbf8ef}
 }
 
 .client-loyalty-disclaimer { margin-top:8px; color:var(--text-muted); font-size:9px; line-height:1.45; opacity:.85; }
+
+/* Schedule workspace: compact controls and full-width calendar */
+.schedule-top-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;flex:0 0 auto}
+.schedule-top-actions .schedule-management-actions{display:flex;align-items:center;gap:8px;margin:0;min-width:0}
+.schedule-top-actions .schedule-management-actions .home-cta-btn{width:auto;min-width:0;min-height:38px;padding:8px 12px;margin:0;border-radius:11px}
+.schedule-top-actions .schedule-management-actions .cta-text{gap:2px}
+.schedule-top-actions .schedule-management-actions .cta-text span{font-size:11px}
+.schedule-top-actions .schedule-management-actions .cta-text small{font-size:9px}
+.schedule-new-booking-btn{width:auto!important;min-width:0!important;min-height:38px!important;height:38px!important;padding:0 13px!important;margin:0!important;border-radius:11px!important;align-self:center!important;white-space:nowrap;font-size:11px!important}
+.schedule-new-booking-btn span{font-size:11px!important}
+#viewSchedule.active{width:100%;max-width:none}
+#viewSchedule #scheduleOverview{flex:0 0 auto}
+.clients-waitlist{margin:14px 0 16px}
+@media(min-width:768px){
+ #viewSchedule.active{height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:10px!important;padding-top:22px!important;padding-bottom:18px!important}
+ #viewSchedule>.schedule-top-actions{flex:0 0 auto}
+ #viewSchedule>.schedule-overview-grid{flex:0 0 auto;margin-bottom:0}
+ #viewSchedule>.schedule-main-card{display:none!important}
+ #viewSchedule>#desktopSchedule{flex:1 1 0!important;min-height:0!important;width:100%!important;max-width:none!important;margin:0!important}
+}
+@media(max-width:767px){
+ .schedule-top-actions{align-items:stretch;flex-direction:column;gap:8px}
+ .schedule-top-actions .schedule-management-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ .schedule-top-actions .schedule-management-actions .home-cta-btn{justify-content:center;padding:8px 7px}
+ .schedule-top-actions .schedule-management-actions .cta-text small{display:none}
+ .schedule-new-booking-btn{align-self:flex-end!important}
+ .clients-waitlist{margin:12px 0;padding:14px}
+}
