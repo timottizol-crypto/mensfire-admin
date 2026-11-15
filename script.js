@@ -2602,6 +2602,9 @@ function renderFinance() {
     if (periodLastDay < periodStart) [periodStart, periodLastDay] = [periodLastDay, periodStart];
     const periodEnd = shift(periodLastDay, 1);
     const periodLabel = financePeriodMode === 'day' ? formatReportDate(selectedDate) : (formatReportDate(periodStart) + ' — ' + formatReportDate(periodLastDay));
+    const aggregationStart = financePeriodMode === 'day' ? monthStart : periodStart;
+    const aggregationEnd = financePeriodMode === 'day' ? nextMonth : periodEnd;
+    const aggregationLabel = financePeriodMode === 'day' ? selectedDate.toLocaleDateString('ru-RU',{month:'long',year:'numeric'}) : periodLabel;
     const dayEnd = shift(selectedDate, 1);
     const weekStart = startOfWeek(selectedDate);
     const weekEnd = shift(weekStart, 7);
@@ -2614,11 +2617,11 @@ function renderFinance() {
         .reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
     const dayRevenue = revenue(selectedDate, dayEnd);
     const weekRevenue = revenue(weekStart, weekEnd);
-    const monthRevenue = revenue(periodStart, periodEnd);
+    const monthRevenue = revenue(aggregationStart, aggregationEnd);
     const dayExpenses = financePeriodMode === 'day' ? expenses.filter(item => item.date === selectedFinanceDate) : expenses.filter(item => inRange(item.date, periodStart, periodEnd));
     const dayExpenseTotal = dayExpenses.reduce((sum, item) => sum + Math.max(0, Number(item.amount || 0)), 0);
     const weekExpenseTotal = expensesTotal(weekStart, weekEnd);
-    const monthExpenseTotal = expensesTotal(periodStart, periodEnd);
+    const monthExpenseTotal = expensesTotal(aggregationStart, aggregationEnd);
     const dayProfit = dayRevenue - dayExpenseTotal;
     const monthProfit = monthRevenue - monthExpenseTotal;
     const activeBookings = bookings.filter(item => item.status !== 'cancelled');
@@ -2627,7 +2630,7 @@ function renderFinance() {
         return sum + Math.max(0, total - getBookingPaymentState(item, total).paid);
     }, 0);
     const paymentTotals = { cash: 0, card: 0, transfer: 0, online: 0, other: 0 };
-    bookings.filter(item => inRange(item.date, periodStart, periodEnd)).forEach(item => {
+    bookings.filter(item => inRange(item.date, aggregationStart, aggregationEnd)).forEach(item => {
         const payments = Array.isArray(item.payments) && item.payments.length
             ? item.payments
             : (getBookingCollectedAmount(item) > 0 ? [{ amount: getBookingCollectedAmount(item), method: item.paymentMethod || 'other' }] : []);
@@ -2644,7 +2647,7 @@ function renderFinance() {
     const monthLabel = document.querySelector('#finTabRevenue .finance-kpi-card:nth-child(3) .finance-kpi-label');
     if (monthLabel) monthLabel.textContent = financePeriodMode === 'day' ? 'Месяц' : 'Период';
     const monthHint = document.querySelector('#finTabRevenue .finance-kpi-card:nth-child(3) small');
-    if (monthHint) monthHint.textContent = periodLabel;
+    if (monthHint) monthHint.textContent = aggregationLabel;
     setText('financeProfit', fmt(dayProfit));
     setText('profitWeek', fmt(weekRevenue - weekExpenseTotal));
     setText('profitMonth', fmt(monthProfit));
@@ -2714,7 +2717,7 @@ function renderFinance() {
     if (teamStats) {
         const staff = Array.isArray(mockStaff) ? mockStaff : [];
         const rows = staff.map(person => {
-            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, periodStart, periodEnd));
+            const own = bookings.filter(item => String(item.barberId) === String(person.id) && inRange(item.date, aggregationStart, aggregationEnd));
             const paid = own.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
             const visits = own.filter(item => item.status === 'completed').length;
             return {name:person.name,paid,visits};
