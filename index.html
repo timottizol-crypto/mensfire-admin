@@ -163,39 +163,19 @@
 
         <!-- ЭКРАН КОМАНДЫ (Только Админ) -->
         <div id="viewTeam" class="view">
-           <button class="home-cta-btn" onclick="openStaffModal()">
-                <div class="cta-text">
-                    <span>+ Добавить мастера</span>
-                </div>
-            </button>
-            <div id="teamList">
-                <!-- Карточки мастеров генерируются через JS -->
-            </div>
+            <div class="workspace-heading"><div><span class="workspace-eyebrow">MENSFIRE TEAM</span><h2>Команда</h2><p>Мастера, загрузка и результаты работы</p></div><button class="home-cta-btn" onclick="openStaffModal()"><div class="cta-text"><span>＋ Добавить мастера</span></div></button></div>
+            <div id="teamOverview" class="team-overview-grid"></div>
+            <div id="teamList" class="team-list-premium"><!-- Карточки мастеров генерируются через JS --></div>
         </div>
 
         <!-- ЭКРАН КЛИЕНТОВ -->
         <div id="viewClients" class="view">
-            <div class="glass-card home-bookings-card" style="display: flex; flex-direction: column; overflow: hidden; height: 100%;">
-                
-                <!-- Заголовок (меняется через JS) -->
-                <h3 id="clientsPageTitle" style="margin-bottom: 15px; font-size: 16px;">Мои клиенты</h3>
-                
-                <!-- Контейнер для кнопок (Мои / Все) — они не будут скроллиться -->
+            <div class="glass-card home-bookings-card clients-workspace">
+                <div class="workspace-heading clients-heading"><div><span class="workspace-eyebrow">MENSFIRE CRM</span><h2 id="clientsPageTitle">Клиенты</h2><p>История визитов, лояльность и отношения с гостями</p></div></div>
+                <div id="clientsOverview" class="clients-overview-grid"></div>
                 <div id="clientsTabsContainer"></div>
-                <div style="margin-bottom: 12px;">
-                    <input
-                        type="search"
-                        id="clientsSearch"
-                        placeholder="Поиск по имени или телефону..."
-                        oninput="setClientsSearchQuery(this.value)"
-                        style="width: 100%;">
-                </div>
-                
-                <!-- Сам список (только он будет скроллиться) -->
-                <div id="clientsList" class="home-scroll-area" style="flex-grow: 1; overflow-y: auto; max-height: none;">
-                    <!-- Список клиентов -->
-                </div>
-                
+                <div class="clients-search-wrap"><input type="search" id="clientsSearch" placeholder="Поиск по имени или телефону..." oninput="setClientsSearchQuery(this.value)"></div>
+                <div id="clientsList" class="home-scroll-area clients-list-premium"><!-- Список клиентов --></div>
             </div>
         </div>
 
