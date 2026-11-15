@@ -1486,8 +1486,7 @@ function getBookingClientType(booking) {
             const previousProfile = findClientProfile(previous.clientName || '', previous.barberId || '').profile;
             return normalizeClientPhone(previousProfile.phone) === phone;
         }
-        return String(previous.clientName || '').trim().toLocaleLowerCase('ru-RU') === name &&
-            String(previous.barberId) === String(booking?.barberId);
+        return String(previous.clientName || '').trim().toLocaleLowerCase('ru-RU') === name;
     });
     return hadEarlierVisit ? 'regular' : 'new';
 }
@@ -1643,6 +1642,10 @@ function openActionModal(id) {
         <div class="booking-detail-main">
             <div class="booking-detail-client">${escapeBookingHtml(booking.clientName || 'Клиент')}</div>
             <div class="booking-detail-date">${escapeBookingHtml(booking.date || 'Дата не указана')} · ${escapeBookingHtml(booking.time || '—')}–${escapeBookingHtml(endTime)}</div>
+            <div class="booking-card-badges">
+                <i class="booking-origin origin-${getBookingSourceMeta(booking).className}">${getBookingSourceMeta(booking).label}</i>
+                <i class="booking-client-type type-${getBookingClientTypeMeta(booking).className}">${getBookingClientTypeMeta(booking).label}</i>
+            </div>
         </div>
         <div class="booking-detail-row">
             <span>Мастер</span>
