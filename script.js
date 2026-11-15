@@ -1919,10 +1919,10 @@ function renderCalendar() {
             selectedBlockDate = thisDateStr;
             if (reportDatePickerTarget) {
                 const target = reportDatePickerTarget;
-                if (target === 'financeStart') financeRangeStart = thisDateStr;
-                if (target === 'financeEnd') financeRangeEnd = thisDateStr;
-                if (target === 'clientsStart') clientsRangeStart = thisDateStr;
-                if (target === 'clientsEnd') clientsRangeEnd = thisDateStr;
+                if (target === 'financeStart') { financeRangeStart = thisDateStr; if (parseReportDate(financeRangeStart) > parseReportDate(financeRangeEnd)) financeRangeEnd = thisDateStr; }
+                if (target === 'financeEnd') { financeRangeEnd = thisDateStr; if (parseReportDate(financeEnd = financeRangeEnd) < parseReportDate(financeRangeStart)) financeRangeStart = thisDateStr; }
+                if (target === 'clientsStart') { clientsRangeStart = thisDateStr; if (parseReportDate(clientsRangeStart) > parseReportDate(clientsRangeEnd)) clientsRangeEnd = thisDateStr; }
+                if (target === 'clientsEnd') { clientsRangeEnd = thisDateStr; if (parseReportDate(clientsRangeEnd) < parseReportDate(clientsRangeStart)) clientsRangeStart = thisDateStr; }
                 reportDatePickerTarget = null;
                 closeModal('calendarModal');
                 if (target.startsWith('finance')) renderFinance();
@@ -3379,7 +3379,7 @@ function renderClients(tab = 'all') {
         const upcomingClients=periodGroups.filter(client=>client.visits.some(visit=>visit.status!=='cancelled'&&parseClientDateTime(visit)>=Date.now())).length;
         const caption=clientsPeriodMode==='sixMonths'?'Последние 6 месяцев':clientsPeriodMode==='month'?'Текущий месяц':formatReportDate(rangeStart)+' — '+formatReportDate(rangeEnd);
         clientsOverview.innerHTML=`
-            <div class="client-overview-card"><span>Клиентов</span><strong>${periodGroups.length}</strong><small>${caption}</small></div>
+            <div class="client-overview-card"><span>Клиентов за период</span><strong>${periodGroups.length}</strong><small>${caption}</small></div>
             <div class="client-overview-card"><span>Постоянных</span><strong>${loyalClients}</strong><small>От 3 визитов за период</small></div>
             <div class="client-overview-card"><span>Завершённых визитов</span><strong>${visitTotal}</strong><small>${caption}</small></div>
             <div class="client-overview-card"><span>Средний чек</span><strong>${averageCheck.toLocaleString('ru-RU')} ₽</strong><small>По завершённым визитам</small></div>
