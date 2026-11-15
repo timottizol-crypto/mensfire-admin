@@ -781,6 +781,25 @@ function renderSchedule() {
 
     setTimeout(() => {
         renderDateSelector();
+        const scheduleDate = selectedScheduleDate;
+        const visibleBookings = bookings.filter(item => item.date === scheduleDate &&
+            item.status !== 'cancelled' &&
+            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
+        const visibleBlocks = timeBlocks.filter(item => item.date === scheduleDate &&
+            (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)));
+        const completedCount = visibleBookings.filter(item => item.status === 'completed').length;
+        const collected = visibleBookings.reduce((sum,item) => sum + getBookingCollectedAmount(item),0);
+        const planned = visibleBookings.reduce((sum,item) => sum + (item.services || []).reduce((n,service) => n + Number(service.price || 0),0),0);
+        const outstanding = visibleBookings.reduce((sum,item) => {
+            const total = (item.services || []).reduce((n,service) => n + Number(service.price || 0),0);
+            return sum + Math.max(0,total-getBookingPaymentState(item,total).paid);
+        },0);
+        const overview = document.getElementById('scheduleOverview');
+        if (overview) overview.innerHTML = `
+            <div class="schedule-overview-card"><span>Записей</span><strong>${visibleBookings.length}</strong><small>${completedCount} завершено</small></div>
+            <div class="schedule-overview-card"><span>Получено</span><strong>${Math.round(collected).toLocaleString('ru-RU')} ₽</strong><small>Фактические оплаты</small></div>
+            <div class="schedule-overview-card"><span>К оплате</span><strong>${Math.round(outstanding).toLocaleString('ru-RU')} ₽</strong><small>По записям дня</small></div>
+            <div class="schedule-overview-card"><span>Перерывов</span><strong>${visibleBlocks.length}</strong><small>Заблокированные интервалы</small></div>`;
 
         const greetEl = document.getElementById('scheduleGreeting');
         if (greetEl) greetEl.innerText = 'Расписание';
