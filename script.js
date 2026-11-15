@@ -2795,7 +2795,7 @@ function renderClients(tab = 'all') {
         const profile = c.profileSummary || c.profiles[0] || {};
         const clientTagLabels = { new: 'Новый', regular: 'Постоянный', vip: 'VIP' };
         const clientTag = clientTagLabels[profile.tag || 'regular'] || 'Постоянный';
-        const masterNames = c.barberIds.map(id => mockStaff.find(staff => staff.id === id)?.name || 'Мастер');
+        const masterNames = c.barberIds.map(id => mockStaff.find(staff => String(staff.id) === String(id))?.name || 'Мастер');
         const masterBadge = currentUser.role === 'admin' && currentClientsTab === 'all'
             ? `<div class="client-meta" style="color: var(--gold); font-size: 10px; margin-top: 4px;">Мастера: ${masterNames.join(', ')}</div>`
             : '';
@@ -2824,24 +2824,21 @@ function showClientDetails(name, barberId) {
     const selectedProfile = findClientProfile(name, barberId);
     const selectedPhone = normalizeClientPhone(selectedProfile.profile.phone);
     const myBookings = bookings.filter(b => {
-        if (b.clientName === name && b.barberId === barberId) return true;
+        if (b.clientName === name && String(b.barberId) === String(barberId)) return true;
         if (!selectedPhone) return false;
         const otherProfile = findClientProfile(b.clientName, b.barberId).profile;
         return normalizeClientPhone(otherProfile.phone) === selectedPhone;
     });
     
     // Правильная сортировка: от старых к новым
-    myBookings.sort((a, b) => {
-        const [d1, m1, y1] = a.date.split('.');
-        const [h1, min1] = a.time.split(':');
-        const t1 = new Date(y1, m1 - 1, d1, h1, min1).getTime();
-
-        const [d2, m2, y2] = b.date.split('.');
-        const [h2, min2] = b.time.split(':');
-        const t2 = new Date(y2, m2 - 1, d2, h2, min2).getTime();
-
-        return t2 - t1;
-    });
+    const parseClientVisitTimestamp = booking => {
+        const [day, month, year] = String(booking.date || '').split('.').map(Number);
+        const [hour, minute] = String(booking.time || '').split(':').map(Number);
+        if (!day || !month || !year || !Number.isInteger(hour) || !Number.isInteger(minute)) return 0;
+        const timestamp = new Date(year, month - 1, day, hour, minute).getTime();
+        return Number.isFinite(timestamp) ? timestamp : 0;
+    };
+    myBookings.sort((a, b) => parseClientVisitTimestamp(b) - parseClientVisitTimestamp(a));
     
     let total = 0;
     let completedRevenue = 0;
@@ -2896,7 +2893,7 @@ function showClientDetails(name, barberId) {
     const tagInput = document.getElementById('clientDetailsTag');
     if (tagInput) tagInput.value = profile.tag || 'regular';
     document.getElementById('clientDetailsNotes').value = profile.notes || '';
-    document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => s.id === barberId)?.name || 'Мастер';
+    document.getElementById('clientDetailsMaster').innerText = mockStaff.find(s => String(s.id) === String(barberId))?.name || 'Мастер';
     document.getElementById('clientDetailsVisits').innerText = completedCount;
     document.getElementById('clientDetailsTotal').innerText = total + ' ₽';
     
