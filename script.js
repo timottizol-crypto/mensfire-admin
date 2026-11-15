@@ -1100,7 +1100,7 @@ function renderDesktopSchedule() {
                         onclick="event.stopPropagation(); openActionModal('${booking.id}')">
                         <strong class="booking-card-client">${booking.clientName || 'Клиент'}</strong>
                         <span class="booking-card-service">${serviceNames || 'Услуга не указана'}</span>
-                        <small class="booking-card-meta"><b>${booking.time}</b> · ${duration} мин. · ${booking.status === 'completed' ? 'Завершена' : booking.status === 'cancelled' ? 'Отменена' : booking.status === 'confirmed' ? 'Подтверждена' : booking.status === 'pending' ? 'Ожидает' : 'Активная'}</small>
+                        <small class="booking-card-meta"><b>${booking.time}</b> · ${duration} мин. · ${booking.status === 'completed' ? 'Завершена' : booking.status === 'cancelled' ? 'Отменена' : booking.status === 'confirmed' ? 'Подтверждена' : booking.status === 'pending' ? 'Ожидает' : 'Активная'}</small><span class="calendar-payment-label payment-${payState.status}">${payState.label} · ${payState.paid.toLocaleString('ru-RU')} ₽</span>
                     </button>`;
             });
         } else {
@@ -1218,12 +1218,12 @@ function escapeBookingHtml(value) {
 const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
 function getBookingPaymentState(booking, total) {
     const paid = Math.max(0, Math.min(total, Number(booking.paidAmount || 0)));
-    const status = paid <= 0 ? 'unpaid' : paid >= total ? 'paid' : 'partial';
+    const status = paid <= 0 || total <= 0 ? 'unpaid' : paid >= total ? 'paid' : 'partial';
     return { paid, status, label: status === 'paid' ? 'Оплачено' : status === 'partial' ? 'Частично оплачено' : 'Не оплачено',
         methodLabel: PAYMENT_METHOD_LABELS[booking.paymentMethod] || 'Не указан' };
 }
 function openBookingPaymentEditor(id) {
-    if (!requireAdminAction('Изменять оплату может только Али')) return;
+    if (!currentUser) return showToast('Войдите в приложение, чтобы изменить оплату', 'error');
     const booking = bookings.find(item => String(item.id) === String(id));
     if (!booking) return;
     const total = (booking.services || []).reduce((sum, item) => sum + Number(item.price || 0), 0);
