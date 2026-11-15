@@ -126,99 +126,39 @@
         </div>
 
             <!-- ЭКРАН ФИНАНСОВ (Только Админ) -->
-        <div id="viewFinance" class="view">
-            
-            <!-- Вкладки внутри Финансов -->
-            <div class="category-tabs" style="margin-bottom: 15px;">
-                <button class="tab-btn active" id="tabFinExpenses" onclick="switchFinanceTab('expenses')">Расходы</button>
-                <button class="tab-btn" id="tabFinRevenue" onclick="switchFinanceTab('revenue')">Выручка и Прибыль</button>
+        <div id="viewFinance" class="view finance-view">
+            <div class="finance-page-heading">
+                <div><span class="finance-eyebrow">MENSFIRE BUSINESS</span><h2>Финансы</h2><p>Контроль выручки, расходов и эффективности команды</p></div>
+                <button class="action-modal-btn action-btn-primary" onclick="openExpenseModal()">＋ Расход</button>
+            </div>
+            <div class="category-tabs finance-tabs" style="margin-bottom:15px;">
+                <button class="tab-btn active" id="tabFinExpenses" onclick="switchFinanceTab('expenses')">Обзор</button>
+                <button class="tab-btn" id="tabFinRevenue" onclick="switchFinanceTab('revenue')">Выручка</button>
                 <button class="tab-btn" id="tabFinAnalytics" onclick="switchFinanceTab('analytics')">Аналитика</button>
             </div>
-
-            <!-- Селектор дат (общий) -->
-            <div class="date-selector" id="financeDateSelector" style="margin-bottom: 20px;"></div>
-
-            <!-- ВКЛАДКА 1: РАСХОДЫ -->
-            <div id="finTabExpenses" class="fin-tab-content" style="display: block;">
-                <!-- Блок расходов за день -->
-                <div class="glass-card" style="margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>Расходы за день</span>
-                        <button class="action-modal-btn action-btn-primary" onclick="openExpenseModal()" style="margin: 0; padding: 8px 15px; font-size: 12px; width: auto;">+ Добавить</button>
-                    </h3>
-                    <div id="expensesList" style="max-height: 40vh; overflow-y: auto; padding-right: 10px;">
-                        <!-- Список расходов за выбранный день -->
-                    </div>
+            <div class="finance-period-heading"><div><strong>Период отчёта</strong><span>Выберите день для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
+            <div class="date-selector" id="financeDateSelector" style="margin-bottom:18px;"></div>
+            <section class="fin-tab-content" id="finTabExpenses" style="display:block;">
+                <div class="finance-kpi-grid" id="financeExecutiveSummary"></div>
+                <div class="finance-dashboard-grid">
+                    <article class="glass-card finance-panel finance-chart-panel"><div class="finance-panel-heading"><div><h3>Динамика поступлений</h3><p>Последние 7 дней относительно выбранной даты</p></div><span class="finance-panel-icon">↗</span></div><div id="financeRevenueChart"></div></article>
+                    <article class="glass-card finance-panel"><div class="finance-panel-heading"><div><h3>Расходы</h3><p>Операции за выбранный день</p></div><button class="finance-text-action" onclick="openExpenseModal()">＋ Добавить</button></div><div id="expensesList"></div><div class="finance-total-row"><span>Расходы за месяц</span><strong id="financeMonthExpenses">0 ₽</strong></div></article>
+                    <article class="glass-card finance-panel"><div class="finance-panel-heading"><div><h3>Способы оплаты</h3><p>Распределение поступлений за месяц</p></div></div><div id="financePaymentMethods"></div></article>
+                    <article class="glass-card finance-panel"><div class="finance-panel-heading"><div><h3>Результат за период</h3><p>Фактически получено минус расходы</p></div></div><div class="finance-period-metrics"><div><span>За день</span><strong id="financeProfit">0 ₽</strong></div><div><span>За неделю</span><strong id="profitWeek">0 ₽</strong></div><div><span>За месяц</span><strong id="profitMonth">0 ₽</strong></div></div></article>
                 </div>
-
-                <!-- Блок расходов за месяц -->
-                <div class="glass-card">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 10px;">Расходы за месяц</h3>
-                    <div style="display: flex; justify-content: space-between; font-size: 18px;">
-                        <span style="color: var(--text-muted);">Итого:</span>
-                        <span id="financeMonthExpenses" style="font-weight: 800; color: #ff4d4d;">0 ₽</span>
-                    </div>
+            </section>
+            <section class="fin-tab-content" id="finTabRevenue" style="display:none;">
+                <div class="finance-kpi-grid finance-revenue-kpis">
+                    <div class="finance-kpi-card finance-kpi-primary"><span class="finance-kpi-label">День</span><strong id="financeToday">0 ₽</strong><small>Поступления за выбранную дату</small></div>
+                    <div class="finance-kpi-card"><span class="finance-kpi-label">Неделя</span><strong id="financeWeek">0 ₽</strong><small>С начала недели</small></div>
+                    <div class="finance-kpi-card"><span class="finance-kpi-label">Месяц</span><strong id="financeMonth">0 ₽</strong><small>С начала месяца</small></div>
                 </div>
-            </div>
-
-            <!-- ВКЛАДКА 2: ВЫРУЧКА И ПРИБЫЛЬ -->
-            <div id="finTabRevenue" class="fin-tab-content" style="display: none; flex-direction: column; gap: 20px;">
-                <!-- Блок Выручки -->
-                <div class="glass-card">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Выручка всех мастеров</h3>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--text-muted);">За выбранный день:</span>
-                        <span id="financeToday" style="font-weight: 800;">0 ₽</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--text-muted);">За неделю:</span>
-                        <span id="financeWeek" style="font-weight: 800;">0 ₽</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-muted);">За месяц:</span>
-                        <span id="financeMonth" style="font-weight: 800;">0 ₽</span>
-                    </div>
-                </div>
-
-                <!-- Блок Прибыли -->
-                <div class="glass-card">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Чистая прибыль</h3>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--text-muted);">За выбранный день:</span>
-                        <span id="financeProfit" style="font-weight: 800; color: #4CAF50; font-size: 20px;">0 ₽</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: var(--text-muted);">За неделю:</span>
-                        <span id="profitWeek" style="font-weight: 800;">0 ₽</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-muted);">За месяц:</span>
-                        <span id="profitMonth" style="font-weight: 800;">0 ₽</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ВКЛАДКА 3: АНАЛИТИКА -->
-            <div id="finTabAnalytics" class="fin-tab-content" style="display: none;">
-                <!-- Блок: Аналитика за выбранный день -->
-                <div class="glass-card" style="margin-bottom: 25px;">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Аналитика</h3>
-                    
-                    <div id="analyticsHeaderBlock" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); flex-shrink: 0;">
-                    </div>
-
-                    <div id="analyticsHistoryList" class="custom-scroll" style="display: flex; flex-direction: column; gap: 0; max-height: 90px; overflow-y: auto; padding-right: 5px;">
-                    </div>
-                </div>
-
-                <!-- Блок: Топ услуг за 30 дней (КОМПАКТНЫЙ, СКРОЛЛ) -->
-                <div class="glass-card" style="margin-top: 10px;">
-                    <h3 style="font-size: 16px; color: var(--gold); margin-bottom: 15px;">Популярные услуги (30 дней)</h3>
-                    <div id="analyticsTopServicesList" class="custom-scroll" style="display: flex; flex-direction: column; gap: 8px; max-height: 190px; overflow-y: auto; padding-right: 5px;">
-                        <!-- Топ услуг -->
-                    </div>
-                </div>
-            </div>
+                <article class="glass-card finance-panel"><div class="finance-panel-heading"><div><h3>Выручка по мастерам</h3><p>Поступления и завершённые визиты за месяц</p></div></div><div id="financeTeamStats"></div></article>
+            </section>
+            <section class="fin-tab-content" id="finTabAnalytics" style="display:none;">
+                <article class="glass-card finance-panel"><div class="finance-panel-heading"><div><h3>Операции за день</h3><p>Статус оплаты по каждой записи</p></div></div><div id="analyticsHeaderBlock"></div><div id="analyticsHistoryList"></div></article>
+                <article class="glass-card finance-panel" style="margin-top:16px;"><div class="finance-panel-heading"><div><h3>Популярные услуги</h3><p>Топ услуг по завершённым визитам за 30 дней</p></div></div><div id="analyticsTopServicesList"></div></article>
+            </section>
         </div>
 
         <!-- ЭКРАН КОМАНДЫ (Только Админ) -->
