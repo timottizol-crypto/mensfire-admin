@@ -5547,3 +5547,12 @@ html.light-theme .finance-range-btn { color:#596577; }
 html.light-theme .finance-range-btn.active { color:#674b0d; background:#fff0c6; border-color:#ddbf6b; }
 html.light-theme .finance-range-date { color:#344052; background:#fff8e7; border-color:#dfc77f; }
 @media(max-width:520px) { .finance-range-toolbar { align-items:stretch; flex-direction:column; } .finance-range-presets { display:grid; grid-template-columns:repeat(3,1fr); width:100%; } .finance-range-btn { padding-inline:8px; } .finance-range-fields { width:100%; } .finance-range-date { flex:1; min-width:0; } }
+
+.clients-range-toolbar { margin:10px 0 12px; }
+.clients-period-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin:0 0 13px; }
+.clients-period-summary>div { display:flex; flex-direction:column; gap:5px; min-width:0; padding:12px 14px; border:1px solid rgba(212,175,55,.15); border-radius:15px; background:linear-gradient(145deg,rgba(212,175,55,.075),rgba(255,255,255,.025)); }
+.clients-period-summary span { color:var(--text-muted); font-size:10px; font-weight:650; }
+.clients-period-summary strong { color:var(--text-main); font-size:19px; letter-spacing:-.4px; overflow-wrap:anywhere; }
+html.light-theme .clients-period-summary>div { background:linear-gradient(145deg,#fffaf0,#f7f8fa); border-color:rgba(140,105,25,.17); }
+html.light-theme .clients-period-summary strong { color:#202631; }
+@media(max-width:520px) { .clients-period-summary { gap:6px; } .clients-period-summary>div { padding:10px 8px; border-radius:12px; } .clients-period-summary span { font-size:9px; } .clients-period-summary strong { font-size:15px; } }
