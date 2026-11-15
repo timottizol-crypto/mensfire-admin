@@ -813,7 +813,59 @@ function renderDesktopSchedule() {
     const staff = currentUser.role === 'admin'
         ? mockStaff
         : mockStaff.filter(s => s.id === currentUser.id);
-    const viewMode = window.desktopCalendarMode === 'week' ? 'week' : 'day';
+    const viewMode = ['week', 'month'].includes(window.desktopCalendarMode) ? window.desktopCalendarMode : 'day';
+    if (viewMode === 'month') {
+        const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        const gridStart = new Date(monthStart);
+        gridStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
+        const monthDays = Array.from({ length: 42 }, (_, i) => {
+            const d = new Date(gridStart);
+            d.setDate(gridStart.getDate() + i);
+            return d;
+        });
+        const monthLabel = selectedDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+        const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        const html = `
+            <div class="desktop-calendar-toolbar">
+                <div class="desktop-calendar-date-controls">
+                    <button type="button" class="calendar-date-arrow" onclick="shiftScheduleMonth(-1)" aria-label="Предыдущий месяц">‹</button>
+                    <button type="button" class="calendar-today-btn" onclick="goToScheduleToday()">Сегодня</button>
+                    <strong>${monthLabel}</strong>
+                    <button type="button" class="calendar-date-arrow" onclick="shiftScheduleMonth(1)" aria-label="Следующий месяц">›</button>
+                    <span>${staff.length} маст.</span>
+                </div>
+                <div class="desktop-calendar-tabs">
+                    <button onclick="setDesktopCalendarMode('day')">День</button>
+                    <button onclick="setDesktopCalendarMode('week')">Неделя</button>
+                    <button class="active" onclick="setDesktopCalendarMode('month')">Месяц</button>
+                    <button class="${currentScheduleTab === 'bookings' ? 'active' : ''}" onclick="switchScheduleTab('bookings')">Записи</button>
+                    <button class="${currentScheduleTab === 'breaks' ? 'active' : ''}" onclick="switchScheduleTab('breaks')">Перерывы</button>
+                </div>
+            </div>
+            <div class="desktop-month-grid">
+                ${weekDays.map(dayName => `<div class="desktop-month-weekday">${dayName}</div>`).join('')}
+                ${monthDays.map(date => {
+                    const dateKey = date.toLocaleDateString('ru-RU');
+                    const inMonth = date.getMonth() === selectedDate.getMonth();
+                    const dayBookings = bookings.filter(b => b.date === dateKey && staff.some(member => member.id === b.barberId));
+                    const dayBlocks = timeBlocks.filter(b => b.date === dateKey && staff.some(member => member.id === b.barberId));
+                    const count = currentScheduleTab === 'bookings' ? dayBookings.length : dayBlocks.length;
+                    const active = dateKey === selectedScheduleDate;
+                    const preview = (currentScheduleTab === 'bookings' ? dayBookings : dayBlocks).slice(0, 3);
+                    return `
+                        <button type="button" class="desktop-month-day ${inMonth ? '' : 'outside-month'} ${active ? 'selected' : ''}"
+                            onclick="selectCalendarDate('${dateKey}')">
+                            <strong>${date.getDate()}</strong>
+                            <span class="desktop-month-count">${count ? (currentScheduleTab === 'bookings' ? count + ' запис.' : count + ' пер.') : '—'}</span>
+                            <span class="desktop-month-preview">${preview.map(item => currentScheduleTab === 'bookings' ? `${item.time} · ${item.clientName}` : `${item.startTime}–${item.endTime} · перерыв`).join('<br>')}</span>
+                            ${count > 3 ? `<small>ещё ${count - 3}</small>` : ''}
+                        </button>`;
+                }).join('')}
+            </div>`;
+        calendar.innerHTML = html;
+        return;
+    }
+
     const START_HOUR = 8;
     const END_HOUR = 22;
     const SLOT_HEIGHT = 24;
@@ -927,8 +979,26 @@ function renderDesktopSchedule() {
 }
 
 function setDesktopCalendarMode(mode) {
-    window.desktopCalendarMode = mode === 'week' ? 'week' : 'day';
+    window.desktopCalendarMode = ['day', 'week', 'month'].includes(mode) ? mode : 'day';
     renderDesktopSchedule();
+}
+
+function shiftScheduleMonth(offset) {
+    const [day, month, year] = selectedScheduleDate.split('.').map(Number);
+    const current = new Date(year, month - 1, day);
+    if (Number.isNaN(current.getTime())) return;
+    const targetDay = current.getDate();
+    const target = new Date(current.getFullYear(), current.getMonth() + Number(offset || 0), 1);
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(targetDay, lastDay));
+    selectedScheduleDate = target.toLocaleDateString('ru-RU');
+    renderSchedule();
+}
+
+function selectCalendarDate(dateKey) {
+    selectedScheduleDate = dateKey;
+    window.desktopCalendarMode = 'day';
+    renderSchedule();
 }
 
 
