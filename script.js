@@ -678,7 +678,7 @@ function renderSchedule() {
                     <div class="home-booking-item ${itemClass}" onclick="openActionModal(${b.id})" style="cursor: pointer; margin-bottom: 0; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%; box-sizing: border-box;">
                         <div class="hb-info" style="flex: 1; min-width: 0;">
                             <div class="hb-date" style="font-size: 14px;">${b.time}</div>
-                            <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? mockStaff.find(s=>s.id === b.barberId)?.name + ' | ' : ''}${b.clientName}</div>
+                            <div class="hb-master" style="font-size: 12px;">${currentUser.role === 'admin' ? (mockStaff.find(s=>s.id === b.barberId)?.name || 'Мастер') + ' · ' : ''}${b.clientName}</div>
                             <div class="hb-services" style="font-size: 11px; white-space: normal;">${servicesText}</div>
                         </div>
                         <div style="flex-shrink: 0; margin-left: 10px;">
@@ -751,8 +751,9 @@ function renderSchedule() {
 
             const targetDate = selectedScheduleDate;
             
-            let filteredBookings = bookings.filter(b => b.date === targetDate && b.barberId === currentUser.id);
-            let filteredBlocks = timeBlocks.filter(tb => tb.date === targetDate && tb.barberId === currentUser.id);
+            const canSeeAllStaff = currentUser.role === 'admin';
+            let filteredBookings = bookings.filter(b => b.date === targetDate && (canSeeAllStaff || b.barberId === currentUser.id));
+            let filteredBlocks = timeBlocks.filter(tb => tb.date === targetDate && (canSeeAllStaff || tb.barberId === currentUser.id));
 
             let html = '';
 
