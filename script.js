@@ -2286,30 +2286,6 @@ function switchFinanceTab(tab) {
     renderFinance();
 }
 
-function financeDateToInput(value) {
-    const parts = String(value || '').split('.').map(Number);
-    if (parts.length !== 3 || !parts.every(Number.isFinite)) return '';
-    return parts[2] + '-' + String(parts[1]).padStart(2,'0') + '-' + String(parts[0]).padStart(2,'0');
-}
-function selectFinanceDateFromInput(value) {
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(value || ''))) return;
-    const [year,month,day] = value.split('-').map(Number);
-    const date = new Date(year,month-1,day);
-    if (date.getFullYear() !== year || date.getMonth() !== month-1 || date.getDate() !== day) return;
-    selectedFinanceDate = date.toLocaleDateString('ru-RU');
-    renderFinance();
-}
-function shiftFinanceDate(days) {
-    const parts = selectedFinanceDate.split('.').map(Number);
-    const current = parts.length === 3 ? new Date(parts[2],parts[1]-1,parts[0]) : new Date();
-    current.setDate(current.getDate() + Number(days || 0));
-    selectedFinanceDate = current.toLocaleDateString('ru-RU');
-    renderFinance();
-}
-function selectFinanceToday() {
-    selectedFinanceDate = new Date().toLocaleDateString('ru-RU');
-    renderFinance();
-}
 function renderFinanceDateSelector() {
     const container = document.getElementById('financeDateSelector');
     if (!container) return;
@@ -2317,8 +2293,6 @@ function renderFinanceDateSelector() {
     const selectedParts = selectedFinanceDate.split('.').map(Number);
     const base = selectedParts.length === 3 ? new Date(selectedParts[2],selectedParts[1]-1,selectedParts[0]) : new Date();
     base.setHours(0,0,0,0);
-    const input = document.getElementById('financeDateInput');
-    if (input) input.value = financeDateToInput(selectedFinanceDate);
     const label = document.getElementById('financeSelectedDateLabel');
     if (label) {
         const today = new Date(); today.setHours(0,0,0,0);
