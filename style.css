@@ -3791,3 +3791,6 @@ html.light-theme .calendar-day:hover:not(.empty) {
 .booking-payment-history{margin-top:9px;padding-top:8px;border-top:1px solid var(--border-color,rgba(255,255,255,.12))}
 .booking-payment-transaction{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:11px;color:var(--text-muted)}
 .booking-payment-transaction strong{color:var(--text-color,#fff);white-space:nowrap}
+
+.data-mode-switch button.is-active{border-color:var(--gold);background:rgba(225,184,74,.14);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(225,184,74,.18)}
+.data-mode-switch button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
