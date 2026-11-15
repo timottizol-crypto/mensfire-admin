@@ -3892,7 +3892,11 @@ function renderClients(tab = 'all') {
             return Number.isFinite(parsed) ? parsed : 0;
         };
         const completedAverageCheck = c.completedCount ? Math.round(c.completedRevenue / c.completedCount) : 0;
-        const loyalty = getClientLoyaltyState(c.visits);
+        const clientPhoneKey = normalizeClientPhone((c.profileSummary || {}).phone);
+        const loyaltyBookings = clientPhoneKey.length >= 7
+            ? bookings.filter(booking => normalizeClientPhone(findClientProfile(booking.clientName, booking.barberId).profile.phone) === clientPhoneKey)
+            : c.visits;
+        const loyalty = getClientLoyaltyState(loyaltyBookings);
         const upcomingVisit = c.visits.filter(visit => visit.status !== 'cancelled' && parseClientDateTime(visit) >= Date.now())
             .sort((a,b) => parseClientDateTime(a) - parseClientDateTime(b))[0];
         const completedVisits = c.visits
@@ -3947,7 +3951,10 @@ function getClientLoyaltyState(sourceBookings) {
             return { booking, total, timestamp: parseClientDateTime(booking) || 0 };
         })
         .filter(item => item.total > 1000)
-        .sort((a, b) => a.timestamp - b.timestamp);
+        .sort((a, b) => {
+            const dateDiff = new Date(a.timestamp).setHours(0,0,0,0) - new Date(b.timestamp).setHours(0,0,0,0);
+            return dateDiff;
+        });
 
     const count = eligible.length;
     let level;
