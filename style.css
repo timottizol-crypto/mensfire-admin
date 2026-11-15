@@ -5628,3 +5628,23 @@ html.light-theme .schedule-barber-filter button.active,html.light-theme .schedul
 .desktop-booking-card[draggable="true"]{cursor:grab}
 .desktop-booking-card[draggable="true"]:active{cursor:grabbing}
 .desktop-staff-track:has(.desktop-booking-card:active){background-color:rgba(212,175,55,.025)}
+
+/* Premium waitlist */
+.schedule-waitlist{margin-top:16px;padding:20px;border:1px solid rgba(212,175,55,.14);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));}
+.schedule-waitlist-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.schedule-waitlist-heading h3{font-size:18px;margin:4px 0}.schedule-waitlist-heading p{font-size:11px;color:var(--text-muted)}
+.waitlist-count{display:grid;place-items:center;min-width:34px;height:34px;padding:0 10px;border-radius:12px;background:rgba(212,175,55,.13);color:var(--gold);font-weight:800}
+.waitlist-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end;padding:14px;border:1px solid rgba(255,255,255,.065);border-radius:16px;background:rgba(0,0,0,.12)}
+.waitlist-form .form-group{margin:0;min-width:0}.waitlist-form label{font-size:10px}.waitlist-form input,.waitlist-form select{width:100%;min-width:0}
+.waitlist-form .checkout-btn{grid-column:1/-1;margin:2px 0 0;min-height:42px}
+.waitlist-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.waitlist-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:rgba(255,255,255,.025)}
+.waitlist-person{display:flex;flex-direction:column;gap:4px;min-width:0}.waitlist-person strong{font-size:12px}.waitlist-person span,.waitlist-person small{font-size:10px;color:var(--text-muted);overflow-wrap:anywhere}
+.waitlist-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}.waitlist-actions button{padding:8px 10px;border:1px solid rgba(212,175,55,.28);border-radius:10px;background:rgba(212,175,55,.1);color:var(--gold);font:700 10px var(--font-main);cursor:pointer}.waitlist-actions .waitlist-remove{border-color:rgba(255,255,255,.1);background:transparent;color:var(--text-muted)}
+.waitlist-empty{padding:15px;text-align:center;color:var(--text-muted);font-size:11px}
+html.light-theme .schedule-waitlist{background:linear-gradient(145deg,#fff,#f5f7fa);border-color:rgba(48,60,78,.13)}
+html.light-theme .waitlist-form{background:#f7f8fa;border-color:#dce2e9}
+html.light-theme .waitlist-row{background:#fff;border-color:#e0e5eb}
+html.light-theme .waitlist-actions .waitlist-remove{color:#647084;border-color:#d5dce5}
+@media(max-width:760px){.schedule-waitlist{padding:15px;border-radius:18px}.waitlist-form{grid-template-columns:repeat(2,minmax(0,1fr));padding:11px}.waitlist-form .checkout-btn{grid-column:1/-1}.waitlist-row{align-items:flex-start;flex-direction:column}.waitlist-actions{width:100%}.waitlist-actions button{flex:1}}
+@media(max-width:390px){.waitlist-form{grid-template-columns:1fr}}
