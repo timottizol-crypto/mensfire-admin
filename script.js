@@ -5,6 +5,22 @@
 // Раздельные пространства данных для демо и рабочей базы.
 let mensfireDataMode = localStorage.getItem('mensfire_data_mode') === 'demo' ? 'demo' : 'live';
 function appStorageKey(key) { return mensfireDataMode === 'demo' ? 'mensfire_demo_' + key.replace(/^mensfire_/, '') : key; }
+function updateDataModeUI() {
+ const demoButton = document.querySelector('.data-mode-switch button[onclick*="demo"]');
+ const liveButton = document.querySelector('.data-mode-switch button[onclick*="live"]');
+ if (demoButton) {
+  demoButton.classList.toggle('is-active', mensfireDataMode === 'demo');
+  demoButton.setAttribute('aria-pressed', String(mensfireDataMode === 'demo'));
+ }
+ if (liveButton) {
+  liveButton.classList.toggle('is-active', mensfireDataMode === 'live');
+  liveButton.setAttribute('aria-pressed', String(mensfireDataMode === 'live'));
+ }
+ const caption = document.querySelector('.data-mode-caption');
+ if (caption) caption.textContent = mensfireDataMode === 'demo'
+  ? 'Тестовые записи изолированы и не затрагивают рабочую базу'
+  : 'Рабочие записи хранятся отдельно от демо-данных';
+}
 function setMensfireDataMode(mode) {
  if (!['demo','live'].includes(mode) || mode === mensfireDataMode) return;
  if (!confirm(mode === 'demo' ? 'Перейти в ДЕМО-режим? Тестовые данные будут отдельно от рабочей базы.' : 'Перейти в РАБОЧИЙ режим? Демо-данные останутся отдельно.')) return;
@@ -73,6 +89,7 @@ let viewOrder = []; // Заполнится в зависимости от ро�
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
 window.addEventListener('DOMContentLoaded', () => {
+    updateDataModeUI();
     initTheme();
         // --- ПРИВЕТСТВИЕ НА ЭКРАНЕ ЗАГРУЗКИ ---
     const hour = new Date().getHours();
