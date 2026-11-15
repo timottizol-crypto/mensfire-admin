@@ -1802,9 +1802,13 @@ function saveNewBooking() {
     const [year, month, day] = dateValue.split('-').map(Number);
     const date = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
 
-    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time) ||
-        !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateValue) ||
-        Number.isNaN(new Date(dateValue + 'T00:00:00').getTime())) {
+    const parsedDate = new Date(dateValue + 'T00:00:00');
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(dateValue) ||
+        Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.getFullYear() !== year ||
+        parsedDate.getMonth() + 1 !== month ||
+        parsedDate.getDate() !== day) {
         return showToast('Укажите корректные дату и время записи', 'error');
     }
 
@@ -1917,7 +1921,7 @@ function addTimeBlock() {
         return h * 60 + m;
     };
 
-    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(start) || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(end)) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end)) {
         return showToast('Укажите корректное время начала и окончания', 'error');
     }
 
@@ -2897,7 +2901,7 @@ function importMensfireBackup(input) {
             const staffIds = new Set();
             const staffPins = new Set();
             const hasAdmin = staff.some(member =>
-                member && member.role === 'admin' && member.id && /^\\d{4}$/.test(String(member.pin || ''))
+                member && member.role === 'admin' && member.id && /^\d{4}$/.test(String(member.pin || ''))
             );
             if (!hasAdmin) {
                 throw new Error('В резервной копии нет действующего администратора с корректным PIN. Восстановление отменено.');
@@ -2905,7 +2909,7 @@ function importMensfireBackup(input) {
             for (const member of staff) {
                 if (!member || typeof member.id !== 'string' || !member.id ||
                     typeof member.name !== 'string' || !member.name.trim() ||
-                    !/^\\d{4}$/.test(String(member.pin || '')) ||
+                    !/^\d{4}$/.test(String(member.pin || '')) ||
                     staffIds.has(member.id) || staffPins.has(String(member.pin))) {
                     throw new Error('Список мастеров или PIN в резервной копии повреждён. Восстановление отменено.');
                 }
