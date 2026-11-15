@@ -3991,6 +3991,7 @@ function renderClientLoyaltyPanel(sourceBookings) {
             <div class="client-loyalty-progress"><i style="width:${state.progress}%;background:${state.level.color}"></i></div>
             <div class="client-loyalty-next">${state.count >= 20 ? 'Достигнут максимальный уровень' : 'До уровня «' + state.level.next + '» осталось: ' + state.remaining + ' виз.'}</div>
             <div class="client-loyalty-history-title">Начисления баллов</div>
+            <div class="client-loyalty-disclaimer">Расчёт по тем же правилам, что и в приложении клиента. Списание баллов здесь пока не предусмотрено.</div>
             ${history.length ? history.map(item => {
                 const booking = item.booking;
                 const date = escapeBookingHtml(booking.date || 'Дата не указана');
