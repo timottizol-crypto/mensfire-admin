@@ -1998,6 +1998,9 @@ function openBlockTimeModal() {
 
     document.getElementById('blockStartTime').value = '';
     document.getElementById('blockEndTime').value = '';
+    document.getElementById('blockAllDay').checked = false;
+    document.getElementById('blockRepeatWeekly').checked = false;
+    toggleBlockAllDay();
 
     updateBlockBarberSelect();
 
@@ -2517,111 +2520,53 @@ function saveNewBooking() {
 
 
 
+function toggleBlockAllDay() {
+    const allDay = Boolean(document.getElementById('blockAllDay')?.checked);
+    ['blockStartTime','blockEndTime'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) { input.disabled = allDay; input.classList.toggle('is-disabled', allDay); if (allDay) input.value = ''; }
+    });
+}
 function addTimeBlock() {
     if (!requireAdminAction('Создавать и изменять перерывы может только Али')) return;
-    const start = document.getElementById('blockStartTime').value;
-    const end = document.getElementById('blockEndTime').value;
+    const allDay = Boolean(document.getElementById('blockAllDay')?.checked);
+    const repeatWeekly = Boolean(document.getElementById('blockRepeatWeekly')?.checked) && !editingBlockId;
+    const start = allDay ? '08:00' : document.getElementById('blockStartTime').value;
+    const end = allDay ? '22:00' : document.getElementById('blockEndTime').value;
     const date = selectedBlockDate;
-
-    const barberId = currentUser.role === 'admin'
-        ? document.getElementById('blockBarberSelect').value
-        : currentUser.id;
-
-    if (!start || !end || !date || !barberId) {
-        return showToast('Укажите мастера, дату и время', 'error');
+    const barberId = currentUser.role === 'admin' ? document.getElementById('blockBarberSelect').value : currentUser.id;
+    if (!start || !end || !date || !barberId) return showToast('Укажите мастера, дату и время', 'error');
+    const toMinutes = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end)) return showToast('Укажите корректное время начала и окончания','error');
+    const newStart=toMinutes(start),newEnd=toMinutes(end);
+    if (newStart>=newEnd) return showToast('Время окончания должно быть позже начала','error');
+    if (newStart<8*60||newEnd>22*60) return showToast('Перерыв должен быть в пределах 08:00–22:00','error');
+    const overlaps=(a,b,c,d)=>a<d&&b>c;
+    const baseDate=parseReportDate(date);
+    if(!baseDate) return showToast('Укажите корректную дату','error');
+    const targetDates=Array.from({length:repeatWeekly?12:1},(_,index)=>{const d=new Date(baseDate);d.setDate(d.getDate()+index*7);return formatReportDate(d)});
+    const conflicts=[];
+    for(const targetDate of targetDates){
+        const bookingConflict=bookings.find(b=>b.date===targetDate&&String(b.barberId)===String(barberId)&&isBookingBlockingSchedule(b)&&(()=>{const s=parseScheduleTimeMinutes(b.time);return s!==null&&overlaps(newStart,newEnd,s,s+getBookingDurationMinutes(b))})());
+        if(bookingConflict){conflicts.push({date:targetDate,message:'запись в '+bookingConflict.time});continue}
+        const blockConflict=timeBlocks.find(block=>block.date===targetDate&&String(block.barberId)===String(barberId)&&(!editingBlockId||String(block.id)!==String(editingBlockId))&&(()=>{const s=parseScheduleTimeMinutes(block.startTime),e=parseScheduleTimeMinutes(block.endTime);return s!==null&&e!==null&&s<e&&overlaps(newStart,newEnd,s,e)})());
+        if(blockConflict) conflicts.push({date:targetDate,message:'другой перерыв'});
     }
-
-    const toMinutes = value => {
-        const [h, m] = value.split(':').map(Number);
-        return h * 60 + m;
-    };
-
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end)) {
-        return showToast('Укажите корректное время начала и окончания', 'error');
+    if(conflicts.length) return showToast('Есть конфликт: '+conflicts[0].date+' — '+conflicts[0].message,'error');
+    if(editingBlockId){
+        const block=timeBlocks.find(b=>String(b.id)===String(editingBlockId));
+        if(!block) return showToast('Перерыв не найден','error');
+        Object.assign(block,{date,barberId,startTime:start,endTime:end,allDay});
+    }else{
+        const groupId=repeatWeekly?'repeat-'+Date.now():null;
+        targetDates.forEach((targetDate,index)=>timeBlocks.push({id:'block-'+Date.now()+'-'+index,barberId,date:targetDate,startTime:start,endTime:end,allDay,repeatGroup:groupId}));
     }
-
-    const newStart = toMinutes(start);
-    const newEnd = toMinutes(end);
-
-    if (newStart >= newEnd) {
-        return showToast('Время окончания должно быть позже начала', 'error');
-    }
-
-    if (newStart < 8 * 60 || newEnd > 22 * 60) {
-        return showToast('Перерыв должен быть в пределах 08:00–22:00', 'error');
-    }
-
-    const overlaps = (aStart, aEnd, bStart, bEnd) =>
-        aStart < bEnd && aEnd > bStart;
-
-    const activeBookings = bookings.filter(b =>
-        b.date === date &&
-        b.barberId === barberId &&
-        isBookingBlockingSchedule(b)
-    );
-
-    const conflict = activeBookings.find(b => {
-        const bookingStart = parseScheduleTimeMinutes(b.time);
-        if (bookingStart === null) return false;
-        const duration = getBookingDurationMinutes(b);
-
-        return overlaps(
-            newStart,
-            newEnd,
-            bookingStart,
-            bookingStart + duration
-        );
-    });
-
-    if (conflict) {
-        return showToast(`Перерыв пересекается с записью в ${conflict.time}`, 'error');
-    }
-
-    const blockConflict = timeBlocks.find(block => {
-        if (block.barberId !== barberId || block.date !== date) return false;
-        if (editingBlockId && String(block.id) === String(editingBlockId)) return false;
-
-        const blockStart = parseScheduleTimeMinutes(block.startTime);
-        const blockEnd = parseScheduleTimeMinutes(block.endTime);
-        if (blockStart === null || blockEnd === null || blockStart >= blockEnd) return false;
-
-        return overlaps(newStart, newEnd, blockStart, blockEnd);
-    });
-
-    if (blockConflict) {
-        return showToast('В это время уже установлен перерыв', 'error');
-    }
-
-    if (editingBlockId) {
-        const block = timeBlocks.find(b =>
-            String(b.id) === String(editingBlockId)
-        );
-
-        if (!block) return showToast('Перерыв не найден', 'error');
-
-        block.date = date;
-        block.barberId = barberId;
-        block.startTime = start;
-        block.endTime = end;
-    } else {
-        timeBlocks.push({
-            id: Date.now(),
-            barberId,
-            date,
-            startTime: start,
-            endTime: end
-        });
-    }
-
-    localStorage.setItem(appStorageKey('mensfire_admin_blocks'), JSON.stringify(timeBlocks));
-
+    localStorage.setItem(appStorageKey('mensfire_admin_blocks'),JSON.stringify(timeBlocks));
     closeModal('blockTimeModal');
-    showToast(editingBlockId ? 'Перерыв обновлён' : 'Перерыв добавлен', 'success');
-
-    editingBlockId = null;
+    showToast(editingBlockId?'Перерыв обновлён':repeatWeekly?'График добавлен на 12 недель':allDay?'Выходной добавлен':'Перерыв добавлен','success');
+    editingBlockId=null;
     renderSchedule();
 }
-
 
 // --- УПРАВЛЕНИЕ БЛОКИРОВКОЙ ---
 function openBlockActionModal(id) {
@@ -2647,6 +2592,9 @@ function editTimeBlock() {
 
     document.getElementById('blockStartTime').value = block.startTime;
     document.getElementById('blockEndTime').value = block.endTime;
+    document.getElementById('blockAllDay').checked = Boolean(block.allDay);
+    document.getElementById('blockRepeatWeekly').checked = false;
+    toggleBlockAllDay();
 
     // Меняем заголовок и кнопку на "Редактирование"
     document.querySelector('#blockTimeModal h2').innerText = 'Редактирование перерыва';
