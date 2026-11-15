@@ -4098,3 +4098,117 @@ html.light-theme #viewSchedule #desktopSchedule .desktop-booking-card > .booking
         height: 100%;
     }
 }
+
+/* Team screen — responsive staff cards with independent content/actions. */
+#viewTeam #teamList,
+#viewProfile #teamListPC {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+#viewTeam .team-member-card,
+#viewProfile .team-member-card {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 14px;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.team-member-card:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+}
+
+.team-member-card .team-info {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.team-member-card .team-name {
+    margin: 0 0 5px;
+    font-size: 15px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.team-member-card .team-role,
+.team-member-card .team-pin {
+    display: block;
+    max-width: 100%;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.team-member-card .team-actions {
+    flex: 0 0 auto;
+    align-items: stretch;
+    max-width: 42%;
+}
+
+.team-member-card .team-action-btn {
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 10px;
+}
+
+.team-empty-state {
+    padding: 24px 16px;
+    color: var(--text-muted);
+    text-align: center;
+    border: 1px dashed rgba(212, 175, 55, .25);
+    border-radius: 14px;
+}
+
+@media (max-width: 767px) {
+    #viewTeam .team-member-card,
+    #viewProfile .team-member-card {
+        padding: 12px;
+        gap: 10px;
+        border-radius: 16px;
+    }
+
+    .team-member-card .team-avatar {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        font-size: 17px;
+    }
+
+    .team-member-card .team-name {
+        font-size: 13px;
+    }
+
+    .team-member-card .team-actions {
+        max-width: 38%;
+        gap: 5px;
+    }
+
+    .team-member-card .team-action-btn {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+        font-size: 9px;
+        padding: 6px;
+    }
+}
+
+@media (min-width: 768px) {
+    #viewTeam #teamList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    #viewTeam .team-member-card {
+        height: 100%;
+    }
+}
