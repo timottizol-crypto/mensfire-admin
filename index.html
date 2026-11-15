@@ -120,8 +120,14 @@
                 <button class="tab-btn" id="tabFinRevenue" onclick="switchFinanceTab('revenue')">Выручка</button>
                 <button class="tab-btn" id="tabFinAnalytics" onclick="switchFinanceTab('analytics')">Аналитика</button>
             </div>
-            <div class="finance-period-heading"><div><strong>Период отчёта</strong><span>Выберите день для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
-            <div class="date-selector" id="financeDateSelector" style="margin-bottom:18px;"></div>
+            <div class="finance-period-heading"><div><strong>Период отчёта</strong><span id="financeSelectedDateLabel">Выберите дату для детализации</span></div><span class="finance-live-label">Локальные данные</span></div>
+            <div class="finance-date-tools">
+                <button type="button" class="finance-date-nav" onclick="shiftFinanceDate(-1)" aria-label="Предыдущий день">‹</button>
+                <button type="button" class="finance-date-today" onclick="selectFinanceToday()">Сегодня</button>
+                <label class="finance-date-input-wrap"><span>Дата</span><input id="financeDateInput" type="date" aria-label="Выбрать дату отчёта" onchange="selectFinanceDateFromInput(this.value)"></label>
+                <button type="button" class="finance-date-nav" onclick="shiftFinanceDate(1)" aria-label="Следующий день">›</button>
+            </div>
+            <div class="date-selector finance-date-strip" id="financeDateSelector" aria-label="Быстрый выбор даты"></div>
             <section class="fin-tab-content" id="finTabExpenses" style="display:block;">
                 <div class="finance-kpi-grid" id="financeExecutiveSummary"></div>
                 <div class="finance-dashboard-grid">
