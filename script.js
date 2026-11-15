@@ -826,6 +826,100 @@ let timeBlocks = (() => {
     }
 })();
 
+let waitlistEntries = (() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(appStorageKey('mensfire_waitlist')) || '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Не удалось загрузить лист ожидания:', error);
+        return [];
+    }
+})();
+let editingWaitlistId = null;
+
+function persistWaitlist() {
+    localStorage.setItem(appStorageKey('mensfire_waitlist'), JSON.stringify(waitlistEntries));
+}
+function openWaitlistDatePicker() {
+    calendarTargetInputId = 'waitlistDate';
+    reportDatePickerTarget = null;
+    const value = document.getElementById('waitlistDate')?.value;
+    const date = parseReportDate(value) || parseReportDate(selectedScheduleDate) || new Date();
+    selectedBlockDate = formatReportDate(date);
+    pickerYear = date.getFullYear();
+    pickerMonth = date.getMonth();
+    renderCalendar();
+    openModal('calendarModal');
+}
+function renderWaitlist() {
+    const host = document.getElementById('waitlistList');
+    if (!host) return;
+    const barber = document.getElementById('waitlistBarber');
+    const service = document.getElementById('waitlistService');
+    if (barber && !barber.options.length) {
+        barber.innerHTML = mockStaff.map(person => `<option value="${escapeBookingHtml(person.id)}">${escapeBookingHtml(person.name)}</option>`).join('');
+    }
+    if (service && !service.options.length) {
+        const options = Object.values(servicesData).flat().filter(item => item.active !== false);
+        service.innerHTML = '<option value="">Любая услуга</option>' + options.map(item => `<option value="${escapeBookingHtml(item.id)}">${escapeBookingHtml(item.title)}</option>`).join('');
+    }
+    const count = document.getElementById('waitlistCount');
+    if (count) count.textContent = String(waitlistEntries.length);
+    if (!waitlistEntries.length) {
+        host.innerHTML = '<div class="waitlist-empty">Пока нет клиентов в листе ожидания</div>';
+        return;
+    }
+    host.innerHTML = waitlistEntries.map(item => {
+        const staff = mockStaff.find(person => String(person.id) === String(item.barberId));
+        return `<article class="waitlist-row"><div class="waitlist-person"><strong>${escapeBookingHtml(item.clientName)}</strong><span>${escapeBookingHtml(item.phone || 'Телефон не указан')}</span><small>${escapeBookingHtml(item.date || 'Любая дата')} · ${escapeBookingHtml(item.time || 'Любое время')} · ${escapeBookingHtml(staff?.name || 'Любой мастер')}</small><small>${escapeBookingHtml(item.serviceTitle || 'Любая услуга')}</small></div><div class="waitlist-actions"><button type="button" onclick="promoteWaitlistEntry('${escapeBookingHtml(item.id)}')">Создать запись</button><button type="button" class="waitlist-remove" onclick="removeWaitlistEntry('${escapeBookingHtml(item.id)}')">Убрать</button></div></article>`;
+    }).join('');
+}
+function addWaitlistEntry() {
+    if (!requireAdminAction('Управлять листом ожидания может только администратор')) return;
+    const clientName = document.getElementById('waitlistClient')?.value.trim();
+    const phone = document.getElementById('waitlistPhone')?.value.trim() || '';
+    const date = document.getElementById('waitlistDate')?.value || '';
+    const time = document.getElementById('waitlistTime')?.value || '';
+    const barberId = document.getElementById('waitlistBarber')?.value || '';
+    const serviceId = document.getElementById('waitlistService')?.value || '';
+    if (!clientName) return showToast('Укажите имя клиента', 'error');
+    if (date && !parseReportDate(date)) return showToast('Проверьте желаемую дату', 'error');
+    if (time && parseScheduleTimeMinutes(time) === null) return showToast('Проверьте желаемое время', 'error');
+    const service = Object.values(servicesData).flat().find(item => String(item.id) === String(serviceId));
+    waitlistEntries.push({ id:'wait-' + Date.now(), clientName, phone, date, time, barberId, serviceId, serviceTitle:service?.title || '', createdAt:new Date().toISOString() });
+    persistWaitlist();
+    ['waitlistClient','waitlistPhone','waitlistDate','waitlistTime'].forEach(id => { const input=document.getElementById(id); if(input) input.value=''; });
+    renderWaitlist();
+    showToast('Клиент добавлен в лист ожидания','success');
+}
+function removeWaitlistEntry(id) {
+    if (!requireAdminAction('Управлять листом ожидания может только администратор')) return;
+    waitlistEntries = waitlistEntries.filter(item => String(item.id) !== String(id));
+    persistWaitlist();
+    renderWaitlist();
+}
+function promoteWaitlistEntry(id) {
+    if (!requireAdminAction('Создавать записи может только администратор')) return;
+    const item = waitlistEntries.find(entry => String(entry.id) === String(id));
+    if (!item) return;
+    const barberId = item.barberId || currentUser.id;
+    const date = item.date || selectedScheduleDate;
+    openNewBookingModal(barberId, item.time || '', date);
+    const client = document.getElementById('newBookingClient');
+    if (client) client.value = item.clientName;
+    const barberSelect = document.getElementById('newBookingBarber');
+    if (barberSelect && item.barberId) barberSelect.value = item.barberId;
+    renderBookingBarberChoices();
+    updateNewBookingServices();
+    if (item.serviceId) {
+        const option = document.querySelector('#newBookingServicesList input[value="' + CSS.escape(String(item.serviceId)) + '"]');
+        if (option) { option.checked = true; updateNewBookingSummary(); }
+    }
+    editingWaitlistId = item.id;
+    showToast('Проверьте дату и время, затем сохраните запись','info');
+}
+
+
 function ensureDemoSampleData() {
  if (mensfireDataMode !== 'demo') return;
  const today = new Date();
@@ -942,6 +1036,7 @@ function renderSchedule() {
         const scheduleDate = selectedScheduleDate;
         const staffFilterHost = document.getElementById('scheduleBarberFilterMobile');
         if (staffFilterHost) staffFilterHost.innerHTML = renderScheduleBarberFilter(mockStaff).replace('schedule-barber-filter','schedule-barber-filter-mobile');
+        renderWaitlist();
         const visibleBookings = bookings.filter(item => item.date === scheduleDate &&
             item.status !== 'cancelled' &&
             (currentUser.role === 'admin' || String(item.barberId) === String(currentUser.id)) &&
@@ -1995,8 +2090,8 @@ function renderCalendar() {
                 else renderTeam();
                 return;
             }
-            if (calendarTargetInputId === 'newBookingDate') {
-                const target = document.getElementById('newBookingDate');
+            if (calendarTargetInputId === 'newBookingDate' || calendarTargetInputId === 'waitlistDate') {
+                const target = document.getElementById(calendarTargetInputId);
                 if (target) target.value = thisDateStr;
                 calendarTargetInputId = null;
             } else {
