@@ -136,6 +136,8 @@ function initAppForUser() {
     document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'Главный мастер' : 'Барбер';
     
     document.getElementById('barberRevenueCard').style.display = isAdminUser() ? 'block' : 'none';
+    const backupCard = document.getElementById('profileBackupCard');
+    if (backupCard) backupCard.style.display = isAdminUser() ? 'block' : 'none';
     if (isAdminUser()) {
         document.getElementById('profileRevenueTitle').innerText = 'Прибыль барбершопа';
     } else {
@@ -1822,6 +1824,7 @@ function deleteTimeBlock() {
 }
 
 function switchFinanceTab(tab) {
+    if (!requireAdminAction('Просматривать финансы может только Али')) return;
     currentFinanceTab = tab;
     document.getElementById('tabFinExpenses').classList.toggle('active', tab === 'expenses');
     document.getElementById('tabFinRevenue').classList.toggle('active', tab === 'revenue');
@@ -1881,6 +1884,7 @@ function renderFinanceDateSelector() {
 }
 
 function renderFinance() {
+    if (!requireAdminAction('Просматривать финансы может только Али')) return;
     renderFinanceDateSelector();
     
     const targetDate = selectedFinanceDate;
@@ -2005,12 +2009,14 @@ function renderFinance() {
 
 
 function openExpenseModal() {
+    if (!requireAdminAction('Управлять финансами может только Али')) return;
     document.getElementById('expenseTitle').value = '';
     document.getElementById('expenseAmount').value = '';
     openModal('expenseModal');
 }
 
 function addExpense() {
+    if (!requireAdminAction('Добавлять расходы может только Али')) return;
     const title = document.getElementById('expenseTitle').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
 
