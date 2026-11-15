@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mensfire-admin-v141';
+const CACHE_NAME = 'mensfire-admin-v142';
 const ASSETS = [
   './index.html',
   './style.css',
