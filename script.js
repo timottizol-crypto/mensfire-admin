@@ -3948,13 +3948,16 @@ function getClientLoyaltyState(sourceBookings) {
                 .reduce((sum, service) => sum + Math.max(0, Number(service.price) || 0), 0);
             const total = Number.isFinite(Number(booking.total)) && booking.total !== '' 
                 ? Number(booking.total) : serviceTotal;
-            return { booking, total, timestamp: parseClientDateTime(booking) || 0 };
+            const parsedTimestamp = parseClientDateTime(booking);
+            return {
+                booking,
+                total,
+                timestamp: parsedTimestamp > 0 ? parsedTimestamp : Number.POSITIVE_INFINITY
+            };
         })
         .filter(item => item.total > 1000)
-        .sort((a, b) => {
-            const dateDiff = new Date(a.timestamp).setHours(0,0,0,0) - new Date(b.timestamp).setHours(0,0,0,0);
-            return dateDiff;
-        });
+        // Повторяем порядок клиентского приложения: дата и точное время визита.
+        .sort((a, b) => a.timestamp - b.timestamp);
 
     const count = eligible.length;
     let level;
