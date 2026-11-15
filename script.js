@@ -1229,7 +1229,7 @@ function escapeBookingHtml(value) {
 const PAYMENT_METHOD_LABELS = { cash: 'Наличные', card: 'Карта', transfer: 'Перевод', online: 'Онлайн', mixed: 'Смешанная оплата' };
 function getBookingCollectedAmount(booking) {
     const serviceTotal = (booking.services || []).reduce((sum, service) => sum + Number(service.price || 0), 0);
-    if (Array.isArray(booking.payments)) {
+    if (Array.isArray(booking.payments) && booking.payments.length) {
         return booking.payments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount || 0)), 0);
     }
     if (Object.prototype.hasOwnProperty.call(booking, 'paidAmount')) {
